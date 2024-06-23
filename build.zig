@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) !void {
         .layouts_dir_path = "layouts",
         .content_dir_path = "content",
         .static_dir_path = "static",
-        .host_url = "https://karitham.dev",
+        .host_url = "https://blog.karitham.dev",
         .title = "Kar's blog",
     });
 }
