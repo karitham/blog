@@ -1,0 +1,42 @@
+name: github pages
+
+on:
+  push:
+    branches:
+      - main  # Set a branch to deploy
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Change if you need git info
+      - uses: DeterminateSystems/nix-installer-action@main
+         
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            ~/.cache/zig
+            zig-cache
+          key: blog-${{hashFiles('build.zig.zon')}}          
+
+      - name: Build
+        run: nix develop .# --command zig build --summary all
+          
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./zig-out
+          
+      - name: Save Cache
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            ~/.cache/zig
+            zig-cache
+          key: blog-${{hashFiles('build.zig.zon')}}
