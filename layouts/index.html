@@ -1,6 +1,7 @@
 <extend template="base.html" />
 
 <title id="title" var="$page.title"></title>
+
 <head id="head">
 </head>
 
@@ -8,9 +9,9 @@
 	<div class="content-container">
 		<nav id="nav" class="content">
 			<ul>
-				<li><a src="/" role="button" class="button">~/</a></li>
-				<li>About</li>
-				<li>Contact</li>
+				<li><a href="/" role="button" class="button">~/</a></li>
+				<li><a href="/about" role="button" class="button">About</a></li>
+				<li><a href="/contact" role="button" class="button">Contact</a></li>
 			</ul>
 		</nav>
 		<div id="page" class="content" var="$page.content"></div>
