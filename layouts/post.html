@@ -1,0 +1,42 @@
+<extend template="with-nav.html" />
+<div id="main">
+    <style>
+        .post {
+            background-color: var(--ctp-surface0);
+            padding: 0.1rem 1rem;
+            margin-top: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .post h2 {
+            color: var(--ctp-mauve);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .post span {
+            display: inline-block;
+            margin-right: 1rem;
+            color: var(--ctp-subtext0);
+            font-size: 0.9rem;
+        }
+
+        .post span span {
+            color: var(--ctp-blue);
+            font-weight: bold;
+        }
+
+        .post div {
+            margin-top: 2rem;
+            color: var(--ctp-text);
+            line-height: 1.6;
+        }
+    </style>
+    <div class="post">
+        <h2 var="$page.title"></h2>
+        <span>by <span var="$page.author"></span></span>
+        <span>Posted on: <span var="$page.date.format('January 02, 2006')"></span></span>
+        <div var="$page.content"></div>
+    </div>
+</div>
