@@ -5,8 +5,6 @@
 }
 
 body {
-  margin: 0;
-  padding: 0;
   background-color: var(--ctp-base);
   color: var(--ctp-text);
   font-family: var(--font-primary);
@@ -58,39 +56,8 @@ a {
 }
 
 a:hover {
-  color: var(--ctp-flamingo);
-}
-
-.subtext1 {
-  color: var(--ctp-flamingo);
-}
-
-.subtext0 {
-  color: var(--ctp-subtext0);
-}
-
-.surface0 {
-  background-color: var(--ctp-surface0);
-}
-
-.surface1 {
-  background-color: var(--ctp-surface1);
-}
-
-.surface2 {
-  background-color: var(--ctp-surface2);
-}
-
-.overlay0 {
-  background-color: var(--ctp-overlay0);
-}
-
-.overlay1 {
-  background-color: var(--ctp-overlay1);
-}
-
-.overlay2 {
-  background-color: var(--ctp-overlay2);
+  background-color: var(--ctp-flamingo);
+  color: var(--ctp-crust);
 }
 
 .button {
@@ -109,87 +76,10 @@ a:hover {
   color: var(--ctp-text);
 }
 
-.button-outline {
-  background-color: transparent;
-  color: var(--ctp-flamingo); /* Rosemary text color */
-  border: 2px solid var(--ctp-flamingo); /* Rosemary border */
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.button-outline:hover {
-  background-color: var(--ctp-base); /* Fills with rosemary on hover */
-  color: var(--ctp-text); /* White text for better contrast */
-}
-
-/* Flexbox Helpers */
-.flex {
-  display: flex;
-}
-
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-.justify-content-center {
-  justify-content: center;
-}
-
-.align-items-center {
-  align-items: center;
-}
-
-/* Spacing Helpers */
-.margin-x-auto {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.margin-y-10 {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.padding-x-20 {
-  padding-left: 20px;
-  padding-right: 20px;
-}
-
-/* Width and Height Helpers */
-.w-full {
-  width: 100%;
-}
-
-.h-auto {
-  height: auto;
-}
-
-/* Responsiveness Helpers (Example) */
-.hidden-xs {
-  display: none; /* Adjust for your breakpoint needs */
-}
-
-/* Text Alignment */
-.text-center {
-  text-align: center;
-}
-
-.content {
+#content {
   max-width: 800px;
   width: 100%;
-  padding: 0 4rem;
-}
-
-#content {
-  padding: 0 1rem;
+  margin: auto;
 }
 
 .content-container {
@@ -200,15 +90,20 @@ a:hover {
 }
 
 #nav {
-  width: 100%;
+  padding: 1rem;
   background-color: var(--ctp-crust);
   border-radius: 0 0 1rem 1rem;
 }
 
 #nav ul {
+  margin: 0;
+  padding: 0;
   list-style-type: none;
-  padding: 0 3rem;
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
+}
+
+#main {
+  padding: 0 1rem;
 }
