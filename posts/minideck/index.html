@@ -143,24 +143,22 @@
     #only(3)[- This one shows on slide 3 and never after]
     #uncover(from: 2, to: 4)[- This one shows on slide 2, 3 and 4]
 ]
-</code></pre><p>In <code>typst</code> laying stuff out works with the box model just like in HTML, and it has all the convenience of floating layouts if you need to overlay layer on top of layer.</p><pre><code>#slide[
-    #grid(
-        columns: (1fr, fr),
-        align: horizon,
-        gutter: 1em,
-        [
-            = Title
+</code></pre><p>Minideck is built on top of <a href="https://github.com/typst/typst"><code>typst</code></a>. Typst is a new markup-based typesetting system that is powerful and easy to learn. It is designed as a direct competitor to LaTeX. With the 50 years of experience we have had to understand the shortcomings of LaTeX.</p><p>Typst is fast, doesn't require user input during compilation, packaging <i>just works</i>, and the error messages are descriptive enough to be understood by a layperson.</p><p>It tries to be easier to learn mostly by reusing modern patterns for typesetting, yet still being plain-text when it needs to be just that. In typst laying stuff out works with the box model just like in HTML, or you can have all the convenience of floating layouts if you want to overlay layer on top of layer.</p><pre><code>#grid(
+    columns: (1fr, fr),
+    align: horizon,
+    gutter: 1em,
+    [
+        = Title
 
-            This content describes the image next to it. They
-            are approximately sized the same. Text wrapping just works.
-            There is no automatic text sizing shenanigans.
+        This content describes the image next to it. They
+        are approximately sized the same. Text wrapping just works.
+        There is no automatic text sizing shenanigans.
 
-            Text will never give you up.
-        ],
-        image("./assets/dQw4w9WgXcQ.gif")
-    )
-]
-</code></pre><p>One might think</p><blockquote><p>But kar, I don't only use Google Slides by myself, I use it for group projects! I love the sync features!</p></blockquote><p>Typst is <i>just</i> plain text and you can <i>just use git</i>, it's great for collaboration.</p><p>The people behind it have also built <a href="https://typst.app/">an online collaborative editor</a> that wipes the floor with overleaf, its direct competitor both in terms of features and UX.</p><p>Another advantage minideck has, and by extension typst has too, is that it works well with language models. You can easily generate most of your slide deck (e.g. from your research paper), focusing only on the important parts and theming it afterwards.</p><p>There's generally a ton of advantages to <a href="https://sive.rs/plaintext">plain-text</a> content, and I'm very happy to finally have found the tool that will make me ditch Google slides or Microsoft Powerpoint.</p></div>
+        Text will never give you up.
+    ],
+    image("./assets/dQw4w9WgXcQ.gif")
+)
+</code></pre><p>One might think</p><blockquote><p>But kar, I don't only use Google Slides by myself, I use it for group projects! I love the sync features!</p></blockquote><p>Typst is <i>just plain-text</i> and you can <i>just use git</i>, it's great for collaboration. Git might not make much sense in a slide-deck scenario, but the people behind it have also built <a href="https://typst.app/">an online editor</a>. The online editor is smoother than Powerpoint or Slides, and collaboration <i>just works</i>. When using typst for documents, the editor also wipes the floor with overleaf, the online collaborative editor for LaTeX.</p><p>Typst also works well with large bullshit models. You can easily generate most of your slide deck (e.g. from your research paper), focusing only on the important parts and theming it afterwards. Iterating on the phrasing in the slides using a standard code editor avoids the <code>copy</code> <code>alt+tab</code> <code>paste</code> <code>copy</code> <code>paste</code> repetition. You can even make a <a href="https://sourcegraph.com/docs/cody/capabilities/commands#custom-commands">custom command</a> to turn this into a few key smashes.</p><p>There's generally a ton of advantages to <a href="https://sive.rs/plaintext">plain-text</a> content, and I'm very happy to finally have found the tool that will make me ditch Google slides or Microsoft Powerpoint.</p></div>
   </div>
 
   </div>
