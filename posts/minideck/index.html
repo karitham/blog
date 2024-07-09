@@ -135,7 +135,7 @@
           </span>
         </span>
     </div>
-    <div ><p>I have always hated Microsoft Powerpoint. It's slow, you have to either fight the app on windows or use the terrible online version.</p><p>Google slides always was the <i>less terrible</i> alternative. Google slides feels slightly faster, and more modern.</p><p>Still, they are overly complex and the UX is suboptimal. Both in terms of throwing text on a slide, or in how they lay it out.</p><p>Enter <a href="https://typst.app/universe/package/minideck/">minideck</a>. Minideck allows you to <i>just write code</i> and get slides out.</p><p>Minideck provides extremely fundamental building blocks: <code>pause</code>, <code>only</code> and <code>uncover</code>.</p><pre><code>#slide[
+    <div ><p>I have always hated Microsoft Powerpoint. It's slow, you have to either fight the app on windows or use the terrible online version. Google slides was always the <i>less terrible</i> alternative. Google slides feels slightly faster and more modern. Still, they are overly complex and the UX is suboptimal. Both in terms of throwing text on a slide and in how they lay it out.</p><p>Enter <a href="https://typst.app/universe/package/minideck/">minideck</a>. Minideck allows you to <i>just write code</i> and get slides out. Minideck provides simple, fundamental building blocks: <code>pause</code>, <code>only</code> and <code>uncover</code>.</p><pre><code>#slide[
     = Slide title
     - This thing shows on the first slide
     #show: pause
@@ -143,7 +143,7 @@
     #only(3)[- This one shows on slide 3 and never after]
     #uncover(from: 2, to: 4)[- This one shows on slide 2, 3 and 4]
 ]
-</code></pre><p>In <code>typst</code>, laying stuff out works with the box model just like in HTML, and it has all the convenience of floating layouts if you need to overlay layer on top of layer.</p><pre><code>#slide[
+</code></pre><p>In <code>typst</code> laying stuff out works with the box model just like in HTML, and it has all the convenience of floating layouts if you need to overlay layer on top of layer.</p><pre><code>#slide[
     #grid(
         columns: (1fr, fr),
         align: horizon,
@@ -160,7 +160,7 @@
         image("./assets/dQw4w9WgXcQ.gif")
     )
 ]
-</code></pre><p>One might think</p><blockquote><p>But kar, I don't only use Google Slides by myself, I use it for group projects! I love the sync features!</p></blockquote><p>Typst does sync extremely well, first off because it's plain text and you can <strong>just use git</strong>.</p><p>The people behind it have also built <a href="https://typst.app/">a fully online collaborative editor</a> that wipes the floor with overleaf, its direct competitor, in terms of features and UX.</p><p>The <i>huge</i> advantage minideck has, and by extension typst provides, is that they work extremely well with language models.</p><p>Thus, you can easily generate most of your slide deck from your research paper for example, only focusing on the important parts and theming it afterwards.</p><p>There's generally a ton of advantages to <a href="https://sive.rs/plaintext">plain-text</a> content, and I'm very happy to finally have found the tool that will make me ditch Google slides or Microsoft Powerpoint.</p></div>
+</code></pre><p>One might think</p><blockquote><p>But kar, I don't only use Google Slides by myself, I use it for group projects! I love the sync features!</p></blockquote><p>Typst is <i>just</i> plain text and you can <i>just use git</i>, it's great for collaboration.</p><p>The people behind it have also built <a href="https://typst.app/">an online collaborative editor</a> that wipes the floor with overleaf, its direct competitor both in terms of features and UX.</p><p>Another advantage minideck has, and by extension typst has too, is that it works well with language models. You can easily generate most of your slide deck (e.g. from your research paper), focusing only on the important parts and theming it afterwards.</p><p>There's generally a ton of advantages to <a href="https://sive.rs/plaintext">plain-text</a> content, and I'm very happy to finally have found the tool that will make me ditch Google slides or Microsoft Powerpoint.</p></div>
   </div>
 
   </div>
