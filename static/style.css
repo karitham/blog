@@ -24,10 +24,6 @@ code {
   font-family: var(--font-monospace); /* Use monospace font for code */
 }
 
-.emph {
-  font-family: var(--font-secondary);
-}
-
 h1 {
   font-size: 2.5rem;
   font-weight: bold;
@@ -81,13 +77,13 @@ pre code {
   background-color: inherit;
   padding: 0;
   border-radius: 0;
-  /* reduce space between lines */
 }
 
 pre {
   background-color: var(--ctp-mantle);
   padding: 1rem;
   border-radius: 8px;
+  overflow: visible;
 }
 
 blockquote {
