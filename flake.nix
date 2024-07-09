@@ -29,7 +29,7 @@
       in {
         devShells.default = let
           newPost = pkgs.writeShellScriptBin "new-post" ''
-            cat << EOF > content/posts/$(date '+%Y.%m.%d')-$1.md
+            cat << EOF > content/posts/$1.md
             ---
             .title = "$1",
             .date = @date("$(date '+%Y-%m-%dT%H:%M:%S')"),
