@@ -60,50 +60,38 @@ a:hover {
   color: var(--ctp-crust);
 }
 
-.button {
-  color: var(--ctp-text); /* White text for readability */
-  text-decoration: none;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
+strong {
+  color: var(--ctp-mauve);
 }
 
-.button:hover {
-  background: var(--ctp-base);
+i {
+  color: var(--ctp-pink);
+}
+
+code {
   color: var(--ctp-text);
+  background-color: var(--ctp-mantle);
+  padding: 4px;
+  font-size: 14px;
+  border-radius: 4px;
 }
 
-#content {
-  max-width: 800px;
-  width: 100%;
-  margin: auto;
-}
-
-.content-container {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#nav {
-  padding: 1rem;
-  background-color: var(--ctp-crust);
-  border-radius: 0 0 1rem 1rem;
-}
-
-#nav ul {
-  margin: 0;
+pre code {
+  color: var(--ctp-text);
+  background-color: inherit;
   padding: 0;
-  list-style-type: none;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
+  border-radius: 0;
+  /* reduce space between lines */
 }
 
-#main {
-  padding: 0 1rem;
+pre {
+  background-color: var(--ctp-mantle);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+blockquote {
+  padding-left: 12px;
+  margin: 0;
+  border-left: 4px solid var(--ctp-overlay1);
 }

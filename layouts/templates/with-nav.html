@@ -2,19 +2,64 @@
 
 <title id="title" var="$page.title"></title>
 
-<head id="head">
-</head>
+<head id="head"> </head>
 
 <div id="content">
-    <nav id="nav">
-        <ul>
-            <li><a href="/" role="button" class="button">~/</a></li>
-            <li><a href="/posts" role="button" class="button">Posts</a></li>
-            <li><a href="/about" role="button" class="button">About</a></li>
-            <li><a href="/contact" role="button" class="button">Contact</a></li>
-        </ul>
-    </nav>
-    <div id="main">
-        <super />
-    </div>
+  <nav id="nav">
+    <style>
+      .button {
+        color: var(--ctp-text); /* White text for readability */
+        text-decoration: none;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      .button:hover {
+        background: var(--ctp-base);
+        color: var(--ctp-text);
+      }
+
+      #content {
+        max-width: 800px;
+        width: 100%;
+        margin: auto;
+        margin-bottom: 16rem;
+      }
+
+      .content-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #nav {
+        padding: 1rem;
+        background-color: var(--ctp-crust);
+        border-radius: 0 0 1rem 1rem;
+      }
+
+      #nav ul {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+      }
+    </style>
+    <ul>
+      <li><a href="/" role="button" class="button">~/</a></li>
+      <li><a href="/posts" role="button" class="button">Posts</a></li>
+      <li><a href="/about" role="button" class="button">About</a></li>
+      <li><a href="/contact" role="button" class="button">Contact</a></li>
+    </ul>
+  </nav>
+  <div id="main">
+    <super />
+  </div>
 </div>
