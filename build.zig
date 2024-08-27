@@ -2,10 +2,10 @@ const std = @import("std");
 const zine = @import("zine");
 
 pub fn build(b: *std.Build) !void {
-    try zine.addWebsite(b, .{
+    zine.addWebsite(b, .{}, b.default_step, .{
         .layouts_dir_path = "layouts",
         .content_dir_path = "content",
-        .static_dir_path = "static",
+        .assets_dir_path = "static",
         .host_url = "https://blog.karitham.dev",
         .title = "Kar's blog",
     });

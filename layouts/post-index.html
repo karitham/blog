@@ -1,5 +1,6 @@
-<extend template="with-nav.html" />
-
+<extend
+  template="with-nav.html"
+></extend>
 <div id="main">
   <style>
     .post-list {
@@ -41,16 +42,16 @@
       margin-top: 0.5rem;
     }
   </style>
-
   <div var="$page.content"></div>
   <div id="articles">
     <ul class="post-list">
       <li inline-loop="$page.subpages()">
         <h2>
-          <a href="$loop.it.permalink()"><span var="$loop.it.title"></span> </a>
+          <a href="$loop.it.permalink()"><span var="$loop.it.title"></span></a>
         </h2>
         <p var="$loop.it.description"></p>
-        <p>Word Count: <span var="$loop.it.wordCount()"></span></p>
+        <p>Word Count:
+          <span var="$loop.it.wordCount()"></span></p>
         <time
           datetime="$loop.it.date.formatHTTP()"
           var='$loop.it.date.format("January 02, 2006")'

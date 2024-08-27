@@ -1,4 +1,6 @@
-<extend template="with-nav.html" />
+<extend
+  template="with-nav.html"
+></extend>
 <div id="main">
   <style>
     .post h2 {
@@ -34,17 +36,17 @@
   <div class="post">
     <h1 var="$page.title"></h1>
     <div id="head-footer">
-      <span>By <span class="emph" var="$page.author"></span></span>
+      <span>By
+        <span class="emph" var="$page.author"></span></span>
       <span
-        >Posted on:
-        <span class="emph" var="$page.date.format('January 02, 2006')"></span
-      ></span>
+      >Posted on:
+        <span class="emph" var="$page.date.format('January 02, 2006')"></span></span>
       <span id="tags">
-          Tags:
-          <span inline-loop="$page.tags">
-            <span class="tag" var="$loop.it"></span>
-          </span>
+        Tags:
+        <span inline-loop="$page.tags">
+          <span class="tag" var="$loop.it"></span>
         </span>
+      </span>
     </div>
     <div var="$page.content"></div>
   </div>
