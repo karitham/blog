@@ -3,9 +3,11 @@
 .date = @date("2024-07-08T16:09:56"),
 .author = "Karitham",
 .draft = false,
-.layout = "post.html",
+.layout = "post.shtml",
 .tags = [],
 ---
+
+# FIRST
 
 First post! I need to start making posts to avoid letting this thing rot.
 

@@ -51,7 +51,7 @@
             .date = @date("$(date '+%Y-%m-%dT%H:%M:%S')"),
             .author = "Karitham",
             .draft = true,
-            .layout = "post.html",
+            .layout = "post.shtml",
             .tags = [],
             ---
             EOF

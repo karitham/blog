@@ -3,8 +3,8 @@
     .version = "0.0.0",
     .dependencies = .{
         .zine = .{
-            .url = "git+https://github.com/kristoff-it/zine.git#6c7174d7708b6df9ecc32a15ec7d66f4128b0fe3",
-            .hash = "1220e0f0e5fe36380fcfb21833fcd4415cdecb5707af508c6ff554642c10bc235788",
+            .url = "git+https://github.com/kristoff-it/zine?ref=v0.4.1#a19ef2a3973105f22f59235032341c28ce98af6c",
+            .hash = "1220d7cd0709740281a51853abe31b17d927ae05138210ef6b9e975339073b8d5654",
         },
     },
     .paths = .{"."},
