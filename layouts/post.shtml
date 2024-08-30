@@ -1,0 +1,44 @@
+<extend
+template="with-nav.shtml"
+>
+<div id="main">
+  <style>
+    .post h2 {
+      color: var(--ctp-mauve);
+    }
+
+    .emph {
+      color: var(--ctp-blue);
+      font-weight: bold;
+    }
+
+    #head-footer {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+  </style>
+  <div class="post">
+    <h1 :text="$page.title"></h1>
+    <div id="head-footer">
+      <div>By
+        <span class="emph" :text="$page.author"></span></div>
+      <div
+      >Posted on:
+        <span class="emph" :text="$page.date.format('January 02, 2006')"></span></div>
+        <div id="tags">
+          <ctx :if="$page.tags.len.eq(0).not()">
+            Tags:
+            <ctx :loop="$page.tags">
+              <span class="emph" :text="$loop.it"></span><span :if="$loop.last.not()">,</span>
+            </ctx>
+          </ctx>
+        </div>
+    </div>
+    <div :html="$page.content()"></div>
+  </div>
+</div>

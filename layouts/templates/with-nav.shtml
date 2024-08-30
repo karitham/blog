@@ -1,9 +1,8 @@
-<extend template="base.html" />
-
-<title id="title" var="$page.title"></title>
-
-<head id="head"> </head>
-
+<extend template="base.shtml">
+  
+<title id="title" :text="$page.title"></title>
+<head id="head">
+</head>
 <div id="content">
   <nav id="nav">
     <style>
@@ -64,6 +63,6 @@
     </ul>
   </nav>
   <div id="main">
-    <super />
+    <super>
   </div>
 </div>

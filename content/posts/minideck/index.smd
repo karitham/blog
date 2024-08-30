@@ -3,8 +3,8 @@
 .date = @date("2024-07-09T21:16:57"),
 .author = "Karitham",
 .draft = false,
-.layout = "post.html",
-.tags = ["typst", "tech"],
+.layout = "post.shtml",
+.tags = ["typst", "tech", "3rd"],
 ---
 
 I have always hated Microsoft Powerpoint. It's slow, you have to either fight the app on windows or use the terrible online version.

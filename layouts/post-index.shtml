@@ -1,0 +1,65 @@
+<extend template="with-nav.shtml">
+
+<div id="main">
+  <style>
+    .post-list {
+        list-style-type: none;
+        padding: 0;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+      }
+
+      .post-list li {
+        padding: 1rem 0;
+      }
+
+      .post-list h2 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+      }
+
+      .post-list h2 a {
+        color: var(--ctp-mauve);
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .post-list h2 a:hover {
+        color: var(--ctp-pink);
+        background-color: inherit;
+      }
+
+      .post-list p {
+        margin: 0.5rem 0;
+        color: var(--ctp-subtext0);
+      }
+
+      .post-list time {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--ctp-overlay2);
+        margin-top: 0.5rem;
+      }
+  </style>
+  <div :html="$page.content()"></div>
+  <div id="articles">
+    <ul class="post-list">
+      <ctx :loop="$page.subpages()">
+        <li>
+          <h2>
+            <a href="$loop.it.link()"><span :text="$loop.it.title"></span></a>
+          </h2>
+          <p :text="$loop.it.description"></p>
+          <p>Word Count:
+            <span :text="$loop.it.wordCount()"></span>
+          </p>
+          <time
+            datetime="$loop.it.date.formatHTTP()"
+            :text='$loop.it.date.format("January 02, 2006")'
+          >
+        </time>
+        </li>
+      </ctx>
+    </ul>
+  </div>
+</div>

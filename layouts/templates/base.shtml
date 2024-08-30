@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head id="head">
+    <meta
+    charset="UTF-8"
+  >
+    <meta
+    name="description"
+    content="Karitham"
+  >
+    <meta
+    name="twitter:card"
+    content="summary"
+  >
+    <meta
+    name="twitter:site"
+    content="@KarithamIRL"
+  >
+    <meta
+    name="twitter:author"
+    content="@KarithamIRL"
+  >
+    <meta
+    name="twitter:description"
+    content="Kar's thoughts"
+  >
+    <meta
+    name="twitter:title"
+    content="$page.title"
+  >
+    <meta
+    property="og:title"
+    content="$page.title"
+  >
+    <meta
+    property="og:type"
+    content="website"
+  >
+    <meta
+    http-equiv="x-ua-compatible"
+    content="ie=edge"
+  >
+    <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  >
+    <title id="title"><super>- Kar</title>
+      <link
+      rel="stylesheet"
+      type="text/css"
+      href="$site.asset('normalize.css').link()"
+    >
+      <link
+      rel="stylesheet"
+      type="text/css"
+      href="$site.asset('ctp.css').link()"
+    >
+      <link
+      rel="stylesheet"
+      type="text/css"
+      href="$site.asset('style.css').link()"
+    >
+    <super
+  >
+  </head>
+  <body>
+    <div id="content">
+      <super
+    >
+    </div>
+  </body>
+</html>

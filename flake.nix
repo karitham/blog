@@ -26,6 +26,22 @@
     flake-utils.lib.eachSystem systems (
       system: let
         pkgs = import nixpkgs {inherit overlays system;};
+        superHTML = pkgs.stdenv.mkDerivation rec {
+          name = "superhtml";
+          version = "0.4.3";
+          triplet = "x86_64-linux-musl";
+          src = pkgs.fetchurl {
+            url = "https://github.com/kristoff-it/superhtml/releases/download/v${version}/${triplet}.tar.gz";
+            sha256 = "sha256-PQg0NEM4nkLxQzAoZfNrCJ+RCTYqJfPRlWWVxAOFlpg=";
+          };
+          phases = ["unpackPhase" "installPhase"];
+          unpackPhase = "tar -xzf $src";
+          installPhase = ''
+            mkdir -p $out/bin
+            cp ${triplet}/superhtml $out/bin/
+            chmod +x $out/bin/superhtml
+          '';
+        };
       in {
         devShells.default = let
           newPost = pkgs.writeShellScriptBin "new-post" ''
@@ -35,7 +51,7 @@
             .date = @date("$(date '+%Y-%m-%dT%H:%M:%S')"),
             .author = "Karitham",
             .draft = true,
-            .layout = "post.html",
+            .layout = "post.shtml",
             .tags = [],
             ---
             EOF
@@ -46,6 +62,7 @@
             nativeBuildInputs = with pkgs; [
               zigpkgs.master
               newPost
+              superHTML
             ];
           };
 
