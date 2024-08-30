@@ -15,38 +15,29 @@ template="with-nav.shtml"
     #head-footer {
       display: flex;
       gap: 12px;
+      align-items: center;
       flex-wrap: wrap;
       justify-content: space-between;
       margin-bottom: 2rem;
     }
 
-    #tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    span.tag {
-      padding: 4px 8px;
-      margin: 0;
-      background-color: var(--ctp-surface1);
-      color: var(--ctp-mauve);
-    }
   </style>
   <div class="post">
     <h1 :text="$page.title"></h1>
     <div id="head-footer">
-      <span>By
-        <span class="emph" :text="$page.author"></span></span>
-      <span
+      <div>By
+        <span class="emph" :text="$page.author"></span></div>
+      <div
       >Posted on:
-        <span class="emph" :text="$page.date.format('January 02, 2006')"></span></span>
-        <span id="tags">
-          Tags:
-          <span :loop="$page.tags">
-            <span class="tag" :text="$loop.it"></span>
-          </span>
-        </span>
+        <span class="emph" :text="$page.date.format('January 02, 2006')"></span></div>
+        <div id="tags">
+          <ctx :if="$page.tags.len.eq(0).not()">
+            Tags:
+            <ctx :loop="$page.tags">
+              <span class="emph" :text="$loop.it"></span><span :if="$loop.last.not()">,</span>
+            </ctx>
+          </ctx>
+        </div>
     </div>
     <div :html="$page.content()"></div>
   </div>
