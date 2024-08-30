@@ -1,29 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
   <head id="head">
-    <meta charset="UTF-8" />
-    <meta name="description" content="Karitham" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:site" content="@KarithamIRL" />
-    <meta name="twitter:author" content="@KarithamIRL" />
-    <meta name="twitter:description" content="Kar's thoughts" />
-    <meta name="twitter:title" content="Minideck" />
-    <meta property="og:title" content="Minideck" />
-    <meta property="og:type" content="website" />
-
-    <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
+    charset="UTF-8"
+  >
+    <meta
+    name="description"
+    content="Karitham"
+  >
+    <meta
+    name="twitter:card"
+    content="summary"
+  >
+    <meta
+    name="twitter:site"
+    content="@KarithamIRL"
+  >
+    <meta
+    name="twitter:author"
+    content="@KarithamIRL"
+  >
+    <meta
+    name="twitter:description"
+    content="Kar's thoughts"
+  >
+    <meta name="twitter:title" content="Minideck">
+    <meta property="og:title" content="Minideck">
+    <meta
+    property="og:type"
+    content="website"
+  >
+    <meta
+    http-equiv="x-ua-compatible"
+    content="ie=edge"
+  >
+    <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  >
+    <title id="title">Minideck- Kar</title>
+      <link rel="stylesheet" type="text/css" href="/normalize.css">
+      <link rel="stylesheet" type="text/css" href="/ctp.css">
+      <link rel="stylesheet" type="text/css" href="/style.css">
+    
 
-    <title id="title">Minideck - Kar</title>
-    <link rel="stylesheet" type="text/css" href="/normalize.css" />
-    <link rel="stylesheet" type="text/css" href="/ctp.css" />
-    <link rel="stylesheet" type="text/css" href="/style.css" />
-     
   </head>
-
   <body>
     <div id="content">
       
@@ -100,42 +121,35 @@
     #head-footer {
       display: flex;
       gap: 12px;
+      align-items: center;
       flex-wrap: wrap;
       justify-content: space-between;
       margin-bottom: 2rem;
     }
 
-    #tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    span.tag {
-      padding: 4px 8px;
-      margin: 0;
-      background-color: var(--ctp-surface1);
-      color: var(--ctp-mauve);
-    }
   </style>
   <div class="post">
-    <h1 >Minideck</h1>
+    <h1>Minideck</h1>
     <div id="head-footer">
-      <span>By <span class="emph" >Karitham</span></span>
-      <span
-        >Posted on:
-        <span class="emph" >July 09, 2024</span
-      ></span>
-      <span id="tags">
-          Tags:
-          <span >
-            <span class="tag" >typst</span>
-          </span><span >
-            <span class="tag" >tech</span>
-          </span>
-        </span>
+      <div>By
+        <span class="emph">Karitham</span></div>
+      <div
+      >Posted on:
+        <span class="emph">July 09, 2024</span></div>
+        <div id="tags">
+          
+            Tags:
+            
+              <span class="emph">typst</span><span>,</span>
+            
+              <span class="emph">tech</span><span>,</span>
+            
+              <span class="emph">3rd</span><span></span>
+            
+          
+        </div>
     </div>
-    <div ><p>I have always hated Microsoft Powerpoint. It's slow, you have to either fight the app on windows or use the terrible online version. Google slides was always the <i>less terrible</i> alternative. Google slides feels slightly faster and more modern. Still, they are overly complex and the UX is suboptimal. Both in terms of throwing text on a slide and in how they lay it out.</p><p>Enter <a href="https://typst.app/universe/package/minideck/">minideck</a>. Minideck allows you to <i>just write code</i> and get slides out. Minideck provides simple, fundamental building blocks: <code>pause</code>, <code>only</code> and <code>uncover</code>.</p><pre><code>#slide[
+    <div><p>I have always hated Microsoft Powerpoint. It's slow, you have to either fight the app on windows or use the terrible online version. Google slides was always the <em>less terrible</em> alternative. Google slides feels slightly faster and more modern. Still, they are overly complex and the UX is suboptimal. Both in terms of throwing text on a slide and in how they lay it out.</p><p>Enter <a href="https://typst.app/universe/package/minideck/" target="_blank">minideck</a>. Minideck allows you to <em>just write code</em> and get slides out. Minideck provides simple, fundamental building blocks: <code>pause</code>, <code>only</code> and <code>uncover</code>.</p><pre><code>#slide[
     = Slide title
     - This thing shows on the first slide
     #show: pause
@@ -143,7 +157,7 @@
     #only(3)[- This one shows on slide 3 and never after]
     #uncover(from: 2, to: 4)[- This one shows on slide 2, 3 and 4]
 ]
-</code></pre><p>Minideck is built on top of <a href="https://github.com/typst/typst"><code>typst</code></a>. Typst is a new markup-based typesetting system that is powerful and easy to learn. It is designed as a direct competitor to LaTeX. With the 50 years of experience we have had to understand the shortcomings of LaTeX.</p><p>Typst is fast, doesn't require user input during compilation, packaging <i>just works</i>, and the error messages are descriptive enough to be understood by a layperson.</p><p>It tries to be easier to learn mostly by reusing modern patterns for typesetting, yet still being plain-text when it needs to be just that. In typst laying stuff out works with the box model just like in HTML, or you can have all the convenience of floating layouts if you want to overlay layer on top of layer.</p><pre><code>#grid(
+</code></pre><p>Minideck is built on top of <a href="https://github.com/typst/typst" target="_blank"><code>typst</code></a>. Typst is a new markup-based typesetting system that is powerful and easy to learn. It is designed as a direct competitor to LaTeX. With the 50 years of experience we have had to understand the shortcomings of LaTeX.</p><p>Typst is fast, doesn't require user input during compilation, packaging <em>just works</em>, and the error messages are descriptive enough to be understood by a layperson.</p><p>It tries to be easier to learn mostly by reusing modern patterns for typesetting, yet still being plain-text when it needs to be just that. In typst laying stuff out works with the box model just like in HTML, or you can have all the convenience of floating layouts if you want to overlay layer on top of layer.</p><pre><code>#grid(
     columns: (1fr, fr),
     align: horizon,
     gutter: 1em,
@@ -156,9 +170,9 @@
 
         Text will never give you up.
     ],
-    image("./assets/dQw4w9WgXcQ.gif")
+    image(&quot;./assets/dQw4w9WgXcQ.gif&quot;)
 )
-</code></pre><p>One might think</p><blockquote><p>But kar, I don't only use Google Slides by myself, I use it for group projects! I love the sync features!</p></blockquote><p>Typst is <i>just plain-text</i> and you can <i>just use git</i>, it's great for collaboration. Git might not make much sense in a slide-deck scenario, but the people behind it have also built <a href="https://typst.app/">an online editor</a>. The online editor is smoother than Powerpoint or Slides, and collaboration <i>just works</i>. When using typst for documents, the editor also wipes the floor with overleaf, the online collaborative editor for LaTeX.</p><p>Typst also works well with large bullshit models. You can easily generate most of your slide deck (e.g. from your research paper), focusing only on the important parts and theming it afterwards. Iterating on the phrasing in the slides using a standard code editor avoids the <code>copy</code> <code>alt+tab</code> <code>paste</code> <code>copy</code> <code>paste</code> repetition. You can even make a <a href="https://sourcegraph.com/docs/cody/capabilities/commands#custom-commands">custom command</a> to turn this into a few key smashes.</p><p>There's generally a ton of advantages to <a href="https://sive.rs/plaintext">plain-text</a> content, and I'm very happy to finally have found the tool that will make me ditch Google slides or Microsoft Powerpoint.</p></div>
+</code></pre><p>One might think</p><blockquote><p>But kar, I don't only use Google Slides by myself, I use it for group projects! I love the sync features!</p></blockquote><p>Typst is <em>just plain-text</em> and you can <em>just use git</em>, it's great for collaboration. Git might not make much sense in a slide-deck scenario, but the people behind it have also built <a href="https://typst.app/" target="_blank">an online editor</a>. The online editor is smoother than Powerpoint or Slides, and collaboration <em>just works</em>. When using typst for documents, the editor also wipes the floor with overleaf, the online collaborative editor for LaTeX.</p><p>Typst also works well with large bullshit models. You can easily generate most of your slide deck (e.g. from your research paper), focusing only on the important parts and theming it afterwards. Iterating on the phrasing in the slides using a standard code editor avoids the <code>copy</code> <code>alt+tab</code> <code>paste</code> <code>copy</code> <code>paste</code> repetition. You can even make a <a href="https://sourcegraph.com/docs/cody/capabilities/commands#custom-commands" target="_blank">custom command</a> to turn this into a few key smashes.</p><p>There's generally a ton of advantages to <a href="https://sive.rs/plaintext" target="_blank">plain-text</a> content, and I'm very happy to finally have found the tool that will make me ditch Google slides or Microsoft Powerpoint.</p></div>
   </div>
 
   </div>
