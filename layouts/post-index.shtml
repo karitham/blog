@@ -44,8 +44,7 @@
   <div :html="$page.content()"></div>
   <div id="articles">
     <ul class="post-list">
-      <!-- TODO: fix this up??? What even is wrong there? -->
-      <!-- <ctx :loop="$page.subpages()">
+      <ctx :loop="$page.subpages()">
         <li>
           <h2>
             <a href="$loop.it.link()"><span :text="$loop.it.title"></span></a>
@@ -60,7 +59,7 @@
           >
         </time>
         </li>
-      </ctx> -->
+      </ctx>
     </ul>
   </div>
 </div>

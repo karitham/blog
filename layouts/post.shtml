@@ -41,6 +41,12 @@ template="with-nav.shtml"
       <span
       >Posted on:
         <span class="emph" :text="$page.date.format('January 02, 2006')"></span></span>
+        <span id="tags">
+          Tags:
+          <span :loop="$page.tags">
+            <span class="tag" :text="$loop.it"></span>
+          </span>
+        </span>
     </div>
     <div :html="$page.content()"></div>
   </div>
