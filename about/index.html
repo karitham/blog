@@ -38,7 +38,12 @@
     name="viewport"
     content="width=device-width, initial-scale=1, shrink-to-fit=no"
   >
-    <title id="title">About- Kar</title>
+  <link
+      rel="icon"
+      href="https://avatars.githubusercontent.com/u/57440386"
+      type="image/x-icon"
+    >
+    <title id="title">About - Kar</title>
       <link rel="stylesheet" type="text/css" href="/normalize.css">
       <link rel="stylesheet" type="text/css" href="/ctp.css">
       <link rel="stylesheet" type="text/css" href="/style.css">
@@ -53,10 +58,11 @@
       .button {
         color: var(--ctp-text); /* White text for readability */
         text-decoration: none;
-        padding: 10px 20px;
         border: none;
-        border-radius: 4px;
         cursor: pointer;
+        text-align: center;
+        width: 100%;
+        padding: 1rem;
         font-size: 16px;
         font-weight: bold;
       }
@@ -64,6 +70,7 @@
       .button:hover {
         background: var(--ctp-base);
         color: var(--ctp-text);
+        transition: color,background-color 0.2s ease-in;
       }
 
       #content {
@@ -81,9 +88,7 @@
       }
 
       #nav {
-        padding: 1rem;
         background-color: var(--ctp-crust);
-        border-radius: 0 0 1rem 1rem;
       }
 
       #nav ul {
@@ -93,6 +98,12 @@
         display: flex;
         flex-direction: row;
         justify-content: space-evenly;
+      }
+
+      #nav li {
+        width: 100%;
+        justify-content: center;
+        display: flex;
       }
 
       #main {

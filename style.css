@@ -54,6 +54,7 @@ a {
 a:hover {
   background-color: var(--ctp-flamingo);
   color: var(--ctp-crust);
+  transition: color, background-color 0.3s ease-in;
 }
 
 strong {
@@ -69,20 +70,17 @@ code {
   background-color: var(--ctp-mantle);
   padding: 4px;
   font-size: 14px;
-  border-radius: 4px;
 }
 
 pre code {
   color: var(--ctp-text);
   background-color: inherit;
   padding: 0;
-  border-radius: 0;
 }
 
 pre {
   background-color: var(--ctp-mantle);
   padding: 1rem;
-  border-radius: 8px;
   overflow: visible;
 }
 
@@ -94,4 +92,63 @@ blockquote {
 
 p {
   line-height: 1.5rem;
+}
+
+hr {
+  border: none;
+  border-top: 3px solid var(--ctp-surface2);
+  margin: 2rem 0;
+}
+
+.typst {
+  color: var(--ctp-text);
+}
+
+.typst .string {
+  color: var(--ctp-green);
+}
+
+.typst .operator {
+  color: var(--ctp-sky);
+}
+
+.typst .function {
+  color: var(--ctp-blue);
+}
+
+.typst .markup.heading {
+  color: var(--ctp-red);
+}
+
+.typst .markup.list {
+  color: var(--ctp-mauve);
+}
+
+.typst .keyword.control {
+  color: var(--ctp-mauve);
+}
+
+.typst .punctuation.delimiter {
+  color: var(--ctp-overlay2);
+}
+
+.typst .variable {
+  color: var(--ctp-flamingo);
+}
+
+.typst .punctuation.bracket {
+  color: var(--ctp-overlay2);
+}
+
+.typst .constant.numeric {
+  color: var(--ctp-peach);
+}
+
+.typst .tag {
+  color: var(--ctp-teal);
+}
+
+.emph {
+  color: var(--ctp-blue);
+  font-weight: bold;
 }
