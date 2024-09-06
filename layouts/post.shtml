@@ -7,11 +7,6 @@ template="with-nav.shtml"
       color: var(--ctp-mauve);
     }
 
-    .emph {
-      color: var(--ctp-blue);
-      font-weight: bold;
-    }
-
     #head-footer {
       display: flex;
       gap: 12px;
@@ -20,7 +15,6 @@ template="with-nav.shtml"
       justify-content: space-between;
       margin-bottom: 2rem;
     }
-
   </style>
   <div class="post">
     <h1 :text="$page.title"></h1>

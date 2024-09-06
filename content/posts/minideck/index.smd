@@ -4,7 +4,7 @@
 .author = "Karitham",
 .draft = false,
 .layout = "post.shtml",
-.tags = ["typst", "tech", "3rd"],
+.tags = ["typst", "tech"],
 ---
 
 I have always hated Microsoft Powerpoint. It's slow, you have to either fight the app on windows or use the terrible online version.
@@ -15,7 +15,7 @@ lay it out.
 Enter [minideck](https://typst.app/universe/package/minideck/). Minideck allows you to *just write code* and get slides out.
 Minideck provides simple, fundamental building blocks: `pause`, `only` and `uncover`.
 
-```
+```typst
 #slide[
     = Slide title
     - This thing shows on the first slide
@@ -34,7 +34,7 @@ Typst is fast, doesn't require user input during compilation, packaging *just wo
 It tries to be easier to learn mostly by reusing modern patterns for typesetting, yet still being plain-text when it needs to be just that.
 In typst laying stuff out works with the box model just like in HTML, or you can have all the convenience of floating layouts if you want to overlay layer on top of layer.
 
-```
+```typst
 #grid(
     columns: (1fr, fr),
     align: horizon,

@@ -5,33 +5,21 @@
     .post-list {
         list-style-type: none;
         padding: 0;
-        border-radius: 8px;
-        transition: background-color 0.3s ease;
       }
 
       .post-list li {
         padding: 1rem 0;
       }
 
-      .post-list h2 {
-        margin-top: 0;
-        margin-bottom: 0.5rem;
-      }
-
       .post-list h2 a {
         color: var(--ctp-mauve);
         text-decoration: none;
-        transition: color 0.3s ease;
       }
-
+      
       .post-list h2 a:hover {
-        color: var(--ctp-pink);
-        background-color: inherit;
-      }
-
-      .post-list p {
-        margin: 0.5rem 0;
-        color: var(--ctp-subtext0);
+        color: var(--ctp-base);
+        background-color: var(--ctp-mauve);
+        transition: color,background-color 0.2s ease-in;
       }
 
       .post-list time {
@@ -39,6 +27,15 @@
         font-size: 0.9rem;
         color: var(--ctp-overlay2);
         margin-top: 0.5rem;
+      }
+      
+      #head-footer {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        color: var(--ctp-subtext0);
+        justify-content: space-between;
       }
   </style>
   <div :html="$page.content()"></div>
@@ -50,9 +47,17 @@
             <a href="$loop.it.link()"><span :text="$loop.it.title"></span></a>
           </h2>
           <p :text="$loop.it.description"></p>
-          <p>Word Count:
-            <span :text="$loop.it.wordCount()"></span>
-          </p>
+          <div id="head-footer"><span>Word Count:
+            <span :text="$loop.it.wordCount()"></span></span>
+            <div id="tags">
+              <ctx :if="$loop.it.tags.len.eq(0).not()">
+                Tags:
+                <ctx :loop="$loop.it.tags">
+                  <span class="emph" :text="$loop.it"></span><span :if="$loop.last.not()">,</span>
+                </ctx>
+              </ctx>
+            </div>
+          </div>
           <time
             datetime="$loop.it.date.formatHTTP()"
             :text='$loop.it.date.format("January 02, 2006")'
