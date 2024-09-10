@@ -1,5 +1,6 @@
 ---
 .title = "Minideck",
+.description = "Typst and minideck kick ass for building slide-decks!",
 .date = @date("2024-07-09T21:16:57"),
 .author = "Karitham",
 .draft = false,

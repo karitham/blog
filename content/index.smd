@@ -4,6 +4,10 @@
 .date = @date("2020-07-06T00:00:00"),
 .layout = "index.shtml",
 .tags = [],
+.alternatives = [{ 
+    .layout = "rss.xml", 
+    .output = "rss.xml",
+}],
 ---
 # Kar's thoughts
 
