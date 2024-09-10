@@ -54,42 +54,9 @@
   <body>
     <div id="content">
       
-  <style>
-    #socials a:hover, #socials a {
-      background-color: inherit;
-      color: inherit;
-      text-decoration: none;
-
-    }
-
-    #socials {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-evenly;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 2rem;
-      padding: 2rem;
-    }
-    
-    #socials svg {
-      width: 32px;
-      height: 32px;
-      fill: var(--ctp-base);
-      stroke: var(--ctp-mauve);
-      stroke-width: 1px;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    #socials svg:hover {
-      stroke-width: 2px;
-      transition: fill 0.2s ease-in;
-    };
-  </style>
   <main>
     <h1>Kar's thoughts</h1><p>I'm Karitham, a passionate <a href="https://github.com/Karitham" target="_blank">open-source contributor</a> and Go expert with a drive to build and explore.</p><p>This blog is my attempt to improve my writing skills and share my thoughts on various topics, mostly about technology.</p><p>By regularly posting here, I aim to organize my ideas better and challenge myself to learn something new.</p><p>This website is built using <a href="https://zine-ssg.io" target="_blank">zine</a> and styled with the <a href="https://catppuccin.com" target="_blank">catpuccin</a> palette.</p><p>Welcome to my blog — a place for real thoughts written by a real human.</p>
-    <div id="socials">
+    <div id="socials" class="row">
       <a href="https://github.com/Karitham" target="_blank">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
     <path d="M6.517 17.113c.395.578 1.592 1.81 3.225 2.12M9.864 22C8.836 21.83 2 19.606 2 12.093C2 5.063 8.002 2 12 2c4 0 10 3.063 10 10.093c0 7.513-6.836 9.738-7.864 9.907c0 0-.21-3.417-.087-4.003c.122-.586-.294-1.528-.294-1.528c.971-.364 2.45-.884 2.945-2.282c.385-1.084.627-2.658-.45-4.138c0 0 .282-2.39-.25-2.484c-.533-.092-2.1.947-2.1.947c-.457-.13-1.476-.377-1.898-.333c-.423-.044-1.445.203-1.902.333c0 0-1.568-1.04-2.1-.947s-.25 2.484-.25 2.484c-1.077 1.48-.835 3.054-.45 4.138c.496 1.398 1.974 1.918 2.945 2.282c0 0-.416.942-.294 1.528S9.864 22 9.864 22"/>
@@ -122,15 +89,18 @@
 </svg></div>
       </a>
     </div>
-    <h2>Posts</h2>
     <div id="articles">
+      <div id="post-title" class="row">
+        <h2>Posts</h2>
+        <a href="/rss.xml" rel="alternate" type="application/rss+xml">RSS feed</a>
+      </div>
       <ul class="post-list">
         
           <li>
             <h3>
               <a href="/posts/minideck/"><span>Minideck</span></a>
             </h3>
-            <p></p>
+            <p>Typst and minideck kick ass for building slide-decks!</p>
             <div class="head-footer"><span>Word Count:
                 <span>538</span></span>
               <div class="tags">
@@ -167,4 +137,8 @@
 
     </div>
   </body>
+  <footer id="footer">
+    
+
+  </footer>
 </html>
