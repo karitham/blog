@@ -2,22 +2,18 @@
 .title = "Karitham's Thoughts",
 .author = "Karitham",
 .date = @date("2020-07-06T00:00:00"),
-.layout = "info.shtml",
+.layout = "index.shtml",
 .tags = [],
 ---
-
+[]($section)
 # Kar's thoughts
 
-I'm trying to get better at writing, and I think the best way to do that is to actually write stuff.
+I'm Karitham, a passionate [open-source contributor](https://github.com/Karitham) and Go expert with a drive to build and explore.
 
-By regularly writing down my ideas and posting them here, I hope to write more clearly and organize my thoughts better.
+This blog is my attempt to improve my writing skills and share my thoughts on various topics, mostly about technology.
 
-I'll be writing about many topics that interest me, from technology and science to philosophy and personal thoughts.
-Each post will be a chance for me to challenge myself, learn something new,
-and hopefully give something useful to anyone who reads it.
+By regularly posting here, I aim to organize my ideas better and challenge myself to learn something new.
 
-So, welcome to my blog! I hope you'll join me on this writing journey, and maybe we can learn and grow together as we put our thoughts into words.
+This website is built using [zine](https://zine-ssg.io) and styled with the [catpuccin](https://catppuccin.com) palette.
 
-The website is written through [zine](https://zine-ssg.io).
-I enjoy using cutting edge tech. I use [catpuccin](https://catppuccin.com) for all my systems so the theme is based on the palette.
-I've found it fairly difficult to consistenly get good styling, and starting from a great palette helps a lot.
+Welcome to my blog — a place for real thoughts written by a real human.

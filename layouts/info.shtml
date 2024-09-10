@@ -1,3 +1,0 @@
-<extend template="with-nav.shtml">
-
-<div id="main" :html="$page.content()"></div>

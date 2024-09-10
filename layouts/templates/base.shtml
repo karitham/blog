@@ -44,34 +44,34 @@
     name="viewport"
     content="width=device-width, initial-scale=1, shrink-to-fit=no"
   >
-  <link
-      rel="icon"
-      href="https://avatars.githubusercontent.com/u/57440386"
-      type="image/x-icon"
-    >
-    <title id="title"><super> - Kar</title>
-      <link
-      rel="stylesheet"
-      type="text/css"
-      href="$site.asset('normalize.css').link()"
-    >
-      <link
-      rel="stylesheet"
-      type="text/css"
-      href="$site.asset('ctp.css').link()"
-    >
-      <link
-      rel="stylesheet"
-      type="text/css"
-      href="$site.asset('style.css').link()"
-    >
+    <link
+    rel="icon"
+    href="https://avatars.githubusercontent.com/u/57440386"
+    type="image/x-icon"
+  >
+    <title id="title"><super>
+      - Kar</title>
+    <link
+    rel="stylesheet"
+    type="text/css"
+    href="$site.asset('normalize.css').link()"
+  >
+    <link
+    rel="stylesheet"
+    type="text/css"
+    href="$site.asset('ctp.css').link()"
+  >
+    <link
+    rel="stylesheet"
+    type="text/css"
+    href="$site.asset('style.css').link()"
+  >
     <super
   >
   </head>
   <body>
     <div id="content">
-      <super
-    >
+      <super>
     </div>
   </body>
 </html>

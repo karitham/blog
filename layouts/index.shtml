@@ -1,0 +1,38 @@
+<extend template="base.shtml">
+<title id="title" text="~/">~/</title>
+<head id="head">
+</head>
+<div id="content">
+  <main>
+    <div :html="$page.content()"></div>
+    <hr>
+    <h2>Posts</h2>
+    <div id="articles">
+      <ul class="post-list">
+        <ctx :loop="$site.page('posts').subpages()">
+          <li>
+            <h3>
+              <a href="$loop.it.link()"><span :text="$loop.it.title"></span></a>
+            </h3>
+            <p :text="$loop.it.description"></p>
+            <div class="head-footer"><span>Word Count:
+                <span :text="$loop.it.wordCount()"></span></span>
+              <div class="tags">
+                <ctx :if="$loop.it.tags.len.eq(0).not()">
+                  Tags:
+                  <ctx :loop="$loop.it.tags">
+                    <span class="emph" :text="$loop.it"></span><span :if="$loop.last.not()">,</span>
+                  </ctx>
+                </ctx>
+              </div></div>
+            <time
+              datetime="$loop.it.date.formatHTTP()"
+              :text='$loop.it.date.format("January 02, 2006")'
+            >
+            </time>
+          </li>
+        </ctx>
+      </ul>
+    </div>
+  </main>
+</div>

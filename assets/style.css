@@ -41,7 +41,7 @@ h2 {
 h3 {
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--ctp-subtext1);
+  color: var(--ctp-mauve);
   margin-bottom: 0.75rem;
 }
 
@@ -81,7 +81,7 @@ pre code {
 pre {
   background-color: var(--ctp-mantle);
   padding: 1rem;
-  overflow: visible;
+  white-space: pre-wrap;
 }
 
 blockquote {
@@ -98,6 +98,43 @@ hr {
   border: none;
   border-top: 3px solid var(--ctp-surface2);
   margin: 2rem 0;
+}
+
+main {
+  padding: 0 1rem;
+}
+
+#content {
+  max-width: 800px;
+  width: 100%;
+  margin: auto;
+  margin-bottom: 16rem;
+}
+
+.content-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#nav {
+  background-color: var(--ctp-crust);
+}
+
+#nav ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+#nav li {
+  width: 100%;
+  justify-content: center;
+  display: flex;
 }
 
 .typst {
@@ -151,4 +188,58 @@ hr {
 .emph {
   color: var(--ctp-blue);
   font-weight: bold;
+}
+
+.post-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.post-list li {
+  padding: 1rem 0;
+}
+
+.post-list a {
+  color: var(--ctp-mauve);
+  text-decoration: none;
+}
+
+.post-list a:hover {
+  color: var(--ctp-base);
+  background-color: var(--ctp-mauve);
+  transition: color, background-color 0.2s ease-in;
+}
+
+.post-list time {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--ctp-overlay2);
+  margin-top: 0.5rem;
+}
+
+.head-footer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--ctp-subtext0);
+  justify-content: space-between;
+}
+
+.button {
+  color: var(--ctp-text); /* White text for readability */
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  padding: 1rem;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.button:hover {
+  background: var(--ctp-base);
+  color: var(--ctp-text);
+  transition: color, background-color 0.2s ease-in;
 }
