@@ -54,7 +54,7 @@ a {
 a:hover {
   background-color: var(--ctp-flamingo);
   color: var(--ctp-crust);
-  transition: color, background-color 0.3s ease-in;
+  transition: color, background-color 0.2s ease-in;
 }
 
 strong {
@@ -95,9 +95,7 @@ p {
 }
 
 hr {
-  border: none;
-  border-top: 3px solid var(--ctp-surface2);
-  margin: 2rem 0;
+  border: 2px solid var(--ctp-surface2);
 }
 
 main {

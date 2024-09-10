@@ -3,9 +3,58 @@
 <head id="head">
 </head>
 <div id="content">
+  <style>
+    #socials a:hover, #socials a {
+      background-color: inherit;
+      color: inherit;
+      text-decoration: none;
+
+    }
+
+    #socials {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-evenly;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2rem;
+      padding: 2rem;
+    }
+    
+    #socials svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--ctp-base);
+      stroke: var(--ctp-mauve);
+      stroke-width: 1px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    #socials svg:hover {
+      stroke-width: 2px;
+      transition: fill 0.2s ease-in;
+    };
+  </style>
   <main>
-    <div :html="$page.content()"></div>
-    <hr>
+    <ctx :html="$page.content()"></ctx>
+    <div id="socials">
+      <a href="https://github.com/Karitham" target="_blank">
+        <ctx :html="$site.asset('icons/github.svg').bytes()"></ctx>
+      </a>
+      <a href="https://linkedin.com/in/pl-pery" target="_blank">
+        <ctx :html="$site.asset('icons/linkedin.svg').bytes()"></ctx>
+      </a>
+      <a href="https://discord.com/users/206794847581896705" target="_blank">
+        <ctx :html="$site.asset('icons/discord.svg').bytes()"></ctx>
+      </a>
+      <a href="https://bsky.app/profile/karitham.dev" target="_blank">
+        <ctx :html="$site.asset('icons/bluesky.svg').bytes()"></ctx>
+      </a>
+      <a href="mailto:pl@karitham.dev" target="_blank">
+        <div id="envelope" :html="$site.asset('icons/email.svg').bytes()"></div>
+      </a>
+    </div>
     <h2>Posts</h2>
     <div id="articles">
       <ul class="post-list">
