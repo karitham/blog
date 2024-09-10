@@ -190,33 +190,6 @@ main {
   font-weight: bold;
 }
 
-.post-list {
-  list-style-type: none;
-  padding: 0;
-}
-
-.post-list li {
-  padding: 1rem 0;
-}
-
-.post-list a {
-  color: var(--ctp-mauve);
-  text-decoration: none;
-}
-
-.post-list a:hover {
-  color: var(--ctp-base);
-  background-color: var(--ctp-mauve);
-  transition: color, background-color 0.2s ease-in;
-}
-
-.post-list time {
-  display: block;
-  font-size: 0.9rem;
-  color: var(--ctp-overlay2);
-  margin-top: 0.5rem;
-}
-
 .head-footer {
   display: flex;
   gap: 12px;
@@ -226,7 +199,7 @@ main {
   justify-content: space-between;
 }
 
-.button {
+#nav a {
   color: var(--ctp-text); /* White text for readability */
   text-decoration: none;
   border: none;
@@ -238,8 +211,34 @@ main {
   font-weight: bold;
 }
 
-.button:hover {
+#nav a:hover {
   background: var(--ctp-base);
   color: var(--ctp-text);
   transition: color, background-color 0.2s ease-in;
+}
+
+.post-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.post-list li {
+  padding: 1rem 0;
+}
+
+.post-list time {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--ctp-overlay2);
+  margin-top: 0.5rem;
+}
+.post-list a:hover {
+  color: var(--ctp-base);
+  background-color: var(--ctp-mauve);
+  transition: color, background-color 0.2s ease-in;
+}
+
+.post-list a {
+  color: var(--ctp-mauve);
+  text-decoration: none;
 }
