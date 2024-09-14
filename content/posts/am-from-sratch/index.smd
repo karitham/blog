@@ -1,5 +1,5 @@
 ---
-.title = "Alertmanager from scratch",
+.title = "Alerting basics",
 .description = "Alerting is complex, but we have good open source tools to make it painless",
 .date = @date("2024-09-14"),
 .author = "Karitham",
@@ -13,7 +13,35 @@ First let's get the basics down: What's alerting? Why should I care?
 Alerting lets you know your cron-job is failing. It pings you on discord. Your precious database backups have stopped hapenning.
 Obviously you care about your backups right? You do backups right?
 
-[OVH datacenter on fire --- 2021-03-10]($video.asset('datacenter-ovh.mp4').loop(true).autoplay(true))
+[OVH datacenter on fire - 2021-03-10]($video.asset('datacenter-ovh.mp4').loop(true).autoplay(true))
 
 Let's assume you want that alerting, but you *really* don't want to deal with the hassle of manually setting it up for every single job you got.
 That's what prometheus is for! Prometheus scrapes all your software with minimal to no configuration required.
+
+## Prometheus
+
+It scrapes your programs, as well as other software you configure it for. Specifically, that means it can integrate with kubernetes and report on the status of the jobs running in your cluster.
+
+How many pods are running, how many pods are scheduled etc. That means prometheus knows when your scheduled cronjob isn't starting!
+Whatever the cronjob is, it doesn't make sense for it to suddently stop running right?
+
+That's where prometheus rules come in. They tell prometheus to process it's metrics and do specific actions with them.
+Here's an example [from the docs](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#defining-alerting-rules):
+
+```yaml
+alert: HighRequestLatency
+expr: job:request_latency_seconds:mean5m{job="myjob"} > 0.5
+for: 10m
+labels:
+    severity: page
+annotations:
+    summary: High request latency
+```
+
+This rule is quite explicit: when `myjob`'s `request_latency` is more than `0.5`s for `10m`, set the following labels and annotations, as well as the `HighRequestLatency` alert name.
+
+Promnetheus by itself collects these metrics and tries to match rules like these. When a match hits, it will send a request to the configured alertmanager.
+
+## Alertmanager
+
+Alertmanager is the other half of the pipeline. It takes these notifications, and routes them to you. Just want a discord message you will find out about when you wake up?
