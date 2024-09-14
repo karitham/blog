@@ -102,6 +102,23 @@ main {
   padding: 0 1rem;
 }
 
+video {
+  width: 100%;
+  display: block;
+  margin: 0;
+}
+
+figure {
+  margin: 0;
+  padding: 0;
+}
+
+figcaption {
+  font-size: 0.9rem;
+  color: var(--ctp-overlay2);
+  margin-top: 0.5rem;
+}
+
 footer {
   display: flex;
   flex-direction: column;
