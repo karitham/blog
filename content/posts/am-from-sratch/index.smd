@@ -1,0 +1,19 @@
+---
+.title = "Alertmanager from scratch",
+.description = "Alerting is complex, but we have good open source tools to make it painless",
+.date = @date("2024-09-14"),
+.author = "Karitham",
+.draft = true,
+.layout = "post.shtml",
+.tags = ["alertmanager", "kubernetes", "alerting"],
+---
+
+First let's get the basics down: What's alerting? Why should I care?
+
+Alerting lets you know your cron-job is failing. It pings you on discord. Your precious database backups have stopped hapenning.
+Obviously you care about your backups right? You do backups right?
+
+[OVH datacenter on fire --- 2021-03-10]($video.asset('datacenter-ovh.mp4').loop(true).autoplay(true))
+
+Let's assume you want that alerting, but you *really* don't want to deal with the hassle of manually setting it up for every single job you got.
+That's what prometheus is for! Prometheus scrapes all your software with minimal to no configuration required.
