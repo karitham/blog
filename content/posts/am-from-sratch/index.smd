@@ -44,4 +44,27 @@ Promnetheus by itself collects these metrics and tries to match rules like these
 
 ## Alertmanager
 
-Alertmanager is the other half of the pipeline. It takes these notifications, and routes them to you. Just want a discord message you will find out about when you wake up?
+Alertmanager is the other half of the pipeline. It takes these notifications, and routes them to you.
+Just want a discord message you will find out about when you wake up? Or would you rather be sent an SMS through Amazon SNS?
+
+You only need to configure what alerts or severity to send where. Informational alerts? Down `/dev/null`, critical alerts? Wake me up please!
+
+```yaml
+route:
+  receiver: '/dev/null'
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  group_by: [cluster, alertname]
+  routes:
+  - receiver: 'aws-sns'
+    group_wait: 30s
+    matchers:
+    - severity="critical"
+```
+
+Alertmanager also has [schedules](https://prometheus.io/docs/alerting/latest/configuration/#time_interval_spec) so you can get pinged only during weekdays and not when you sleep.
+
+Great to avoid warnings waking you up, while still keeping you in the know.
+
+## Deployment
