@@ -162,51 +162,48 @@ footer {
   display: flex;
 }
 
-.typst {
-  color: var(--ctp-text);
-}
-
-.typst .string {
+.string {
   color: var(--ctp-green);
 }
 
-.typst .operator {
+.operator {
   color: var(--ctp-sky);
 }
 
-.typst .function {
+.function {
   color: var(--ctp-blue);
 }
 
-.typst .markup.heading {
+.markup.heading {
   color: var(--ctp-red);
 }
 
-.typst .markup.list {
+.markup.list {
   color: var(--ctp-mauve);
 }
 
-.typst .keyword.control {
+.keyword.control {
   color: var(--ctp-mauve);
 }
 
-.typst .punctuation.delimiter {
+.punctuation.delimiter {
   color: var(--ctp-overlay2);
 }
 
-.typst .variable {
+.variable {
   color: var(--ctp-flamingo);
 }
 
-.typst .punctuation.bracket {
+.punctuation.bracket {
   color: var(--ctp-overlay2);
 }
 
-.typst .constant.numeric {
+.constant.numeric {
   color: var(--ctp-peach);
 }
 
-.typst .tag {
+.tag,
+.property {
   color: var(--ctp-teal);
 }
 
