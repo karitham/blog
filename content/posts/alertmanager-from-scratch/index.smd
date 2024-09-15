@@ -3,9 +3,12 @@
 .description = "Alerting is complex, but we have good open source tools to make it painless",
 .date = @date("2024-09-14"),
 .author = "Karitham",
-.draft = true,
 .layout = "post.shtml",
 .tags = ["alertmanager", "kubernetes", "alerting"],
+.custom = {
+     // I prefer that my HTML be rendered but not set on the title so I can ask for feedback without updating the rss feed
+    .draft = true,
+},
 ---
 
 First let's get the basics down: What's alerting? Why should I care?
@@ -68,3 +71,7 @@ Alertmanager also has [schedules](https://prometheus.io/docs/alerting/latest/con
 Great to avoid warnings waking you up, while still keeping you in the know.
 
 ## Deployment
+
+The easiest way to deploy both Alertmanager and Prometheus is through [Kube Prometheus Stack](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md).
+
+The default values will give you a bare-bones prometheus, alertmanager and grafana

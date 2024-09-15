@@ -29,7 +29,7 @@
       </div>
       <ul class="post-list">
         <ctx :loop="$site.page('posts').subpages()">
-          <li>
+          <li :if="$loop.it.custom.has('draft').not()">
             <h3>
               <a href="$loop.it.link()"><span :text="$loop.it.title"></span></a>
             </h3>
