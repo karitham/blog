@@ -5,25 +5,31 @@
         <description>Recent content on Karitham's Thoughts</description>
         <generator>Zine -- https://github.com/kristoff-it/zine</generator>
         <language>en-us</language>
-        <lastBuildDate>Fri, 13 Sep 2024 08:08:27 +0000</lastBuildDate>
+        <lastBuildDate>Sun, 15 Sep 2024 23:31:27 +0000</lastBuildDate>
         
-            <item>
-                <title>Minideck</title>
-                <link>https://blog.karitham.dev/posts/minideck/</link>
-                <pubDate>Tue, 09 Jul 2024 21:16:57 +0000</pubDate>
-                <guid>https://blog.karitham.dev/posts/minideck/</guid>
-                
-                    <description>Typst and minideck kick ass for building slide-decks!</description>
-                
-            </item>
+            
         
-            <item>
-                <title>First Post!</title>
-                <link>https://blog.karitham.dev/posts/first/</link>
-                <pubDate>Mon, 08 Jul 2024 16:09:56 +0000</pubDate>
-                <guid>https://blog.karitham.dev/posts/first/</guid>
-                
-            </item>
+            
+                <item>
+                    <title>Minideck</title>
+                    <link>https://blog.karitham.dev/posts/minideck/</link>
+                    <pubDate>Tue, 09 Jul 2024 21:16:57 +0000</pubDate>
+                    <guid>https://blog.karitham.dev/posts/minideck/</guid>
+                    
+                        <description>Typst and minideck kick ass for building slide-decks!</description>
+                    
+                </item>
+            
+        
+            
+                <item>
+                    <title>First Post!</title>
+                    <link>https://blog.karitham.dev/posts/first/</link>
+                    <pubDate>Mon, 08 Jul 2024 16:09:56 +0000</pubDate>
+                    <guid>https://blog.karitham.dev/posts/first/</guid>
+                    
+                </item>
+            
         
     </channel>
 </rss>

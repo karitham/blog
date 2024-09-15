@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head id="head">
+    <meta
+    charset="UTF-8"
+  >
+    <meta
+    name="description"
+    content="Karitham"
+  >
+    <meta
+    name="twitter:card"
+    content="summary"
+  >
+    <meta
+    name="twitter:site"
+    content="@KarithamIRL"
+  >
+    <meta
+    name="twitter:author"
+    content="@KarithamIRL"
+  >
+    <meta
+    name="twitter:description"
+    content="Kar's thoughts"
+  >
+    <meta name="twitter:title" content="Alerting basics">
+    <meta property="og:title" content="Alerting basics">
+    <meta
+    property="og:type"
+    content="website"
+  >
+    <meta
+    http-equiv="x-ua-compatible"
+    content="ie=edge"
+  >
+    <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  >
+    <link
+    rel="icon"
+    href="https://avatars.githubusercontent.com/u/57440386"
+    type="image/x-icon"
+  >
+    <title id="title">Alerting basics
+      - Kar</title>
+    <link rel="stylesheet" type="text/css" href="/normalize.css">
+    <link rel="stylesheet" type="text/css" href="/ctp.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    
+
+  </head>
+  <body>
+    <div id="content">
+      
+  <nav id="nav">
+    <ul>
+      <li><a href="/" role="button" class="button">~/</a></li>
+    </ul>
+  </nav>
+  <div id="main">
+    
+  <main>
+    <div class="post">
+      <h1>Alerting basics</h1>
+      <div class="head-footer">
+        <div>By
+          <span class="emph">Karitham</span></div>
+        <div
+        >Posted on:
+          <span class="emph">September 14, 2024</span></div>
+        <div class="tags">
+          
+            Tags:
+            
+              <span class="emph">alertmanager</span><span>,</span>
+            
+              <span class="emph">kubernetes</span><span>,</span>
+            
+              <span class="emph">alerting</span><span></span>
+            
+          
+        </div>
+      </div>
+      <div><p>First let's get the basics down: What's alerting? Why should I care?</p><p>Alerting lets you know your cron-job is failing. It pings you on discord. Your precious database backups have stopped hapenning. Obviously you care about your backups right? You do backups right?</p><p><figure><video loop autoplay>
+<source src="/posts/alertmanager-from-scratch/datacenter-ovh.mp4">
+</video>
+<figcaption>OVH datacenter on fire - 2021-03-10</figcaption></figure></p><p>Let's assume you want that alerting, but you <em>really</em> don't want to deal with the hassle of manually setting it up for every single job you got. That's what prometheus is for! Prometheus scrapes all your software with minimal to no configuration required.</p><h2>Prometheus</h2><p>It scrapes your programs, as well as other software you configure it for. Specifically, that means it can integrate with kubernetes and report on the status of the jobs running in your cluster.</p><p>How many pods are running, how many pods are scheduled etc. That means prometheus knows when your scheduled cronjob isn't starting! Whatever the cronjob is, it doesn't make sense for it to suddently stop running right?</p><p>That's where prometheus rules come in. They tell prometheus to process it's metrics and do specific actions with them. Here's an example <a href="https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#defining-alerting-rules" target="_blank">from the docs</a>:</p><pre><code class="yaml"><span class="property">alert</span><span class="punctuation delimiter">:</span> <span class="string">HighRequestLatency</span>
+<span class="property">expr</span><span class="punctuation delimiter">:</span> <span class="string">job:request_latency_seconds:mean5m{job=&quot;myjob&quot;} &gt; 0.5</span>
+<span class="property">for</span><span class="punctuation delimiter">:</span> <span class="string">10m</span>
+<span class="property">labels</span><span class="punctuation delimiter">:</span>
+    <span class="property">severity</span><span class="punctuation delimiter">:</span> <span class="string">page</span>
+<span class="property">annotations</span><span class="punctuation delimiter">:</span>
+    <span class="property">summary</span><span class="punctuation delimiter">:</span> <span class="string">High request latency</span>
+</code></pre>
+<p>This rule is quite explicit: when <code>myjob</code>'s <code>request_latency</code> is more than <code>0.5</code>s for <code>10m</code>, set the following labels and annotations, as well as the <code>HighRequestLatency</code> alert name.</p><p>Promnetheus by itself collects these metrics and tries to match rules like these. When a match hits, it will send a request to the configured alertmanager.</p><h2>Alertmanager</h2><p>Alertmanager is the other half of the pipeline. It takes these notifications, and routes them to you. Just want a discord message you will find out about when you wake up? Or would you rather be sent an SMS through Amazon SNS?</p><p>You only need to configure what alerts or severity to send where. Informational alerts? Down <code>/dev/null</code>, critical alerts? Wake me up please!</p><pre><code class="yaml"><span class="property">route</span><span class="punctuation delimiter">:</span>
+  <span class="property">receiver</span><span class="punctuation delimiter">:</span> <span class="string">&apos;/dev/null&apos;</span>
+  <span class="property">group_wait</span><span class="punctuation delimiter">:</span> <span class="string">30s</span>
+  <span class="property">group_interval</span><span class="punctuation delimiter">:</span> <span class="string">5m</span>
+  <span class="property">repeat_interval</span><span class="punctuation delimiter">:</span> <span class="string">4h</span>
+  <span class="property">group_by</span><span class="punctuation delimiter">:</span> <span class="punctuation bracket">[</span><span class="string">cluster</span><span class="punctuation delimiter">,</span> <span class="string">alertname</span><span class="punctuation bracket">]</span>
+  <span class="property">routes</span><span class="punctuation delimiter">:</span>
+  <span class="punctuation delimiter">-</span> <span class="property">receiver</span><span class="punctuation delimiter">:</span> <span class="string">&apos;aws-sns&apos;</span>
+    <span class="property">group_wait</span><span class="punctuation delimiter">:</span> <span class="string">30s</span>
+    <span class="property">matchers</span><span class="punctuation delimiter">:</span>
+    <span class="punctuation delimiter">-</span> <span class="string">severity=&quot;critical&quot;</span>
+</code></pre>
+<p>Alertmanager also has <a href="https://prometheus.io/docs/alerting/latest/configuration/#time_interval_spec" target="_blank">schedules</a> so you can get pinged only during weekdays and not when you sleep.</p><p>Great to avoid warnings waking you up, while still keeping you in the know.</p><h2>Deployment</h2><p>The easiest way to deploy both Alertmanager and Prometheus is through <a href="https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md" target="_blank">Kube Prometheus Stack</a>.</p><p>The default values will give you a bare-bones prometheus, alertmanager and grafana</p></div>
+    </div>
+  </main>
+
+  </div>
+
+    </div>
+  </body>
+  <footer id="footer">
+    
+  </footer>
+</html>
