@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service1-prod
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service1-stag
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service1-test
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service2-prod
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service2-stag
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service2-test
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: standalone
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: team3-prod
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: team3-stag
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: team3-test
