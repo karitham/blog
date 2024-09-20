@@ -20,29 +20,9 @@ The model is quite intuitive and more representative of modern programming langu
 
 Nu allows you to represent most data formats natively, and it has built-in support for a huge number of them, with a plugin system to allow even more. It can ingest csv and turn it into yaml, no dirty sed + awk'ing.
 
-### Example
+## Example
 
-```
-#!/usr/bin/env nu
-let ns_names: list<string> = [
-    "standalone",
-    ("service1-{test,stag,prod}" | str expand),
-    ("service2-{test,stag,prod}" | str expand),
-    ("team3-{test,stag,prod}" | str expand),
-] | flatten | sort
-
-let namespaces = $ns_names | each {{
-    apiVersion: "v1",
-    kind: "Namespace",
-    metadata: { name: $in },
-}}
-
-{
-    apiVersion: "v1",
-    kind: "List",
-    items: $namespaces
-} | to yaml | save -f $"($env.PROCESS_PATH | path dirname)/namespaces.yaml"
-```
+[Original nushell script]($code.asset('namespaces.nu').language('sh'))
 
 gives
 
@@ -62,22 +42,16 @@ items:
   kind: Namespace
   metadata:
     name: service1-test
-- apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: service2-prod
-- apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: service2-stag
 ...
 ```
 
-I'm sparing you the rest, along with all the typos.
+I'm sparing you [the rest]($link.asset('namespaces.yaml')).
 
-It's so much better than writing it by hand!
+Here's the bash way of doing things (to the best of my abilities)
 
-### Using it day to day
+[A bash alternative]($code.asset('namespaces.bash').language('bash'))
+
+## Using it day to day
 
 You might be wondering why we're outputting yaml here, instead of directly applying it.
 
