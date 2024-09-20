@@ -1,0 +1,91 @@
+---
+.title = "Nushell is great",
+.description = "Shells have been held back far too long by sh compatibility, and the ecosystem suffered.",
+.date = @date("2024-09-21"),
+.author = "Karitham",
+.layout = "post.shtml",
+.tags = ["nushell", "scripting"],
+---
+
+I dislike configuring my software. I like when the defaults are sane and powerful. I like when I can just pop in once in a while in the configuration settings. Add something (not remove it), and it just works.
+
+Fish is like that. I used it for the longest time. Then I got swept up by the mass of zsh users with their fancy looking prompts, and their *standards*. So, for the past 2 years I've used zsh. 
+It didn't really make much of a difference to me, except the scripting part was just a little bit worse. Less ergonomic.
+
+Since then, I've learned a lot and switched roles, ending up in a SRE/Ops sort of situation where I write a ton more scripts, or write big one-liners. Unfortunately, I'm bad at that.
+
+What I'm good at, is high level, typed, functional languages. So when I discovered [nushell](https://www.nushell.sh/), I was sold.
+
+The model is quite intuitive and more representative of modern programming languages. Types are either primitives (`int`,`string`,`bool`), records (sometimes called tables) or lists. Yes, there's bools.
+
+Nu allows you to represent most data formats natively, and it has built-in support for a huge number of them, with a plugin system to allow even more. It can ingest csv and turn it into yaml, no dirty sed + awk'ing.
+
+### Example
+
+```
+#!/usr/bin/env nu
+let ns_names: list<string> = [
+    "standalone",
+    ("service1-{test,stag,prod}" | str expand),
+    ("service2-{test,stag,prod}" | str expand),
+    ("team3-{test,stag,prod}" | str expand),
+] | flatten | sort
+
+let namespaces = $ns_names | each {{
+    apiVersion: "v1",
+    kind: "Namespace",
+    metadata: { name: $in },
+}}
+
+{
+    apiVersion: "v1",
+    kind: "List",
+    items: $namespaces
+} | to yaml | save -f $"($env.PROCESS_PATH | path dirname)/namespaces.yaml"
+```
+
+gives
+
+```yaml
+kind: List
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service1-prod
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service1-stag
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service1-test
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service2-prod
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: service2-stag
+...
+```
+
+I'm sparing you the rest, along with all the typos.
+
+It's so much better than writing it by hand!
+
+### Using it day to day
+
+You might be wondering why we're outputting yaml here, instead of directly applying it.
+
+It would be a great option when working on a solo project, but on a project you don't own, I rather give an escape hatch.
+
+New, shiny tools have a low adoption, and you can't expect everyone to have them installed on their system (yes, they could just use [`nix`](https://nixos.org)).
+
+Saving the results as a file that gets commited to git makes collaboration that much easier. If others just want to append to the list manually they can do so.
+I can keep using my script as long as I keep it up to date. Unfortunately, that's the cost to pay for using non-standard tools.
+
+On solo projects, the script above would be simpler, and could even be abstracted to build an entire k8s cluster the GitOps way, only through nushell!

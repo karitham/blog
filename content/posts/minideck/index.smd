@@ -5,7 +5,7 @@
 .author = "Karitham",
 .draft = false,
 .layout = "post.shtml",
-.tags = ["typst", "tech"],
+.tags = ["typst"],
 ---
 
 I have always hated Microsoft Powerpoint. It's slow, you have to either fight the app on windows or use the terrible online version.
