@@ -54,26 +54,26 @@
           
         </div>
       </div>
-      <div><p>I dislike configuring my software. I like when the defaults are sane and powerful. I like when I can just pop in once in a while in the configuration settings. Add something (not remove it), and it just works.</p><p>Fish is like that. I used it for the longest time. Then I got swept up by the mass of zsh users with their fancy looking prompts, and their <em>standards</em>. So, for the past 2 years I've used zsh. It didn't really make much of a difference to me, except the scripting part was just a little bit worse. Less ergonomic.</p><p>Since then, I've learned a lot and switched roles, ending up in a SRE/Ops sort of situation where I write a ton more scripts, or write big one-liners. Unfortunately, I'm bad at that.</p><p>What I'm good at, is high level, typed, functional languages. So when I discovered <a href="https://www.nushell.sh/" target="_blank">nushell</a>, I was sold.</p><p>The model is quite intuitive and more representative of modern programming languages. Types are either primitives (<code>int</code>,<code>string</code>,<code>bool</code>), records (sometimes called tables) or lists. Yes, there's bools.</p><p>Nu allows you to represent most data formats natively, and it has built-in support for a huge number of them, with a plugin system to allow even more. It can ingest csv and turn it into yaml, no dirty sed + awk'ing.</p><h2>Example</h2><p><figure><pre><code class="sh">#!/usr/bin/env nu
+      <div><p>I dislike configuring my software. I like when the defaults are sane and powerful. I like when I can just pop in once in a while in the configuration settings. Add something (not remove it), and it just works.</p><p>Fish is like that. I used it for the longest time. Then I got swept up by the mass of zsh users with their fancy looking prompts, and their <em>standards</em>. So, for the past 2 years I've used zsh. It didn't really make much of a difference to me, except the scripting part was just a little bit worse. Less ergonomic.</p><p>Since then, I've learned a lot and switched roles, ending up in a SRE/Ops sort of situation where I write a ton more scripts, or write big one-liners. Unfortunately, I'm bad at that.</p><p>What I'm good at, is high level, typed, functional languages. So when I discovered <a href="https://www.nushell.sh/" target="_blank">nushell</a>, I was sold.</p><p>The model is quite intuitive and more representative of modern programming languages. Types are either primitives (<code>int</code>,<code>string</code>,<code>bool</code>), records (sometimes called tables) or lists. Yes, there's bools.</p><p>Nu allows you to represent most data formats natively, and it has built-in support for a huge number of them, with a plugin system to allow even more. It can ingest csv and turn it into yaml, no dirty sed + awk'ing.</p><h2>Example</h2><p><figure><pre><code class="nu"><span class="keyword directive">#!/usr/bin/env nu
+</span>
+<span class="keyword">let</span> <span class="variable">ns_names</span><span class="punctuation special">:</span> <span class="type enum">list</span><span class="punctuation bracket">&lt;</span><span class="type">string</span><span class="punctuation bracket">&gt;</span> <span class="operator">=</span> <span class="punctuation bracket">[</span>
+    <span class="variable parameter">&quot;standalone&quot;</span>,
+    <span class="punctuation bracket">(</span><span class="variable parameter">&quot;service1-{test,stag,prod}&quot;</span> <span class="operator">|</span> <span class="function builtin">str</span> <span class="variable parameter">expand</span><span class="punctuation bracket">)</span>,
+    <span class="punctuation bracket">(</span><span class="variable parameter">&quot;service2-{test,stag,prod}&quot;</span> <span class="operator">|</span> <span class="function builtin">str</span> <span class="variable parameter">expand</span><span class="punctuation bracket">)</span>,
+    <span class="punctuation bracket">(</span><span class="variable parameter">&quot;team3-{test,stag,prod}&quot;</span> <span class="operator">|</span> <span class="function builtin">str</span> <span class="variable parameter">expand</span><span class="punctuation bracket">)</span>,
+<span class="punctuation bracket">]</span> <span class="operator">|</span> <span class="function builtin">flatten</span> <span class="operator">|</span> <span class="function builtin">sort</span>
 
-let ns_names: list&lt;string&gt; = [
-    &quot;standalone&quot;,
-    (&quot;service1-{test,stag,prod}&quot; | str expand),
-    (&quot;service2-{test,stag,prod}&quot; | str expand),
-    (&quot;team3-{test,stag,prod}&quot; | str expand),
-] | flatten | sort
+<span class="keyword">let</span> <span class="variable">namespaces</span> <span class="operator">=</span> <span class="none">$ns_names</span> <span class="operator">|</span> <span class="function builtin">each</span> <span class="punctuation bracket">{</span><span class="punctuation bracket">{</span>
+    <span class="property">apiVersion</span><span class="punctuation special">:</span> <span class="variable parameter">&quot;v1&quot;</span>,
+    <span class="property">kind</span><span class="punctuation special">:</span> <span class="variable parameter">&quot;Namespace&quot;</span>,
+    <span class="property">metadata</span><span class="punctuation special">:</span> <span class="punctuation bracket">{</span> <span class="property">name</span><span class="punctuation special">:</span> <span class="none">$in</span> <span class="punctuation bracket">}</span>,
+<span class="punctuation bracket">}</span><span class="punctuation bracket">}</span>
 
-let namespaces = $ns_names | each {{
-    apiVersion: &quot;v1&quot;,
-    kind: &quot;Namespace&quot;,
-    metadata: { name: $in },
-}}
-
-{
-    apiVersion: &quot;v1&quot;,
-    kind: &quot;List&quot;,
-    items: $namespaces
-} | to yaml | save -f $&quot;($env.PROCESS_PATH | path dirname)/namespaces.yaml&quot;</code></pre>
+<span class="punctuation bracket">{</span>
+    <span class="property">apiVersion</span><span class="punctuation special">:</span> <span class="variable parameter">&quot;v1&quot;</span>,
+    <span class="property">kind</span><span class="punctuation special">:</span> <span class="variable parameter">&quot;List&quot;</span>,
+    <span class="property">items</span><span class="punctuation special">:</span> <span class="none">$namespaces</span>
+<span class="punctuation bracket">}</span> <span class="operator">|</span> <span class="function builtin">to</span> <span class="variable parameter">yaml</span> <span class="operator">|</span> <span class="function builtin">save</span> <span class="punctuation delimiter">-</span><span class="attribute">f</span> <span class="string">$&quot;</span><span class="variable parameter">(</span><span class="none">$env.PROCESS_PATH</span> <span class="operator">|</span> <span class="function builtin">path</span> <span class="variable parameter">dirname</span><span class="variable parameter">)</span><span class="string">/namespaces.yaml</span><span class="string">&quot;</span></code></pre>
 <figcaption>Original nushell script</figcaption></figure></p><p>gives</p><pre><code class="yaml"><span class="property">kind</span><span class="punctuation delimiter">:</span> <span class="string">List</span>
 <span class="property">apiVersion</span><span class="punctuation delimiter">:</span> <span class="string">v1</span>
 <span class="property">items</span><span class="punctuation delimiter">:</span>
