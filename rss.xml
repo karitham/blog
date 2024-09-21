@@ -5,14 +5,14 @@
         <description>Recent content on Karitham's Thoughts</description>
         <generator>Zine -- https://github.com/kristoff-it/zine</generator>
         <language>en-us</language>
-        <lastBuildDate>Fri, 20 Sep 2024 22:58:09 +0000</lastBuildDate>
+        <lastBuildDate>Sat, 21 Sep 2024 12:38:04 +0000</lastBuildDate>
         
             
                 <item>
                     <title>Nushell is great</title>
-                    <link>https://blog.karitham.dev/posts/nushell/</link>
+                    <link>https://karitham.dev/posts/nushell/</link>
                     <pubDate>Sat, 21 Sep 2024 00:00:00 +0000</pubDate>
-                    <guid>https://blog.karitham.dev/posts/nushell/</guid>
+                    <guid>https://karitham.dev/posts/nushell/</guid>
                     
                         <description>Shells have been held back far too long by sh compatibility, and the ecosystem suffered.</description>
                     
@@ -22,9 +22,9 @@
             
                 <item>
                     <title>Alerting basics</title>
-                    <link>https://blog.karitham.dev/posts/alerting-basics/</link>
+                    <link>https://karitham.dev/posts/alerting-basics/</link>
                     <pubDate>Sat, 21 Sep 2024 00:00:00 +0000</pubDate>
-                    <guid>https://blog.karitham.dev/posts/alerting-basics/</guid>
+                    <guid>https://karitham.dev/posts/alerting-basics/</guid>
                     
                         <description>Alerting is complex, but we have good open source tools to make it painless</description>
                     
@@ -34,9 +34,9 @@
             
                 <item>
                     <title>Minideck</title>
-                    <link>https://blog.karitham.dev/posts/minideck/</link>
+                    <link>https://karitham.dev/posts/minideck/</link>
                     <pubDate>Tue, 09 Jul 2024 21:16:57 +0000</pubDate>
-                    <guid>https://blog.karitham.dev/posts/minideck/</guid>
+                    <guid>https://karitham.dev/posts/minideck/</guid>
                     
                         <description>Typst and minideck kick ass for building slide-decks!</description>
                     
@@ -46,9 +46,9 @@
             
                 <item>
                     <title>First Post!</title>
-                    <link>https://blog.karitham.dev/posts/first/</link>
+                    <link>https://karitham.dev/posts/first/</link>
                     <pubDate>Mon, 08 Jul 2024 16:09:56 +0000</pubDate>
-                    <guid>https://blog.karitham.dev/posts/first/</guid>
+                    <guid>https://karitham.dev/posts/first/</guid>
                     
                 </item>
             
