@@ -22,7 +22,7 @@ Nu allows you to represent most data formats natively, and it has built-in suppo
 
 ## Example
 
-[Original nushell script]($code.asset('namespaces.nu').language('sh'))
+[Original nushell script]($code.asset('namespaces.nu').language('nu'))
 
 gives
 
