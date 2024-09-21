@@ -164,7 +164,8 @@ footer {
   display: flex;
 }
 
-.string {
+.string,
+.variable.parameter {
   color: var(--ctp-green);
 }
 
@@ -180,24 +181,23 @@ footer {
   color: var(--ctp-red);
 }
 
-.markup.list {
+.markup.list,
+.keyword {
   color: var(--ctp-mauve);
 }
 
-.keyword.control {
-  color: var(--ctp-mauve);
+.keyword.directive {
+  color: var(--ctp-red);
 }
 
-.punctuation.delimiter {
+.punctuation.delimiter,
+.punctuation.bracket,
+.punctuation.special {
   color: var(--ctp-overlay2);
 }
 
 .variable {
   color: var(--ctp-flamingo);
-}
-
-.punctuation.bracket {
-  color: var(--ctp-overlay2);
 }
 
 .constant.numeric {
@@ -207,6 +207,26 @@ footer {
 .tag,
 .property {
   color: var(--ctp-teal);
+}
+
+.type {
+  color: var(--ctp-yellow);
+}
+
+.function.builtin {
+  color: var(--ctp-sapphire);
+}
+
+.none {
+  color: var(--ctp-text);
+}
+
+.attribute {
+  color: var(--ctp-pink);
+}
+
+.comment {
+  color: var(--ctp-overlay0);
 }
 
 .emph {
