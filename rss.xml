@@ -5,19 +5,7 @@
         <description>Recent content on Karitham's Thoughts</description>
         <generator>Zine -- https://github.com/kristoff-it/zine</generator>
         <language>en-us</language>
-        <lastBuildDate>Sat, 21 Sep 2024 17:35:50 +0000</lastBuildDate>
-        
-            
-                <item>
-                    <title>Nushell is great</title>
-                    <link>https://karitham.dev/posts/nushell/</link>
-                    <pubDate>Sat, 21 Sep 2024 00:00:00 +0000</pubDate>
-                    <guid>https://karitham.dev/posts/nushell/</guid>
-                    
-                        <description>Shells have been held back far too long by sh compatibility, and the ecosystem suffered.</description>
-                    
-                </item>
-            
+        <lastBuildDate>Sun, 09 Mar 2025 18:06:04 +0000</lastBuildDate>
         
             
                 <item>
@@ -27,6 +15,18 @@
                     <guid>https://karitham.dev/posts/alerting-basics/</guid>
                     
                         <description>Alerting is complex, but we have good open source tools to make it painless</description>
+                    
+                </item>
+            
+        
+            
+                <item>
+                    <title>Nushell is great</title>
+                    <link>https://karitham.dev/posts/nushell/</link>
+                    <pubDate>Sat, 21 Sep 2024 00:00:00 +0000</pubDate>
+                    <guid>https://karitham.dev/posts/nushell/</guid>
+                    
+                        <description>Shells have been held back far too long by sh compatibility, and the ecosystem suffered.</description>
                     
                 </item>
             
