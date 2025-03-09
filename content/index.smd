@@ -5,7 +5,8 @@
 .layout = "index.shtml",
 .tags = [],
 .alternatives = [{ 
-    .layout = "rss.xml", 
+    .layout = "rss.xml",
+    .name = "rss.xml",
     .output = "rss.xml",
 }],
 ---

@@ -1,10 +1,11 @@
 .{
-    .name = "Kar's blog",
+    .name = .blog,
     .version = "0.0.0",
+    .fingerprint = 0xc0155143830c13fb,
     .dependencies = .{
         .zine = .{
-            .url = "git+https://github.com/karitham/zine#97180d1f8231004c9cc40953a6b1e1140f07c319",
-            .hash = "1220a2544dacddd981f4dc8ff207afc96a1baa439cfc89998d61c0451b99e6db158e",
+            .url = "git+https://github.com/kristoff-it/zine?ref=main#92ef5f930a65773eb7730f714830a70c9dfebf73",
+            .hash = "zine-0.0.0-ou6nID_kBQDh3bzW8TpyF5-jtomG90qD3VLTRLb_KB3G",
         },
     },
     .paths = .{"."},
