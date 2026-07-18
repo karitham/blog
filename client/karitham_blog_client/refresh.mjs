@@ -1,7 +1,7 @@
 import * as $string from "../gleam_stdlib/gleam/string.mjs";
 import * as $api from "../shared/api.mjs";
-import * as $decode from "../shared/decode.mjs";
 import * as $dynamic from "../shared/dynamic.mjs";
+import * as $fetch from "../shared/fetch.mjs";
 import * as $play from "../shared/gen/alpha/feed/play.mjs";
 import * as $repo from "../shared/gen/repo.mjs";
 import * as $plays_view from "../shared/plays.mjs";
@@ -11,8 +11,8 @@ import * as $browser from "./browser.mjs";
 import { Ok, Empty as $Empty } from "./gleam.mjs";
 
 /**
- * How often to re-fetch plays. 30s is short enough that a new track
- * shows up promptly, long enough that we're not hammering the PDS.
+ * Short enough that a new track shows up promptly, long enough that
+ * we're not hammering the PDS.
  * 
  * @ignore
  */
@@ -31,7 +31,7 @@ function commit_plays(plays_data) {
 }
 
 function on_plays(text) {
-  let $ = $decode.decode_plays(text);
+  let $ = $fetch.decode_plays(text);
   if ($ instanceof Ok) {
     let $1 = $[0];
     if ($1 instanceof $Empty) {
@@ -53,7 +53,7 @@ function mark_plays_stale() {
 
 function refresh_plays() {
   mark_plays_stale();
-  return $browser.fetch_text($api.plays_url(), on_plays);
+  return $browser.fetch_text($fetch.plays_url(), on_plays);
 }
 
 function commit_repos(repos) {
@@ -65,15 +65,15 @@ function commit_repos(repos) {
 
 function fetch_pinned_dids_and_repos() {
   return $browser.fetch_text(
-    $api.pinned_dids_url(),
+    $fetch.pinned_dids_url(),
     (pinned_text) => {
-      let $ = $decode.decode_pinned_dids(pinned_text);
+      let $ = $fetch.decode_pinned_dids(pinned_text);
       if ($ instanceof Ok) {
         let dids = $[0];
         return $browser.fetch_text(
-          $api.repos_url(),
+          $fetch.repos_url(),
           (repos_text) => {
-            let $1 = $decode.decode_repos(repos_text);
+            let $1 = $fetch.decode_repos(repos_text);
             if ($1 instanceof Ok) {
               let all_repos = $1[0];
               return commit_repos($api.filter_pinned_repos(all_repos, dids));
@@ -96,7 +96,7 @@ function fetch_pinned_dids_and_repos() {
 }
 
 function on_profile(text) {
-  let $ = $decode.decode_profile(text);
+  let $ = $fetch.decode_profile(text);
   if ($ instanceof Ok) {
     let profile = $[0];
     return $browser.set_inner_html(
@@ -112,7 +112,7 @@ function on_profile(text) {
 }
 
 function fetch_profile() {
-  return $browser.fetch_text($api.profile_url(), on_profile);
+  return $browser.fetch_text($fetch.profile_url(), on_profile);
 }
 
 function refresh_all() {
@@ -139,8 +139,7 @@ function poll_tick() {
 }
 
 /**
- * Public entry point. Wires up the initial fetches, the 30s poll,
- * and the visibility-change listener. Call once on page load.
+ * Wires up initial fetches, periodic poll, and visibility listener.
  */
 export function start() {
   refresh_all();

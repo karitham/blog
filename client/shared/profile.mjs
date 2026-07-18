@@ -1,4 +1,3 @@
-import * as $int from "../gleam_stdlib/gleam/int.mjs";
 import * as $option from "../gleam_stdlib/gleam/option.mjs";
 import { unwrap } from "../gleam_stdlib/gleam/option.mjs";
 import * as $attribute from "../lustre/lustre/attribute.mjs";
@@ -6,7 +5,7 @@ import { alt, class$, href, id, src, target } from "../lustre/lustre/attribute.m
 import * as $element from "../lustre/lustre/element.mjs";
 import { fragment, none, text } from "../lustre/lustre/element.mjs";
 import * as $html from "../lustre/lustre/element/html.mjs";
-import { a, div, h1, img, p, span, strong } from "../lustre/lustre/element/html.mjs";
+import { a, div, h1, img, p } from "../lustre/lustre/element/html.mjs";
 import * as $defs from "./gen/actor/defs.mjs";
 import { toList } from "./gleam.mjs";
 
@@ -36,11 +35,6 @@ export function profile(profile) {
     );
   }
   let banner = _block$1;
-  let display_name = unwrap(profile.display_name, profile.handle);
-  let description = unwrap(profile.description, "");
-  let followers = unwrap(profile.followers_count, 0);
-  let follows = unwrap(profile.follows_count, 0);
-  let posts = unwrap(profile.posts_count, 0);
   return div(
     toList([id("profile-section")]),
     toList([
@@ -60,7 +54,7 @@ export function profile(profile) {
                       target("_blank"),
                       class$("profile-name"),
                     ]),
-                    toList([text(display_name)]),
+                    toList([text(unwrap(profile.display_name, profile.handle))]),
                   ),
                 ]),
               ),
@@ -73,38 +67,9 @@ export function profile(profile) {
                   ),
                 ]),
               ),
-              p(toList([class$("description")]), toList([text(description)])),
-              div(
-                toList([class$("profile-stats")]),
-                toList([
-                  span(
-                    toList([]),
-                    toList([
-                      strong(
-                        toList([]),
-                        toList([text($int.to_string(followers))]),
-                      ),
-                      text(" followers"),
-                    ]),
-                  ),
-                  span(
-                    toList([]),
-                    toList([
-                      strong(
-                        toList([]),
-                        toList([text($int.to_string(follows))]),
-                      ),
-                      text(" following"),
-                    ]),
-                  ),
-                  span(
-                    toList([]),
-                    toList([
-                      strong(toList([]), toList([text($int.to_string(posts))])),
-                      text(" posts"),
-                    ]),
-                  ),
-                ]),
+              p(
+                toList([class$("description")]),
+                toList([text(unwrap(profile.description, ""))]),
               ),
             ]),
           ),
