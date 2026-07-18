@@ -1,0 +1,35 @@
+import * as $json from "../gleam_json/gleam/json.mjs";
+import * as $defs from "./gen/actor/defs.mjs";
+import { profile_view_detailed_fields } from "./gen/actor/defs.mjs";
+import * as $play from "./gen/alpha/feed/play.mjs";
+import { alpha_feed_play_fields } from "./gen/alpha/feed/play.mjs";
+import * as $repo from "./gen/repo.mjs";
+import { repo_fields } from "./gen/repo.mjs";
+import { toList } from "./gleam.mjs";
+import * as $hydration from "./hydration.mjs";
+
+/**
+ * Serialize a HydrationModel to the JSON shape embedded in the
+ * page for client hydration. Uses the generated field encoders
+ * so the shape matches what the generated decoders expect.
+ * Pairs with `decode.decode_hydration_model`.
+ */
+export function encode_hydration_model(data) {
+  let _pipe = $json.object(
+    toList([
+      ["profile", $json.object(profile_view_detailed_fields(data.profile))],
+      [
+        "plays",
+        $json.array(
+          data.plays,
+          (p) => { return $json.object(alpha_feed_play_fields(p)); },
+        ),
+      ],
+      [
+        "repos",
+        $json.array(data.repos, (r) => { return $json.object(repo_fields(r)); }),
+      ],
+    ]),
+  );
+  return $json.to_string(_pipe);
+}

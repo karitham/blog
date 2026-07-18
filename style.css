@@ -1,0 +1,735 @@
+/* ============================================================
+   Catppuccin Macchiato — terminal edition
+   Flat rows. Lines, not cards. No elevation by surface fill.
+   ============================================================ */
+
+:root {
+  /* base */
+  --bg: #24273a;
+  --bg-alt: #1e2030;
+  --bg-nav: #181926;
+
+  /* text */
+  --text: #cad3f5;
+  --text-dim: #a5adcb;
+  --text-dimmer: #6e738d;
+
+  /* accents */
+  --accent: #c6a0f6;
+  /* mauve — primary: links, titles, prompt, strong */
+  --green: #a6da95;
+  /* strings in syntax, also a working accent */
+  --blue: #8aadf4;
+  /* secondary: tags, handle, blockquote bar, post # marker */
+  --peach: #f5a97f;
+  --red: #ed8796;
+  --yellow: #eed49f;
+  --teal: #8bd5ca;
+  --lavender: #b7bdf8;
+  --pink: #f5bde6;
+
+  /* divider (the only "line" in the system) */
+  --border: #494d64;
+  --cursor: #a6da95;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "JetBrains Mono", "Fira Code", "Menlo", monospace;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: inherit;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.2rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition-property: color, background;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+a:hover {
+  color: var(--bg);
+  background: var(--accent);
+}
+
+/* Inline elements inside an anchor should integrate with the link on
+   hover — otherwise the anchor's hover highlight gets hidden behind
+   their own background (e.g. <a><code>nix</code></a>). */
+a code,
+a strong,
+a em,
+a i {
+  color: inherit;
+}
+
+a:hover code {
+  background: transparent;
+}
+
+strong {
+  color: var(--accent);
+}
+
+i,
+em {
+  color: var(--peach);
+}
+
+code {
+  font-family: inherit;
+  background: var(--bg-alt);
+  padding: 1px 5px;
+  font-size: 0.9em;
+}
+
+pre {
+  background: var(--bg-alt);
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+blockquote {
+  margin: 0;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 2px solid var(--blue);
+  color: var(--text-dim);
+}
+
+p,
+ul,
+ol {
+  line-height: 1.65;
+  margin: 0.85rem 0;
+  text-wrap: pretty;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline-offset: -1px;
+}
+
+video {
+  width: 100%;
+  display: block;
+}
+
+figure {
+  margin: 0;
+}
+
+figcaption {
+  font-size: 0.8rem;
+  color: var(--text-dimmer);
+  margin-top: 0.35rem;
+}
+
+.dim {
+  color: var(--text-dim);
+}
+
+.dimmer {
+  color: var(--text-dimmer);
+}
+
+.emph {
+  color: var(--blue);
+  font-weight: 500;
+}
+
+.tags {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+
+#content {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  min-height: 100vh;
+}
+
+#main {
+  padding: 2.5rem 0 0;
+}
+
+/* Nav */
+#nav {
+  background: var(--bg-nav);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0.7rem 1.5rem;
+}
+
+#nav a {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+#nav a:hover {
+  color: var(--text);
+  background: none;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 3rem 1.5rem 2.5rem;
+  margin-top: 4rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-dimmer);
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   Banner
+   ============================================================ */
+
+#banner {
+  margin-bottom: 1rem;
+}
+
+#banner img {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+
+/* ============================================================
+   Profile
+   ============================================================ */
+
+#profile {
+  padding: 0.5rem 0 0;
+}
+
+#profile .avatar {
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--border);
+  vertical-align: middle;
+  margin-right: 0.85rem;
+  transition-property: transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+#profile > a:hover {
+  background-color: transparent;
+  color: transparent;
+}
+
+#profile .avatar:hover {
+  transform: scale(1.05);
+}
+
+#profile .avatar:active {
+  transform: scale(0.96);
+}
+
+.profile-name {
+  font-size: 1.25rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.profile-name:hover {
+  background: none;
+  color: var(--accent);
+}
+
+#profile h1 {
+  display: inline;
+  font-size: 1rem;
+  vertical-align: middle;
+  margin: 0;
+}
+
+#profile h1 a:hover {
+  background: none;
+  color: var(--accent);
+}
+
+.handle a {
+  font-size: 0.85rem;
+  color: var(--blue);
+}
+
+.handle a:hover {
+  background: var(--blue);
+  color: var(--bg);
+}
+
+.description {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0.4rem 0;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.82rem;
+  color: var(--text-dimmer);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.profile-stats strong {
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* ============================================================
+   Sections
+   ============================================================ */
+
+.section {
+  margin: 2.5rem 0;
+}
+
+#plays h2::before,
+#repos h2::before,
+.section-header h2::before {
+  content: "$ ";
+  color: var(--accent);
+}
+
+/* Stale-data indicator. Set on the section root by the SSG (plays
+   only) and toggled by the client as it fetches/polls. The dot
+   sits inside the h2 after the title, so the prompt + title + dot
+   read as one terminal-flavored unit. */
+.section[data-stale="true"] h2::after {
+  content: "•";
+  color: var(--cursor);
+  margin-left: 0.4em;
+  animation: stale-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes stale-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* No border-bottom — the rows below carry their own dividers. */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+  font-size: 1.05rem;
+}
+
+/* ============================================================
+   Cards (articles + projects) — flat rows
+   ============================================================ */
+
+.card {
+  padding: 0.85rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+  transition-property: background;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+.card:last-child {
+  border-bottom: none;
+}
+
+.card:hover {
+  background: var(--bg-alt);
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.card-title:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.card-date {
+  font-size: 0.78rem;
+  color: var(--text-dimmer);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-desc {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin-bottom: 0.4rem;
+}
+
+.card-tags {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+}
+
+.card-tag {
+  color: var(--blue);
+}
+
+.card-tag::before {
+  content: "#";
+  color: var(--text-dimmer);
+}
+
+/* ============================================================
+   Play rows — compact ls -l listing
+   ============================================================ */
+
+.play-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  transition-property: background;
+  transition-duration: 120ms;
+}
+
+.play-row:last-child {
+  border-bottom: none;
+}
+
+.play-row:hover {
+  background: var(--bg-alt);
+}
+
+.play-time {
+  color: var(--text-dimmer);
+  font-size: 0.82rem;
+  min-width: 3rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.play-track {
+  flex: 1.8;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.play-artist {
+  flex: 1.2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.play-release {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  color: var(--text-dimmer);
+}
+
+/* ============================================================
+   Single post page
+   ============================================================ */
+
+.post h1 {
+  margin-bottom: 0.4rem;
+  color: var(--text);
+}
+
+.post h1::before {
+  content: "# ";
+  color: var(--blue);
+}
+
+.post .post-meta {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 2rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.post-content {
+  line-height: 1.7;
+  font-size: 1rem;
+  text-wrap: pretty;
+}
+
+.post-content h2 {
+  margin-top: 2.5rem;
+}
+
+.post-content h3 {
+  margin-top: 1.75rem;
+}
+
+.post-content pre {
+  margin: 1.25rem 0;
+}
+
+.post-content p {
+  margin: 1rem 0;
+}
+
+.post-content img {
+  margin: 1rem 0;
+}
+
+.post-content ul,
+.post-content ol {
+  padding-left: 1.5rem;
+}
+
+/* ============================================================
+   Socials
+   ============================================================ */
+
+#socials {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0 0.5rem;
+}
+
+#socials a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--text-dimmer);
+  border: 1px solid var(--border);
+  margin-left: -1px;
+  transition-property: color, border-color, background;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+#socials a:first-child {
+  margin-left: 0;
+}
+
+#socials a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-alt);
+}
+
+#socials svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* ============================================================
+   Syntax tokens (highlight.js, Catppuccin Macchiato)
+   ============================================================ */
+
+.hljs {
+  color: var(--text);
+  background: transparent;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--text-dimmer);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link {
+  color: var(--accent);
+}
+
+.hljs-string,
+.hljs-attr,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-addition {
+  color: var(--green);
+}
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-meta .hljs-meta-keyword {
+  color: var(--peach);
+}
+
+.hljs-type,
+.hljs-class .hljs-title,
+.hljs-title.class_,
+.hljs-tag {
+  color: var(--yellow);
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: var(--teal);
+}
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-function .hljs-title {
+  color: var(--blue);
+}
+
+.hljs-variable,
+.hljs-name {
+  color: var(--red);
+}
+
+.hljs-property,
+.hljs-attribute {
+  color: var(--blue);
+}
+
+.hljs-regexp,
+.hljs-deletion {
+  color: var(--pink);
+}
+
+.hljs-meta,
+.hljs-meta-string {
+  color: var(--lavender);
+}
+
+.hljs-params,
+.hljs-punctuation,
+.hljs-operator {
+  color: var(--text-dim);
+}
+
+.hljs-doctag,
+.hljs-strong {
+  font-weight: 700;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}

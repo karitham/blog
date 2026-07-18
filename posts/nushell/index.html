@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta content="Shells have been held back far too long by sh compatibility, and the ecosystem suffered." name="description"><title>Nushell is great - Kar</title><meta content="karitham.dev" property="og:site_name"><meta content="article" property="og:type"><meta content="https://karitham.dev/posts/nushell/" property="og:url"><meta content="Nushell is great - Kar" property="og:title"><meta content="Shells have been held back far too long by sh compatibility, and the ecosystem suffered." property="og:description"><meta content="https://cdn.bsky.app/img/avatar/plain/did:plc:kcgwlowulc3rac43lregdawo/bafkreihyxqee3fi4zf6ijoag5xzzflhwi4efrwhpqpayxvtv6mwmprukpe" property="og:image"><meta content="summary_large_image" name="twitter:card"><meta content="@KarithamIRL" name="twitter:site"><meta content="@KarithamIRL" name="twitter:author"><meta content="Nushell is great - Kar" name="twitter:title"><meta content="Shells have been held back far too long by sh compatibility, and the ecosystem suffered." name="twitter:description"><meta content="https://cdn.bsky.app/img/avatar/plain/did:plc:kcgwlowulc3rac43lregdawo/bafkreihyxqee3fi4zf6ijoag5xzzflhwi4efrwhpqpayxvtv6mwmprukpe" name="twitter:image"><meta content="https://cdn.bsky.app/img/avatar/plain/did:plc:kcgwlowulc3rac43lregdawo/bafkreihyxqee3fi4zf6ijoag5xzzflhwi4efrwhpqpayxvtv6mwmprukpe" property="og:logo"><link href="/style.css" rel="stylesheet"><link href="/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"><link href="/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"><link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"><link href="/site.webmanifest" rel="manifest"><script id="site-model" type="application/json"></script><script defer src="/highlight.min.js"></script><script src="/highlight.mjs" type="module"></script><script type="module">import{main}from'/client/karitham_blog_client/client.mjs';main();</script><meta content="2024-09-21" property="article:published_time"><meta content="nushell" property="article:tag"><meta content="scripting" property="article:tag"></head><body><div id="content"><nav id="nav"><a href="/">~/karitham.dev</a></nav><div id="main"><div class="post"><h1>Nushell is great</h1><div class="post-meta"><span>Written <span class="emph">September 21, 2024</span></span><div class="tags"><span class="emph">nushell</span><span class="emph">scripting</span></div></div><div class="post-content"><div><p>I dislike configuring my software. I like when the defaults are sane and powerful. I like when I can just pop in once in a while in the configuration settings. Add something (not remove it), and it just works.</p>
+<p>Fish is like that. I used it for the longest time. Then I got swept up by the mass of zsh users with their fancy looking prompts, and their <em>standards</em>. So, for the past 2 years I've used zsh.
+It didn't really make much of a difference to me, except the scripting part was just a little bit worse. Less ergonomic.</p>
+<p>Since then, I've learned a lot and switched roles, ending up in a SRE/Ops sort of situation where I write a ton more scripts, or write big one-liners. Unfortunately, I'm bad at that.</p>
+<p>What I'm good at, is high level, typed, functional languages. So when I discovered <a href="https://www.nushell.sh/">nushell</a>, I was sold.</p>
+<p>The model is quite intuitive and more representative of modern programming languages. Types are either primitives (<code>int</code>,<code>string</code>,<code>bool</code>), records (sometimes called tables) or lists. Yes, there's bools.</p>
+<p>Nu allows you to represent most data formats natively, and it has built-in support for a huge number of them, with a plugin system to allow even more. It can ingest csv and turn it into yaml, no dirty sed + awk'ing.</p>
+<h2>Example</h2>
+<p>Original nushell script:</p>
+<pre><code class="language-nu">#!/usr/bin/env nu
+
+let ns_names: list&lt;string&gt; = [
+    &quot;standalone&quot;,
+    (&quot;service1-{test,stag,prod}&quot; | str expand),
+    (&quot;service2-{test,stag,prod}&quot; | str expand),
+    (&quot;team3-{test,stag,prod}&quot; | str expand),
+] | flatten | sort
+
+let namespaces = $ns_names | each {{
+    apiVersion: &quot;v1&quot;,
+    kind: &quot;Namespace&quot;,
+    metadata: { name: $in },
+}}
+
+{
+    apiVersion: &quot;v1&quot;,
+    kind: &quot;List&quot;,
+    items: $namespaces
+} | to yaml | save -f $&quot;($env.PROCESS_PATH | path dirname)/namespaces.yaml&quot;
+</code></pre>
+<p>gives</p>
+<pre><code class="language-yaml">kind: List
+apiVersion: v1
+items:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: service1-prod
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: service1-stag
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: service1-test
+...
+</code></pre>
+<p>I'm sparing you <a href="/posts/nushell/namespaces.yaml">the rest</a>.</p>
+<p>Here's the bash way of doing things (to the best of my abilities)</p>
+<pre><code class="language-bash">#!/usr/bin/env bash
+
+# Define the namespace names
+ns_names=(
+    &quot;standalone&quot;
+    $(eval echo &quot;service1-{test,stag,prod}&quot;)
+    $(eval echo &quot;service2-{test,stag,prod}&quot;)
+    $(eval echo &quot;team3-{test,stag,prod}&quot;)
+)
+
+# Sort the namespace names
+IFS=$'\n' sorted_ns=($(sort &lt;&lt;&lt;&quot;${ns_names[*]}&quot;))
+unset IFS
+
+# Generate the YAML output
+{
+    echo &quot;apiVersion: v1&quot;
+    echo &quot;kind: List&quot;
+    echo &quot;items:&quot;
+    for ns in &quot;${sorted_ns[@]}&quot;; do
+        echo &quot;- apiVersion: v1&quot;
+        echo &quot;  kind: Namespace&quot;
+        echo &quot;  metadata:&quot;
+        echo &quot;    name: $ns&quot;
+    done
+} &gt;&quot;$(dirname &quot;$0&quot;)/namespaces.yaml&quot;
+</code></pre>
+<h2>Using it day to day</h2>
+<p>You might be wondering why we're outputting yaml here, instead of directly applying it.</p>
+<p>It would be a great option when working on a solo project, but on a project you don't own, I rather give an escape hatch.</p>
+<p>New, shiny tools have a low adoption, and you can't expect everyone to have them installed on their system (yes, they could just use <a href="https://nixos.org"><code>nix</code></a>).</p>
+<p>Saving the results as a file that gets commited to git makes collaboration that much easier. If others just want to append to the list manually they can do so.
+I can keep using my script as long as I keep it up to date. Unfortunately, that's the cost to pay for using non-standard tools.</p>
+<p>On solo projects, the script above would be simpler, and could even be abstracted to build an entire k8s cluster the GitOps way, only through nushell!</p>
+</div></div></div></div><footer><div class="row" id="socials"><a href="https://github.com/Karitham" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32"><path d="M6.517 17.113c.395.578 1.592 1.81 3.225 2.12M9.864 22C8.836 21.83 2 19.606 2 12.093C2 5.063 8.002 2 12 2c4 0 10 3.063 10 10.093c0 7.513-6.836 9.738-7.864 9.907c0 0-.21-3.417-.087-4.003c.122-.586-.294-1.528-.294-1.528c.971-.364 2.45-.884 2.945-2.282c.385-1.084.627-2.658-.45-4.138c0 0 .282-2.39-.25-2.484c-.533-.092-2.1.947-2.1.947c-.457-.13-1.476-.377-1.898-.333c-.423-.044-1.445.203-1.902.333c0 0-1.568-1.04-2.1-.947s-.25 2.484-.25 2.484c-1.077 1.48-.835 3.054-.45 4.138c.496 1.398 1.974 1.918 2.945 2.282c0 0-.416.942-.294 1.528S9.864 22 9.864 22"></path></svg></a><a href="https://linkedin.com/in/pl-pery" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32"><path d="M4.5 9.5H4c-.943 0-1.414 0-1.707.293S2 10.557 2 11.5V20c0 .943 0 1.414.293 1.707S3.057 22 4 22h.5c.943 0 1.414 0 1.707-.293S6.5 20.943 6.5 20v-8.5c0-.943 0-1.414-.293-1.707S5.443 9.5 4.5 9.5m2-5.25a2.25 2.25 0 1 1-4.5 0a2.25 2.25 0 0 1 4.5 0m5.826 5.25H11.5c-.943 0-1.414 0-1.707.293S9.5 10.557 9.5 11.5V20c0 .943 0 1.414.293 1.707S10.557 22 11.5 22h.5c.943 0 1.414 0 1.707-.293S14 20.943 14 20v-3.5c0-1.657.528-3 2.088-3c.78 0 1.412.672 1.412 1.5v4.5c0 .943 0 1.414.293 1.707s.764.293 1.707.293h.499c.942 0 1.414 0 1.707-.293c.292-.293.293-.764.293-1.706L22 14c0-2.486-2.364-4.5-4.703-4.5c-1.332 0-2.52.652-3.297 1.673c0-.63 0-.945-.137-1.179a1 1 0 0 0-.358-.358c-.234-.137-.549-.137-1.179-.137"></path></svg></a><a href="https://discord.com/users/206794847581896705" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32"><path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.1.1 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.1 16.1 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02M8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12m6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12"></path></svg></a><a href="https://bsky.app/profile/karitham.dev" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 24 24"><title>Bluesky</title><path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"></path></svg></a><a href="mailto:pl@karitham.dev" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"></path></svg></a></div><p>built with <a href="https://gleam.run">Gleam</a> · styled with <a href="https://catppuccin.com">Catppuccin</a></p></footer></div></body></html>
