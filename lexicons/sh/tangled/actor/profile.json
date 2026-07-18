@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "sh.tangled.actor.profile",
+  "description": "Tangled actor profile with pinned repositories",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "properties": {
+          "pinnedRepositories": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+[formatter.gleam]
+command = "gleam"
+options = ["format"]
+includes = ["*.gleam"]
+excludes = ["shared/src/gen/**"]
+
+[formatter.nix]
+command = "nixfmt"
+includes = ["*.nix"]
+
+[formatter.toml]
+command = "taplo"
+options = ["format"]
+includes = ["*.toml"]
+
+[formatter.shell]
+command = "shfmt"
+options = ["-w", "-i", "2", "-s"]
+includes = ["*.sh", "*.bash"]
+
+[formatter.nushell]
+command = "nufmt"
+includes = ["*.nu"]
+
+[formatter.prettier]
+command = "prettier"
+options = ["--write"]
+includes = [
+  "*.md",
+  "*.yml",
+  "*.yaml",
+  "*.json",
+  "*.webmanifest",
+  "*.mjs",
+  "*.css",
+]

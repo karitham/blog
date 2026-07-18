@@ -1,0 +1,78 @@
+---
+title: Alerting basics
+description: Alerting is complex, but we have good open source tools to make it painless
+date: 2024-09-21
+tags: [alertmanager, kubernetes, alerting]
+---
+
+First let's get the basics down: What's alerting? Why should I care?
+
+Alerting lets you know your cron-job is failing. It pings you on discord. Your precious database backups have stopped hapenning.
+Obviously you care about your backups right? You do backups right?
+
+<figure><video loop autoplay>
+<source src="/posts/alerting-basics/datacenter-ovh.mp4">
+</video>
+<figcaption>OVH datacenter on fire - 2021-03-10</figcaption></figure>
+
+Let's assume you want that alerting, but you _really_ don't want to deal with the hassle of manually setting it up for every single job you got.
+That's what prometheus is for! Prometheus scrapes all your software with minimal to no configuration required.
+
+## Prometheus
+
+It scrapes your programs, as well as other software you configure it for. Specifically, that means it can integrate with kubernetes and report on the status of the jobs running in your cluster.
+
+How many pods are running, how many pods are scheduled etc. That means prometheus knows when your scheduled cronjob isn't starting!
+Whatever the cronjob is, it doesn't make sense for it to suddently stop running right?
+
+That's where prometheus rules come in. They tell prometheus to process it's metrics and do specific actions with them.
+Here's an example [from the docs](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#defining-alerting-rules):
+
+```yaml
+alert: HighRequestLatency
+expr: job:request_latency_seconds:mean5m{job="myjob"} > 0.5
+for: 10m
+labels:
+  severity: page
+annotations:
+  summary: High request latency
+```
+
+This rule is quite explicit: when `myjob`'s `request_latency` is more than `0.5`s for `10m`, set the following labels and annotations, as well as the `HighRequestLatency` alert name.
+
+Promnetheus by itself collects these metrics and tries to match rules like these. When a match hits, it will send a request to the configured alertmanager.
+
+## Alertmanager
+
+Alertmanager is the other half of the pipeline. It takes these notifications, and routes them to you.
+Just want a discord message you will find out about when you wake up? Or would you rather be sent an SMS through Amazon SNS?
+
+You only need to configure what alerts or severity to send where. Informational alerts? Down `/dev/null`, critical alerts? Wake me up please!
+
+```yaml
+route:
+  receiver: "/dev/null"
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  group_by: [cluster, alertname]
+  routes:
+    - receiver: "aws-sns"
+      group_wait: 30s
+      matchers:
+        - severity="critical"
+```
+
+Alertmanager also has [schedules](https://prometheus.io/docs/alerting/latest/configuration/#time_interval_spec) so you can get pinged only during weekdays and not when you sleep.
+
+Great to avoid warnings waking you up, while still keeping you in the know.
+
+## Deployment
+
+The easiest way to deploy both Alertmanager and Prometheus is through [Kube Prometheus Stack](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md).
+
+The default values will give you a bare-bones prometheus, alertmanager and grafana, which you can configure easily through helm values.
+
+Deploying the software and getting the basics working is actually the easiest part here. Fine-tuning alerts to avoid fatigue is the most painful part of all of this.
+
+My personal setup involves notifications to my phone for critical severity, warnings go to a dedicated discord channel, and I discard Informational events.

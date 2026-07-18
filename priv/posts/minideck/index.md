@@ -1,0 +1,64 @@
+---
+title: Minideck
+description: Typst and minideck kick ass for building slide-decks!
+date: 2024-07-09
+tags: [typst]
+---
+
+I have always hated Microsoft Powerpoint. It's slow, you have to either fight the app on windows or use the terrible online version.
+Google slides was always the _less terrible_ alternative. Google slides feels slightly faster and more modern.
+Still, they are overly complex and the UX is suboptimal. Both in terms of throwing text on a slide and in how they
+lay it out.
+
+Enter [minideck](https://typst.app/universe/package/minideck/). Minideck allows you to _just write code_ and get slides out.
+Minideck provides simple, fundamental building blocks: `pause`, `only` and `uncover`.
+
+```typst
+#slide[
+    = Slide title
+    - This thing shows on the first slide
+    #show: pause
+    - And this renders on the next slide
+    #only(3)[- This one shows on slide 3 and never after]
+    #uncover(from: 2, to: 4)[- This one shows on slide 2, 3 and 4]
+]
+```
+
+Minideck is built on top of [`typst`](https://github.com/typst/typst). Typst is a new markup-based typesetting system that is powerful and easy to learn.
+It is designed as a direct competitor to LaTeX. With the 50 years of experience we have had to understand the shortcomings of LaTeX.
+
+Typst is fast, doesn't require user input during compilation, packaging _just works_, and the error messages are descriptive enough to be understood by a layperson.
+
+It tries to be easier to learn mostly by reusing modern patterns for typesetting, yet still being plain-text when it needs to be just that.
+In typst laying stuff out works with the box model just like in HTML, or you can have all the convenience of floating layouts if you want to overlay layer on top of layer.
+
+```typst
+#grid(
+    columns: (1fr, fr),
+    align: horizon,
+    gutter: 1em,
+    [
+        = Title
+
+        This content describes the image next to it. They
+        are approximately sized the same. Text wrapping just works.
+        There is no automatic text sizing shenanigans.
+
+        Text will never give you up.
+    ],
+    image("./assets/dQw4w9WgXcQ.gif")
+)
+```
+
+One might think
+
+> But kar, I don't only use Google Slides by myself, I use it for group projects! I love the sync features!
+
+Typst is _just plain-text_ and you can _just use git_, it's great for collaboration. Git might not make much sense in a slide-deck scenario,
+but the people behind it have also built [an online editor](https://typst.app/). The online editor is smoother than Powerpoint or Slides, and collaboration _just works_.
+When using typst for documents, the editor also wipes the floor with overleaf, the online collaborative editor for LaTeX.
+
+Typst also works well with large bullshit models. You can easily generate most of your slide deck (e.g. from your research paper), focusing only on the important parts and theming it afterwards.
+Iterating on the phrasing in the slides using a standard code editor avoids the `copy` `alt+tab` `paste` `copy` `paste` repetition. You can even make a [custom command](https://sourcegraph.com/docs/cody/capabilities/commands#custom-commands) to turn this into a few key smashes.
+
+There's generally a ton of advantages to [plain-text](https://sive.rs/plaintext) content, and I'm very happy to finally have found the tool that will make me ditch Google slides or Microsoft Powerpoint.

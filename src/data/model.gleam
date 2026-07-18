@@ -1,0 +1,25 @@
+import gen/actor/defs.{type ProfileViewDetailed}
+import gen/alpha/feed/play.{type AlphaFeedPlay}
+import gen/repo.{type Repo}
+
+pub type SiteData {
+  SiteData(
+    profile: ProfileViewDetailed,
+    recent_plays: List(AlphaFeedPlay),
+    repos: List(Repo),
+    posts: List(Post),
+  )
+}
+
+pub type Post {
+  Post(
+    title: String,
+    description: String,
+    slug: String,
+    date: String,
+    content: String,
+    tags: List(String),
+    draft: Bool,
+    image: String,
+  )
+}

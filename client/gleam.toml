@@ -1,0 +1,12 @@
+name = "karitham_blog_client"
+version = "1.0.0"
+target = "javascript"
+
+[dependencies]
+gleam_stdlib = ">= 1.0.0 and < 2.0.0"
+gleam_json = ">= 2.0.0 and < 4.0.0"
+lustre = ">= 4.0.0 and < 6.0.0"
+shared = { path = "../shared" }
+
+[dev_dependencies]
+gleeunit = ">= 1.9.0 and < 2.0.0"

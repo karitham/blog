@@ -1,0 +1,34 @@
+{
+  "lexicon": 1,
+  "id": "fm.teal.alpha.feed.play",
+  "description": "A Teal play record",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["trackName", "artists", "playedTime"],
+        "properties": {
+          "trackName": { "type": "string" },
+          "artists": {
+            "type": "array",
+            "items": { "type": "ref", "ref": "#artistView" }
+          },
+          "releaseName": { "type": "string" },
+          "duration": { "type": "integer" },
+          "playedTime": { "type": "string", "format": "datetime" },
+          "originUrl": { "type": "string", "format": "uri" }
+        }
+      }
+    },
+    "artistView": {
+      "type": "object",
+      "required": ["artistName"],
+      "properties": {
+        "artistName": { "type": "string" },
+        "artistMbId": { "type": "string" }
+      }
+    }
+  }
+}

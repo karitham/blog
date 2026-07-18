@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.defs",
+  "defs": {
+    "profileViewDetailed": {
+      "type": "object",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
+        "displayName": { "type": "string" },
+        "description": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
+        "banner": { "type": "string", "format": "uri" },
+        "followersCount": { "type": "integer" },
+        "followsCount": { "type": "integer" },
+        "postsCount": { "type": "integer" }
+      }
+    }
+  }
+}
