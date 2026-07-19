@@ -16,7 +16,9 @@
 import data/model.{type Post, Post}
 import data/util
 import gleam/list
+import gleam/result
 import gleam/string
+import gleam/time/timestamp
 import mork
 
 pub type ParseError {
@@ -48,11 +50,11 @@ fn parse_with_frontmatter(
   let draft_str = util.extract_field(lines, "draft:", "false")
   let image = util.extract_field(lines, "image:", "")
 
-  case title == "", date == "", is_iso_date(date) {
+  case title == "", date == "", parse_article_date(date) {
     True, _, _ -> Error(MissingField(slug, "title"))
     _, True, _ -> Error(MissingField(slug, "date"))
-    _, _, False -> Error(InvalidDate(slug, date))
-    False, False, True ->
+    _, _, Error(_) -> Error(InvalidDate(slug, date))
+    False, False, Ok(_) ->
       Ok(build_post(
         slug,
         title,
@@ -121,34 +123,16 @@ fn parse_bool(s: String) -> Bool {
   }
 }
 
-/// Check that a string matches the `YYYY-MM-DD` shape. Does not
-/// validate calendar correctness (e.g. "2024-02-31" passes).
-pub fn is_iso_date(s: String) -> Bool {
-  case string.split(s, on: "-") {
-    [y, m, d] ->
-      string.length(y) == 4
-      && string.length(m) == 2
-      && string.length(d) == 2
-      && is_all_digits(y)
-      && is_all_digits(m)
-      && is_all_digits(d)
-    _ -> False
-  }
+/// Validate a `YYYY-MM-DD` or RFC 3339 frontmatter date via `gleam_time`.
+/// The raw string is still stored on `Post` for RSS/OG output; this is
+/// only used to fail the build loudly on a malformed date.
+fn parse_article_date(s: String) -> Result(timestamp.Timestamp, Nil) {
+  timestamp.parse_rfc3339(s <> "T00:00:00Z")
 }
 
-fn is_all_digits(s: String) -> Bool {
-  case s {
-    "" -> False
-    _ -> s |> string.to_graphemes |> list.all(is_digit_char)
-  }
-}
+const slug_chars = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
-fn is_digit_char(c: String) -> Bool {
-  case c {
-    "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" -> True
-    _ -> False
-  }
-}
+const slug_start_chars = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 /// Validates that a string is a usable post slug: starts with a
 /// lowercase letter or digit, contains only lowercase letters,
@@ -156,105 +140,12 @@ fn is_digit_char(c: String) -> Bool {
 pub fn is_valid_slug(slug: String) -> Bool {
   case slug {
     "" -> False
-    _ ->
-      slug
-      |> string.to_graphemes
-      |> list.all(is_slug_char)
-      && is_slug_start(slug |> string.first |> result_unwrap(""))
-  }
-}
-
-fn is_slug_char(c: String) -> Bool {
-  case c {
-    "a"
-    | "b"
-    | "c"
-    | "d"
-    | "e"
-    | "f"
-    | "g"
-    | "h"
-    | "i"
-    | "j"
-    | "k"
-    | "l"
-    | "m"
-    | "n"
-    | "o"
-    | "p"
-    | "q"
-    | "r"
-    | "s"
-    | "t"
-    | "u"
-    | "v"
-    | "w"
-    | "x"
-    | "y"
-    | "z"
-    | "0"
-    | "1"
-    | "2"
-    | "3"
-    | "4"
-    | "5"
-    | "6"
-    | "7"
-    | "8"
-    | "9"
-    | "-" -> True
-    _ -> False
-  }
-}
-
-fn is_slug_start(c: String) -> Bool {
-  case c {
-    "a"
-    | "b"
-    | "c"
-    | "d"
-    | "e"
-    | "f"
-    | "g"
-    | "h"
-    | "i"
-    | "j"
-    | "k"
-    | "l"
-    | "m"
-    | "n"
-    | "o"
-    | "p"
-    | "q"
-    | "r"
-    | "s"
-    | "t"
-    | "u"
-    | "v"
-    | "w"
-    | "x"
-    | "y"
-    | "z"
-    | "0"
-    | "1"
-    | "2"
-    | "3"
-    | "4"
-    | "5"
-    | "6"
-    | "7"
-    | "8"
-    | "9" -> True
-    _ -> False
-  }
-}
-
-// Silly wrapper to make the type checker happy when string.first
-// returns Error — the empty string default makes is_slug_start
-// return False, which is what we want.
-fn result_unwrap(r: Result(a, b), default: a) -> a {
-  case r {
-    Ok(v) -> v
-    Error(_) -> default
+    _ -> {
+      let first = string.first(slug) |> result.unwrap("")
+      string.contains(slug_start_chars, first)
+      && list.all(string.to_graphemes(slug), fn(c) {
+        string.contains(slug_chars, c)
+      })
+    }
   }
 }

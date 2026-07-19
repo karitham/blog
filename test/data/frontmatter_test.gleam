@@ -104,14 +104,32 @@ pub fn parse_malformed_date_fails_test() {
 pub fn parse_valid_iso_date_test() {
   let cases = ["2024-01-01", "2024-12-31", "2024-02-29", "1999-09-09"]
   list.each(cases, fn(good) {
-    frontmatter.is_iso_date(good) |> should.equal(True)
+    let post =
+      frontmatter.parse(
+        "valid-date",
+        "---\ntitle: t\ndate: " <> good <> "\n---\nbody",
+      )
+    post |> should.be_ok()
   })
 }
 
 pub fn parse_invalid_iso_date_test() {
-  let cases = ["", "2024", "2024-1", "2024-01", "2024-1-1", "abcd-ef-gh"]
+  let cases = [
+    "",
+    "2024",
+    "2024-1",
+    "2024-01",
+    "2024-1-1",
+    "abcd-ef-gh",
+    "2024-02-30",
+  ]
   list.each(cases, fn(bad) {
-    frontmatter.is_iso_date(bad) |> should.equal(False)
+    let post =
+      frontmatter.parse(
+        "invalid-date",
+        "---\ntitle: t\ndate: " <> bad <> "\n---\nbody",
+      )
+    post |> should.be_error()
   })
 }
 

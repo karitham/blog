@@ -160,6 +160,7 @@ packages = [
     "atproto_client",
     "gleam_json",
     "gleam_stdlib",
+    "gleam_time",
     "lustre",
   ], source = "local", path = "shared" },
   { name = "simplifile", version = "2.5.0", build_tools = [
@@ -184,6 +185,7 @@ gleam_http = { version = ">= 4.0.0 and < 5.0.0" }
 gleam_httpc = { version = ">= 5.0.0 and < 6.0.0" }
 gleam_json = { version = ">= 2.0.0 and < 4.0.0" }
 gleam_stdlib = { version = ">= 1.0.0 and < 2.0.0" }
+gleam_time = { version = ">= 1.0.0 and < 2.0.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
 lustre = { version = ">= 4.0.0 and < 6.0.0" }
 mork = { version = ">= 1.12.1 and < 2.0.0" }

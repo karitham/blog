@@ -13,6 +13,7 @@
 //// For a one-command build, use `make build` which chains them.
 
 import build
+import date
 import gleam/int
 import gleam/io
 import gleam/list
@@ -111,45 +112,9 @@ pub fn slugify(input: String) -> String {
 }
 
 fn slugify_char(c: String) -> String {
-  case c {
-    "a"
-    | "b"
-    | "c"
-    | "d"
-    | "e"
-    | "f"
-    | "g"
-    | "h"
-    | "i"
-    | "j"
-    | "k"
-    | "l"
-    | "m"
-    | "n"
-    | "o"
-    | "p"
-    | "q"
-    | "r"
-    | "s"
-    | "t"
-    | "u"
-    | "v"
-    | "w"
-    | "x"
-    | "y"
-    | "z"
-    | "0"
-    | "1"
-    | "2"
-    | "3"
-    | "4"
-    | "5"
-    | "6"
-    | "7"
-    | "8"
-    | "9"
-    | "-" -> c
-    _ -> "-"
+  case string.contains("abcdefghijklmnopqrstuvwxyz0123456789-", c) {
+    True -> c
+    False -> "-"
   }
 }
 
@@ -191,7 +156,7 @@ separately; for a one-shot build use `make build`.",
 /// so the scaffolded post sorts to the top of the timeline.
 fn template(slug: String) -> String {
   let #(y, m, d) = today()
-  let date = int.to_string(y) <> "-" <> pad2(m) <> "-" <> pad2(d)
+  let date = int.to_string(y) <> "-" <> date.pad2(m) <> "-" <> date.pad2(d)
   "---\n"
   <> "title: "
   <> title_from_slug(slug)
@@ -220,13 +185,6 @@ fn capitalize(word: String) -> String {
   case string.to_graphemes(word) {
     [] -> ""
     [first, ..rest] -> string.uppercase(first) <> string.join(rest, "")
-  }
-}
-
-fn pad2(n: Int) -> String {
-  case n < 10 {
-    True -> "0" <> int.to_string(n)
-    False -> int.to_string(n)
   }
 }
 

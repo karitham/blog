@@ -21,6 +21,7 @@ const plays_poll_ms = 30_000
 /// Wires up initial fetches, periodic poll, and visibility listener.
 pub fn start() -> Nil {
   refresh_all()
+  browser.localize_dates()
   browser.set_interval(plays_poll_ms, poll_tick)
   browser.on_visibility_change(on_visibility_change)
 }
@@ -97,6 +98,7 @@ fn commit_plays(plays_data: List(AlphaFeedPlay)) -> Nil {
     "plays",
     dynamic.render(plays_view.plays_section(plays_data)),
   )
+  browser.localize_dates()
   mark_plays_fresh()
 }
 

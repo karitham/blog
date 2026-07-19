@@ -21,3 +21,6 @@ pub fn is_visible() -> Bool
 
 @external(javascript, "./browser_ffi.mjs", "on_visibility_change")
 pub fn on_visibility_change(callback: fn(Bool) -> Nil) -> Nil
+
+@external(javascript, "./browser_ffi.mjs", "localize_dates")
+pub fn localize_dates() -> Nil

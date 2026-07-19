@@ -1,3 +1,4 @@
+import date
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
@@ -354,12 +355,12 @@ fn icon_email() -> Element(Nil) {
 pub fn rss_feed(posts: List(#(String, String, String, String))) -> String {
   let items =
     list.map(posts, fn(t) {
-      let #(title, description, slug, date) = t
+      let #(title, description, slug, date_str) = t
       "  <item>
     <title>" <> title <> "</title>
     <description>" <> description <> "</description>
     <link>https://karitham.dev/posts/" <> slug <> "/</link>
-    <pubDate>" <> date <> "</pubDate>
+    <pubDate>" <> date.to_rfc822(date_str) <> "</pubDate>
   </item>"
     })
 

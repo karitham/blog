@@ -1,8 +1,11 @@
+import date
 import gen/alpha/feed/play.{type AlphaFeedPlay, type ArtistView}
 import gleam/list
 import gleam/option.{unwrap}
 import gleam/string
-import lustre/attribute.{class, href, target}
+import gleam/time/calendar
+import gleam/time/timestamp
+import lustre/attribute.{attribute, class, href, target}
 import lustre/element.{type Element, none, text}
 import lustre/element/html.{a, div, span}
 import section
@@ -21,7 +24,7 @@ pub fn plays_section(plays: List(AlphaFeedPlay)) -> Element(msg) {
 }
 
 fn render_play_row(play: AlphaFeedPlay) -> Element(msg) {
-  let time = extract_time(play.played_time)
+  let #(time, iso) = format_play_time(play.played_time)
 
   let artists_str =
     play.artists
@@ -32,7 +35,13 @@ fn render_play_row(play: AlphaFeedPlay) -> Element(msg) {
   let release_name = unwrap(play.release_name, "")
 
   div([class("play-row")], [
-    span([class("play-time")], [text(time)]),
+    span(
+      [
+        class("play-time"),
+        attribute("data-iso", iso),
+      ],
+      [text(time)],
+    ),
     span(
       [
         class("play-track"),
@@ -55,10 +64,14 @@ fn render_play_row(play: AlphaFeedPlay) -> Element(msg) {
   ])
 }
 
-fn extract_time(iso: String) -> String {
-  // "2026-07-18T15:33:46Z" → "15:33"
-  case string.split(iso, "T") {
-    [_, rest] -> string.slice(rest, 0, 5)
-    _ -> ""
+/// Render a play's `played_time` as `HH:MM` in UTC, and return the
+/// original ISO string for client-side re-localization.
+fn format_play_time(iso: String) -> #(String, String) {
+  case timestamp.parse_rfc3339(iso) {
+    Ok(ts) -> {
+      let #(_, time) = timestamp.to_calendar(ts, calendar.utc_offset)
+      #(date.pad2(time.hours) <> ":" <> date.pad2(time.minutes), iso)
+    }
+    Error(_) -> #("", iso)
   }
 }

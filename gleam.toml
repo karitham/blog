@@ -13,6 +13,7 @@ mork = ">= 1.12.1 and < 2.0.0"
 argv = ">= 1.0.0 and < 2.0.0"
 shared = { path = "shared" }
 atproto_client = ">= 0.1.0 and < 1.0.0"
+gleam_time = ">= 1.0.0 and < 2.0.0"
 
 [dev_dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

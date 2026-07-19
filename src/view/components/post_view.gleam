@@ -19,7 +19,7 @@ fn render_article_card(post: Post) -> Element(Nil) {
     title_href: "/posts/" <> post.slug <> "/",
     title_text: post.title,
     title_target: None,
-    date: date.format_date(post.date),
+    date: date.format_ymd(post.date),
     description: post.description,
     topics: post.tags,
   )
@@ -40,7 +40,7 @@ pub fn render_single(post: Post) -> Element(Nil) {
     div([class("post-meta")], [
       span([], [
         text("Written "),
-        span([class("emph")], [text(date.format_date(post.date))]),
+        span([class("emph")], [text(date.format_ymd(post.date))]),
       ]),
       tags,
     ]),
