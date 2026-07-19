@@ -1,5 +1,5 @@
+import * as $list from "../gleam_stdlib/gleam/list.mjs";
 import * as $string from "../gleam_stdlib/gleam/string.mjs";
-import * as $api from "../shared/api.mjs";
 import * as $dynamic from "../shared/dynamic.mjs";
 import * as $fetch from "../shared/fetch.mjs";
 import * as $play from "../shared/gen/alpha/feed/play.mjs";
@@ -68,16 +68,23 @@ function fetch_pinned_dids_and_repos() {
   return $browser.fetch_text(
     $fetch.pinned_dids_url(),
     (pinned_text) => {
-      let $ = $fetch.decode_pinned_dids(pinned_text);
+      let $ = $fetch.decode_actor_profiles(pinned_text);
       if ($ instanceof Ok) {
-        let dids = $[0];
+        let profiles = $[0];
+        let pinned_dids = $fetch.pinned_dids_from_profiles(profiles);
         return $browser.fetch_text(
           $fetch.repos_url(),
           (repos_text) => {
             let $1 = $fetch.decode_repos(repos_text);
             if ($1 instanceof Ok) {
-              let all_repos = $1[0];
-              return commit_repos($api.filter_pinned_repos(all_repos, dids));
+              let records = $1[0];
+              let _block;
+              let _pipe = records;
+              let _pipe$1 = $fetch.filter_repos_by_did(_pipe, pinned_dids);
+              let _pipe$2 = $list.map(_pipe$1, $fetch.resolve_repo_name);
+              _block = $list.map(_pipe$2, (record) => { return record.value; });
+              let repos = _block;
+              return commit_repos(repos);
             } else {
               let reason = $1[0];
               return $browser.log_error(
@@ -89,7 +96,7 @@ function fetch_pinned_dids_and_repos() {
       } else {
         let reason = $[0];
         return $browser.log_error(
-          "decode_pinned_dids failed: " + $string.inspect(reason),
+          "decode_actor_profiles failed: " + $string.inspect(reason),
         );
       }
     },

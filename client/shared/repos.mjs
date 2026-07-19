@@ -32,17 +32,9 @@ function compare_repos_newest_first(a, b) {
   }
 }
 
-function is_hash_name(name) {
-  return (($string.length(name) > 12) && !$string.contains(name, "-")) && !$string.contains(
-    name,
-    "_",
-  );
-}
-
 function dedup_by_did(repos) {
-  let _pipe = repos;
-  let _pipe$1 = $list.fold(
-    _pipe,
+  return $list.fold(
+    repos,
     toList([]),
     (acc, repo) => {
       let $ = $list.any(acc, (r) => { return r.repo_did === repo.repo_did; });
@@ -53,13 +45,12 @@ function dedup_by_did(repos) {
       }
     },
   );
-  return $list.filter(_pipe$1, (r) => { return !is_hash_name(r.name); });
 }
 
 /**
- * Dedupe by repo_did, drop auto-generated hash names, sort newest
- * first, and take the top N. Sorting uses the parsed timestamp so
- * different source offsets compare correctly.
+ * Dedupe by repo_did, sort newest first, take the top N. Sorting
+ * uses the parsed timestamp so different source offsets compare
+ * correctly.
  */
 export function select_top_repos(repos) {
   let _pipe = repos;
@@ -69,20 +60,19 @@ export function select_top_repos(repos) {
 }
 
 function render_repo_card(repo) {
-  let _block;
-  let $ = $timestamp.parse_rfc3339(repo.created_at);
-  if ($ instanceof Ok) {
-    let ts = $[0];
-    _block = $date.format_month_day_year(ts);
-  } else {
-    _block = repo.created_at;
-  }
-  let date_str = _block;
   return $card.card(
     "https://tangled.org/" + repo.repo_did,
-    repo.name,
+    unwrap(repo.name, ""),
     new Some("_blank"),
-    date_str,
+    (() => {
+      let $ = $timestamp.parse_rfc3339(repo.created_at);
+      if ($ instanceof Ok) {
+        let ts = $[0];
+        return $date.format_month_day_year(ts);
+      } else {
+        return repo.created_at;
+      }
+    })(),
     unwrap(repo.description, ""),
     unwrap(repo.topics, toList([])),
   );

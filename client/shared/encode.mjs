@@ -1,4 +1,5 @@
 import * as $json from "../gleam_json/gleam/json.mjs";
+import * as $fetch from "./fetch.mjs";
 import * as $defs from "./gen/actor/defs.mjs";
 import { profile_view_detailed_fields } from "./gen/actor/defs.mjs";
 import * as $play from "./gen/alpha/feed/play.mjs";
@@ -7,6 +8,16 @@ import * as $repo from "./gen/repo.mjs";
 import { repo_fields } from "./gen/repo.mjs";
 import { toList } from "./gleam.mjs";
 import * as $hydration from "./hydration.mjs";
+
+function encode_decoded_repo(record) {
+  return $json.object(
+    toList([
+      ["uri", $json.string(record.uri)],
+      ["cid", $json.string(record.cid)],
+      ["value", $json.object(repo_fields(record.value))],
+    ]),
+  );
+}
 
 /**
  * Serialize a HydrationModel to the JSON shape embedded in the
@@ -27,7 +38,7 @@ export function encode_hydration_model(data) {
       ],
       [
         "repos",
-        $json.array(data.repos, (r) => { return $json.object(repo_fields(r)); }),
+        $json.array(data.repos, (r) => { return encode_decoded_repo(r); }),
       ],
     ]),
   );

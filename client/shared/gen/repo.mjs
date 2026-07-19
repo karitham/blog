@@ -6,17 +6,18 @@ import * as $internal from "../gen/internal.mjs";
 import { toList, prepend as listPrepend, CustomType as $CustomType } from "../gleam.mjs";
 
 export class Repo extends $CustomType {
-  constructor(created_at, description, name, repo_did, topics) {
+  constructor(created_at, description, name, repo_did, topics, website) {
     super();
     this.created_at = created_at;
     this.description = description;
     this.name = name;
     this.repo_did = repo_did;
     this.topics = topics;
+    this.website = website;
   }
 }
-export const Repo$Repo = (created_at, description, name, repo_did, topics) =>
-  new Repo(created_at, description, name, repo_did, topics);
+export const Repo$Repo = (created_at, description, name, repo_did, topics, website) =>
+  new Repo(created_at, description, name, repo_did, topics, website);
 export const Repo$isRepo = (value) => value instanceof Repo;
 export const Repo$Repo$created_at = (value) => value.created_at;
 export const Repo$Repo$0 = (value) => value.created_at;
@@ -28,6 +29,8 @@ export const Repo$Repo$repo_did = (value) => value.repo_did;
 export const Repo$Repo$3 = (value) => value.repo_did;
 export const Repo$Repo$topics = (value) => value.topics;
 export const Repo$Repo$4 = (value) => value.topics;
+export const Repo$Repo$website = (value) => value.website;
+export const Repo$Repo$5 = (value) => value.website;
 
 export const collection = "sh.tangled.repo";
 
@@ -36,15 +39,16 @@ export function repo_fields(value) {
     toList([
       toList([
         ["createdAt", $json.string(value.created_at)],
-        ["name", $json.string(value.name)],
         ["repoDid", $json.string(value.repo_did)],
       ]),
       $internal.opt("description", value.description, $json.string),
+      $internal.opt("name", value.name, $json.string),
       $internal.opt(
         "topics",
         value.topics,
         (items) => { return $json.array(items, $json.string); },
       ),
+      $internal.opt("website", value.website, $json.string),
     ]),
   );
 }
@@ -65,9 +69,10 @@ export function repo_decoder() {
         new $option.None(),
         $decode.optional($decode.string),
         (description) => {
-          return $decode.field(
+          return $decode.optional_field(
             "name",
-            $decode.string,
+            new $option.None(),
+            $decode.optional($decode.string),
             (name) => {
               return $decode.field(
                 "repoDid",
@@ -78,14 +83,22 @@ export function repo_decoder() {
                     new $option.None(),
                     $decode.optional($decode.list($decode.string)),
                     (topics) => {
-                      return $decode.success(
-                        new Repo(
-                          created_at,
-                          description,
-                          name,
-                          repo_did,
-                          topics,
-                        ),
+                      return $decode.optional_field(
+                        "website",
+                        new $option.None(),
+                        $decode.optional($decode.string),
+                        (website) => {
+                          return $decode.success(
+                            new Repo(
+                              created_at,
+                              description,
+                              name,
+                              repo_did,
+                              topics,
+                              website,
+                            ),
+                          );
+                        },
                       );
                     },
                   );
