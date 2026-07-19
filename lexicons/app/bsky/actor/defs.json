@@ -14,7 +14,8 @@
         "banner": { "type": "string", "format": "uri" },
         "followersCount": { "type": "integer" },
         "followsCount": { "type": "integer" },
-        "postsCount": { "type": "integer" }
+        "postsCount": { "type": "integer" },
+        "pronouns": { "type": "string" }
       }
     }
   }

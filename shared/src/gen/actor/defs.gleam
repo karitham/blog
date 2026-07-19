@@ -17,6 +17,7 @@ pub type ProfileViewDetailed {
     follows_count: Option(Int),
     handle: String,
     posts_count: Option(Int),
+    pronouns: Option(String),
   )
 }
 
@@ -30,6 +31,7 @@ pub fn profile_view_detailed_fields(value: ProfileViewDetailed) -> List(#(String
     internal.opt("followersCount", value.followers_count, json.int),
     internal.opt("followsCount", value.follows_count, json.int),
     internal.opt("postsCount", value.posts_count, json.int),
+    internal.opt("pronouns", value.pronouns, json.string),
   ])
 }
 
@@ -47,5 +49,6 @@ pub fn profile_view_detailed_decoder() -> decode.Decoder(ProfileViewDetailed) {
   use follows_count <- decode.optional_field("followsCount", option.None, decode.optional(decode.int))
   use handle <- decode.field("handle", decode.string)
   use posts_count <- decode.optional_field("postsCount", option.None, decode.optional(decode.int))
-  decode.success(ProfileViewDetailed(avatar:, banner:, description:, did:, display_name:, followers_count:, follows_count:, handle:, posts_count:))
+  use pronouns <- decode.optional_field("pronouns", option.None, decode.optional(decode.string))
+  decode.success(ProfileViewDetailed(avatar:, banner:, description:, did:, display_name:, followers_count:, follows_count:, handle:, posts_count:, pronouns:))
 }

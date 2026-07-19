@@ -18,6 +18,7 @@ fn sample_profile() -> ProfileViewDetailed {
     followers_count: Some(100),
     follows_count: Some(50),
     posts_count: Some(25),
+    pronouns: Some("they/them"),
   )
 }
 
@@ -102,6 +103,7 @@ pub fn round_trip_zero_counts_test() {
       followers_count: Some(0),
       follows_count: Some(0),
       posts_count: Some(0),
+      pronouns: None,
     )
   let original = HydrationModel(profile: profile, plays: [], repos: [])
   let json = encode.encode_hydration_model(original)

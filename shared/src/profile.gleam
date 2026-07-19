@@ -1,18 +1,15 @@
 import gen/actor/defs.{type ProfileViewDetailed}
-import gleam/option.{unwrap}
+import gleam/option.{None, Some, unwrap}
 import lustre/attribute.{alt, class, href, id, src, target}
 import lustre/element.{type Element, fragment, none, text}
-import lustre/element/html.{a, div, h1, img, p}
+import lustre/element/html.{a, div, h1, img, p, span}
 
 pub fn profile(profile: ProfileViewDetailed) -> Element(msg) {
   let bsky_url = "https://bsky.app/profile/" <> profile.handle
 
   let avatar = case unwrap(profile.avatar, "") {
     "" -> none()
-    url ->
-      a([href(bsky_url), target("_blank")], [
-        img([class("avatar"), src(url), alt("avatar")]),
-      ])
+    url -> img([class("avatar"), src(url), alt("avatar")])
   }
 
   let banner = case unwrap(profile.banner, "") {
@@ -23,19 +20,27 @@ pub fn profile(profile: ProfileViewDetailed) -> Element(msg) {
       ])
   }
 
+  let pronouns_el = case profile.pronouns {
+    Some(pronouns) -> span([class("pronouns")], [text("(" <> pronouns <> ")")])
+    None -> none()
+  }
+
   div([id("profile-section")], [
     fragment([
       banner,
       div([id("profile")], [
-        avatar,
-        h1([], [
-          a([href(bsky_url), target("_blank"), class("profile-name")], [
-            text(unwrap(profile.display_name, profile.handle)),
-          ]),
-        ]),
-        p([class("handle")], [
-          a([href(bsky_url), target("_blank")], [
-            text("@" <> profile.handle),
+        div([class("profile-header")], [
+          avatar,
+          div([class("profile-info")], [
+            h1([class("profile-name")], [
+              text(unwrap(profile.display_name, profile.handle)),
+            ]),
+            p([class("handle")], [
+              a([href(bsky_url), target("_blank")], [
+                text("@" <> profile.handle),
+              ]),
+              pronouns_el,
+            ]),
           ]),
         ]),
         p([class("description")], [text(unwrap(profile.description, ""))]),
