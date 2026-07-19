@@ -11,9 +11,9 @@ import section
 
 const max_repos = 5
 
-/// Dedupe by repo_did, drop auto-generated hash names, sort newest
-/// first, and take the top N. Sorting uses the parsed timestamp so
-/// different source offsets compare correctly.
+/// Dedupe by repo_did, sort newest first, take the top N. Sorting
+/// uses the parsed timestamp so different source offsets compare
+/// correctly.
 pub fn select_top_repos(repos: List(Repo)) -> List(Repo) {
   repos
   |> dedup_by_did
@@ -47,32 +47,23 @@ pub fn repos_section(repos: List(Repo)) -> Element(msg) {
 }
 
 fn dedup_by_did(repos: List(Repo)) -> List(Repo) {
-  repos
-  |> list.fold([], fn(acc: List(Repo), repo: Repo) {
-    case list.any(acc, fn(r: Repo) { r.repo_did == repo.repo_did }) {
-      True -> acc
-      False -> list.append(acc, [repo])
-    }
-  })
-  |> list.filter(fn(r: Repo) { !is_hash_name(r.name) })
-}
+  use acc, repo <- list.fold(repos, [])
 
-fn is_hash_name(name: String) -> Bool {
-  string.length(name) > 12
-  && !string.contains(name, "-")
-  && !string.contains(name, "_")
+  case list.any(acc, fn(r: Repo) { r.repo_did == repo.repo_did }) {
+    True -> acc
+    False -> list.append(acc, [repo])
+  }
 }
 
 fn render_repo_card(repo: Repo) -> Element(msg) {
-  let date_str = case timestamp.parse_rfc3339(repo.created_at) {
-    Ok(ts) -> date.format_month_day_year(ts)
-    Error(_) -> repo.created_at
-  }
   card.card(
     title_href: "https://tangled.org/" <> repo.repo_did,
-    title_text: repo.name,
+    title_text: unwrap(repo.name, ""),
     title_target: Some("_blank"),
-    date: date_str,
+    date: case timestamp.parse_rfc3339(repo.created_at) {
+      Ok(ts) -> date.format_month_day_year(ts)
+      Error(_) -> repo.created_at
+    },
     description: unwrap(repo.description, ""),
     topics: unwrap(repo.topics, []),
   )

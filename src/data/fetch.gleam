@@ -1,122 +1,87 @@
-import api
+//// Gather all site data for the SSG.
+////
+//// Each section fetches its own URL through the shared decoders in
+//// `shared/src/fetch.gleam`. Failure on a section logs a warning
+//// and returns an empty value, so one slow PDS doesn't take the
+//// whole build down.
+
 import data/frontmatter
 import data/model.{type Post, type SiteData, SiteData}
 import data/transport
-import fetch
-import gen/actor/defs.{type ProfileViewDetailed}
-import gen/actor/profile.{actor_profile_decoder}
-import gen/alpha/feed/play.{type AlphaFeedPlay, alpha_feed_play_decoder}
-import gen/client.{
-  ActorGetProfileParams, RepoListRecordsParams, actor_get_profile,
-  repo_list_records,
-}
-import gen/repo.{type Repo, repo_decoder}
-import gleam/dynamic/decode
+import fetch.{type DecodedRecord}
+import gen/alpha/feed/play.{type AlphaFeedPlay}
+import gen/repo.{type Repo}
 import gleam/io
 import gleam/list
-import gleam/option.{None, Some}
 import gleam/order
-import gleam/result
 import gleam/string
 import simplifile
 
 pub fn fetch_all() -> SiteData {
-  let client = transport.http_client()
+  let pinned_dids = fetch_pinned_dids()
+  let profile = fetch_profile()
+  let recent_plays = fetch_plays()
+  let repos = fetch_repos(pinned_dids)
 
-  let profile = fetch_profile(client)
-  let recent_plays = fetch_plays(client)
-  let repos = fetch_repos(client)
-  let posts = read_posts()
-
-  SiteData(profile:, recent_plays:, repos:, posts:)
+  SiteData(profile:, recent_plays:, repos:, posts: read_posts())
 }
 
-fn fetch_profile(client) -> ProfileViewDetailed {
-  let params = ActorGetProfileParams(actor: "karitham.dev")
-  case actor_get_profile(client, api.public_api, params, None) {
-    Ok(profile) -> profile
-    Error(e) -> {
-      io.println("Failed to fetch profile: " <> string.inspect(e))
-      panic as "profile fetch failed"
-    }
+// --- profile ---
+
+fn fetch_profile() {
+  case transport.fetch_body(fetch.profile_url()) {
+    Ok(body) ->
+      case fetch.decode_profile(body) {
+        Ok(profile) -> profile
+        Error(e) -> log_fail_and_panic("profile", string.inspect(e))
+      }
+    Error(e) -> log_fail_and_panic("profile", e)
   }
 }
 
-fn fetch_plays(client) -> List(AlphaFeedPlay) {
-  let params =
-    RepoListRecordsParams(
-      repo: api.did,
-      collection: "fm.teal.alpha.feed.play",
-      limit: Some(api.plays_limit),
-      cursor: None,
-      reverse: None,
-    )
-  case repo_list_records(client, api.pds_endpoint, params, None) {
-    Ok(output) ->
-      fetch.decode_record_values(output.records, alpha_feed_play_decoder())
-    Error(e) -> {
-      io.println("Failed to fetch plays: " <> string.inspect(e))
-      []
-    }
+// --- plays ---
+
+fn fetch_plays() -> List(AlphaFeedPlay) {
+  case transport.fetch_body(fetch.plays_url()) {
+    Ok(body) ->
+      case fetch.decode_plays(body) {
+        Ok(plays) -> plays
+        Error(e) -> log_fail("plays", string.inspect(e), [])
+      }
+    Error(e) -> log_fail("plays", e, [])
   }
 }
 
-fn fetch_repos(client) -> List(Repo) {
-  let pinned_dids = fetch_pinned_dids(client)
+// --- repos ---
 
-  let repos = fetch_all_repos(client)
-
-  api.filter_pinned_repos(repos, pinned_dids)
-}
-
-fn fetch_pinned_dids(client) -> List(String) {
-  let params =
-    RepoListRecordsParams(
-      repo: api.did,
-      collection: "sh.tangled.actor.profile",
-      limit: None,
-      cursor: None,
-      reverse: None,
-    )
-  case repo_list_records(client, api.pds_endpoint, params, None) {
-    Ok(output) ->
-      output.records
-      |> list.map(fn(record) {
-        decode.run(record.value, actor_profile_decoder())
-      })
-      |> result.values
-      |> list.map(fn(profile) {
-        case profile.pinned_repositories {
-          Some(dids) -> dids
-          None -> []
-        }
-      })
-      |> list.flatten
-      |> list.filter(fn(d) { d != "" })
-    Error(e) -> {
-      io.println("Failed to fetch pinned DIDs: " <> string.inspect(e))
-      []
-    }
+fn fetch_repos(pinned_dids: List(String)) -> List(DecodedRecord(Repo)) {
+  case transport.fetch_body(fetch.repos_url()) {
+    Ok(body) ->
+      case fetch.decode_repos(body) {
+        Ok(records) ->
+          records
+          |> fetch.filter_repos_by_did(pinned_dids)
+          |> list.map(fetch.resolve_repo_name)
+        Error(e) -> log_fail("repos", string.inspect(e), [])
+      }
+    Error(e) -> log_fail("repos", e, [])
   }
 }
 
-fn fetch_all_repos(client) -> List(Repo) {
-  let params =
-    RepoListRecordsParams(
-      repo: api.did,
-      collection: "sh.tangled.repo",
-      limit: None,
-      cursor: None,
-      reverse: None,
-    )
-  case repo_list_records(client, api.pds_endpoint, params, None) {
-    Ok(output) -> fetch.decode_record_values(output.records, repo_decoder())
-    Error(e) -> {
-      io.println("Failed to fetch repos: " <> string.inspect(e))
-      []
-    }
+// --- pinned DIDs ---
+
+fn fetch_pinned_dids() -> List(String) {
+  case transport.fetch_body(fetch.pinned_dids_url()) {
+    Ok(body) ->
+      case fetch.decode_actor_profiles(body) {
+        Ok(profiles) -> fetch.pinned_dids_from_profiles(profiles)
+        Error(_) -> []
+      }
+    Error(_) -> []
   }
 }
+
+// --- posts (filesystem, not HTTP) ---
 
 /// Read every post under `priv/posts/<slug>/index.md`. Includes
 /// drafts (caller filters them). Fails the build if any post has
@@ -187,4 +152,16 @@ fn format_parse_error(slug: String, e: frontmatter.ParseError) -> String {
 
 fn compare_posts_desc(a: Post, b: Post) -> order.Order {
   string.compare(b.date, a.date)
+}
+
+// --- logging ---
+
+fn log_fail_and_panic(what: String, reason: String) -> a {
+  io.println("Failed to fetch " <> what <> ": " <> reason)
+  panic as "required fetch failed"
+}
+
+fn log_fail(what: String, reason: String, fallback: a) -> a {
+  io.println("Failed to fetch " <> what <> ": " <> reason)
+  fallback
 }

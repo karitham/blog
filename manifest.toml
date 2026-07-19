@@ -11,17 +11,6 @@ packages = [
     "gleam",
   ], requirements = [
   ], otp_app = "argv", source = "hex", outer_checksum = "3277D100448BDB4A29B6D58C0F36F631CBC349E8BDD09766C6309DF202831140" },
-  { name = "atproto_client", version = "0.1.1", build_tools = [
-    "gleam",
-  ], requirements = [
-    "gleam_crypto",
-    "gleam_http",
-    "gleam_json",
-    "gleam_stdlib",
-    "gleam_time",
-    "gose",
-    "kryptos",
-  ], otp_app = "atproto_client", source = "hex", outer_checksum = "97A6C830B0CF6F3EB9BA6ECF92C7F4E57366919F417DA35FD325431C03B95E19" },
   { name = "atproto_codegen", version = "0.3.0", build_tools = [
     "gleam",
   ], requirements = [
@@ -40,11 +29,6 @@ packages = [
     "gleam_stdlib",
     "simplifile",
   ], otp_app = "atproto_lexicon", source = "hex", outer_checksum = "556D2AE353100AD0CFB279228346C23E8A733FE733250E5F3E9A4634AF574815" },
-  { name = "bigi", version = "4.1.1", build_tools = [
-    "gleam",
-  ], requirements = [
-    "gleam_stdlib",
-  ], otp_app = "bigi", source = "hex", outer_checksum = "44FEDF1DF5C1F426A80B67C32B976D0828D66524E11BDC2DD22B78D37C883BA7" },
   { name = "casefold", version = "2.1.0", build_tools = [
     "gleam",
   ], requirements = [
@@ -60,11 +44,6 @@ packages = [
   ], requirements = [
     "gleam_stdlib",
   ], otp_app = "filepath", source = "hex", outer_checksum = "B06A9AF0BF10E51401D64B98E4B627F1D2E48C154967DA7AF4D0914780A6D40A" },
-  { name = "gleam_crypto", version = "1.6.0", build_tools = [
-    "gleam",
-  ], requirements = [
-    "gleam_stdlib",
-  ], otp_app = "gleam_crypto", source = "hex", outer_checksum = "2DE9E4EF53CF6FEE049D4F765731F7178F7A11AEFAE00EEE63BF7536B354AD3F" },
   { name = "gleam_erlang", version = "1.3.0", build_tools = [
     "gleam",
   ], requirements = [
@@ -112,14 +91,6 @@ packages = [
   ], requirements = [
     "gleam_stdlib",
   ], otp_app = "gleeunit", source = "hex", outer_checksum = "EC31ABA74256AEA531EDF8169931D775BBB384FED0A8A1BDC4DD9354E3E21826" },
-  { name = "gose", version = "2.1.0", build_tools = [
-    "gleam",
-  ], requirements = [
-    "gleam_json",
-    "gleam_stdlib",
-    "gleam_time",
-    "kryptos",
-  ], otp_app = "gose", source = "hex", outer_checksum = "F1F172D428A07BC6F3229F8363B85E6E8C79A5E9E28F27B07C2EFBF1F6B08114" },
   { name = "houdini", version = "1.2.1", build_tools = [
     "gleam",
   ], requirements = [
@@ -129,13 +100,6 @@ packages = [
   ], requirements = [
     "gleam_stdlib",
   ], otp_app = "justin", source = "hex", outer_checksum = "8B1C62269E8607D0A0ED698B7903984CE0BF7B6B3C0DEA3C6C8302B39402837B" },
-  { name = "kryptos", version = "1.4.0", build_tools = [
-    "gleam",
-  ], requirements = [
-    "bigi",
-    "gleam_stdlib",
-    "gleam_time",
-  ], otp_app = "kryptos", source = "hex", outer_checksum = "734DAB837962A4A45788F8E6350EF4A6DF20A1F54734736CD1FF3A03FFCE4C97" },
   { name = "lustre", version = "5.7.1", build_tools = [
     "gleam",
   ], requirements = [
@@ -157,7 +121,6 @@ packages = [
   { name = "shared", version = "1.0.0", build_tools = [
     "gleam",
   ], requirements = [
-    "atproto_client",
     "gleam_json",
     "gleam_stdlib",
     "gleam_time",
@@ -183,7 +146,6 @@ packages = [
 
 [requirements]
 argv = { version = ">= 1.0.0 and < 2.0.0" }
-atproto_client = { version = ">= 0.1.0 and < 1.0.0" }
 atproto_codegen = { version = ">= 0.3.0 and < 1.0.0" }
 filepath = { version = ">= 1.0.0 and < 2.0.0" }
 gleam_http = { version = ">= 4.0.0 and < 5.0.0" }

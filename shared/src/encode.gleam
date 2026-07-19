@@ -1,6 +1,7 @@
+import fetch.{type DecodedRecord}
 import gen/actor/defs.{profile_view_detailed_fields}
 import gen/alpha/feed/play.{alpha_feed_play_fields}
-import gen/repo.{repo_fields}
+import gen/repo.{type Repo, repo_fields}
 import gleam/json
 import hydration.{type HydrationModel}
 
@@ -19,8 +20,16 @@ pub fn encode_hydration_model(data: HydrationModel) -> String {
     ),
     #(
       "repos",
-      json.array(from: data.repos, of: fn(r) { json.object(repo_fields(r)) }),
+      json.array(from: data.repos, of: fn(r) { encode_decoded_repo(r) }),
     ),
   ])
   |> json.to_string
+}
+
+fn encode_decoded_repo(record: DecodedRecord(Repo)) -> json.Json {
+  json.object([
+    #("uri", json.string(record.uri)),
+    #("cid", json.string(record.cid)),
+    #("value", json.object(repo_fields(record.value))),
+  ])
 }

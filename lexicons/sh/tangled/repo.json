@@ -8,11 +8,12 @@
       "key": "tid",
       "record": {
         "type": "object",
-        "required": ["name", "repoDid", "createdAt"],
+        "required": ["repoDid", "createdAt"],
         "properties": {
           "name": { "type": "string" },
           "description": { "type": "string" },
           "repoDid": { "type": "string", "format": "did" },
+          "website": { "type": "string" },
           "createdAt": { "type": "string", "format": "datetime" },
           "topics": { "type": "array", "items": { "type": "string" } }
         }

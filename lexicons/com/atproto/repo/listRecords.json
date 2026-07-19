@@ -4,19 +4,13 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List a range of records in a repository, matching a specific collection. Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["repo", "collection"],
         "properties": {
           "repo": { "type": "string", "format": "at-identifier" },
           "collection": { "type": "string", "format": "nsid" },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 100,
-            "default": 50
-          },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
           "cursor": { "type": "string" },
           "reverse": { "type": "boolean" }
         }

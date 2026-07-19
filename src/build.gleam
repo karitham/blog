@@ -79,7 +79,11 @@ fn write_index(data: SiteData) {
 
   let dynamic =
     div([id("dynamic-sections")], [
-      dynamic.dynamic_sections(data.profile, data.recent_plays, data.repos),
+      dynamic.dynamic_sections(
+        data.profile,
+        data.recent_plays,
+        list.map(data.repos, fn(record) { record.value }),
+      ),
     ])
 
   let content =

@@ -1,3 +1,4 @@
+import fetch.{type DecodedRecord}
 import gen/actor/defs.{type ProfileViewDetailed}
 import gen/alpha/feed/play.{type AlphaFeedPlay}
 import gen/repo.{type Repo}
@@ -6,7 +7,7 @@ pub type SiteData {
   SiteData(
     profile: ProfileViewDetailed,
     recent_plays: List(AlphaFeedPlay),
-    repos: List(Repo),
+    repos: List(DecodedRecord(Repo)),
     posts: List(Post),
   )
 }

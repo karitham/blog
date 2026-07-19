@@ -6,9 +6,11 @@
 # Build the static site from scratch.
 build: codegen client ssg
 
-# Regenerate types/decoders from vendored Lexicon schemas.
+# Regenerate types/decoders from vendored Lexicon schemas. We don't
+# ask for the typed XRPC client — both SSG and browser go through
+# `shared/src/fetch.gleam`'s raw HTTP + decoders instead.
 codegen:
-	gleam run -m atproto_codegen -- ./lexicons ./shared/src/gen gen app.bsky.,com.atproto.,sh.tangled.,fm.teal. client
+	gleam run -m atproto_codegen -- ./lexicons ./shared/src/gen gen app.bsky.,com.atproto.,sh.tangled.,fm.teal.
 
 # Build the JS bundle.
 client:

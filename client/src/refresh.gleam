@@ -3,12 +3,12 @@
 //// Fetches fresh data and re-renders all dynamic sections on page load.
 //// Plays are then polled every 30s while the tab is visible.
 
-import api
 import browser
 import dynamic
 import fetch
 import gen/alpha/feed/play.{type AlphaFeedPlay}
 import gen/repo.{type Repo}
+import gleam/list
 import gleam/string
 import plays as plays_view
 import profile as profile_view
@@ -56,21 +56,29 @@ fn on_profile(text: String) -> Nil {
 
 fn fetch_pinned_dids_and_repos() -> Nil {
   browser.fetch_text(fetch.pinned_dids_url(), fn(pinned_text) {
-    case fetch.decode_pinned_dids(pinned_text) {
-      Ok(dids) ->
+    case fetch.decode_actor_profiles(pinned_text) {
+      Ok(profiles) -> {
+        let pinned_dids = fetch.pinned_dids_from_profiles(profiles)
         browser.fetch_text(fetch.repos_url(), fn(repos_text) {
           case fetch.decode_repos(repos_text) {
-            Ok(all_repos) ->
-              commit_repos(api.filter_pinned_repos(all_repos, dids))
+            Ok(records) -> {
+              let repos =
+                records
+                |> fetch.filter_repos_by_did(pinned_dids)
+                |> list.map(fetch.resolve_repo_name)
+                |> list.map(fn(record) { record.value })
+              commit_repos(repos)
+            }
             Error(reason) ->
               browser.log_error(
                 "decode_repos failed: " <> string.inspect(reason),
               )
           }
         })
+      }
       Error(reason) ->
         browser.log_error(
-          "decode_pinned_dids failed: " <> string.inspect(reason),
+          "decode_actor_profiles failed: " <> string.inspect(reason),
         )
     }
   })

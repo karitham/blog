@@ -12,17 +12,20 @@ pub type Repo {
   Repo(
     created_at: String,
     description: Option(String),
-    name: String,
+    name: Option(String),
     repo_did: String,
     topics: Option(List(String)),
+    website: Option(String),
   )
 }
 
 pub fn repo_fields(value: Repo) -> List(#(String, json.Json)) {
   list.flatten([
-    [#("createdAt", json.string(value.created_at)), #("name", json.string(value.name)), #("repoDid", json.string(value.repo_did))],
+    [#("createdAt", json.string(value.created_at)), #("repoDid", json.string(value.repo_did))],
     internal.opt("description", value.description, json.string),
+    internal.opt("name", value.name, json.string),
     internal.opt("topics", value.topics, fn(items) { json.array(items, json.string) }),
+    internal.opt("website", value.website, json.string),
   ])
 }
 
@@ -36,8 +39,9 @@ pub fn encode_repo(value: Repo) -> json.Json {
 pub fn repo_decoder() -> decode.Decoder(Repo) {
   use created_at <- decode.field("createdAt", decode.string)
   use description <- decode.optional_field("description", option.None, decode.optional(decode.string))
-  use name <- decode.field("name", decode.string)
+  use name <- decode.optional_field("name", option.None, decode.optional(decode.string))
   use repo_did <- decode.field("repoDid", decode.string)
   use topics <- decode.optional_field("topics", option.None, decode.optional(decode.list(decode.string)))
-  decode.success(Repo(created_at:, description:, name:, repo_did:, topics:))
+  use website <- decode.optional_field("website", option.None, decode.optional(decode.string))
+  decode.success(Repo(created_at:, description:, name:, repo_did:, topics:, website:))
 }

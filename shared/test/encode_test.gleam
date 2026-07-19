@@ -1,5 +1,6 @@
 import decode
 import encode
+import fetch.{type DecodedRecord, DecodedRecord}
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
 import gen/alpha/feed/play.{type AlphaFeedPlay, AlphaFeedPlay, ArtistView}
 import gen/repo.{type Repo, Repo}
@@ -48,21 +49,31 @@ fn sample_plays() -> List(AlphaFeedPlay) {
   ]
 }
 
-fn sample_repos() -> List(Repo) {
+fn sample_repos() -> List(DecodedRecord(Repo)) {
   [
-    Repo(
-      name: "repo-one",
-      description: Some("first"),
-      repo_did: "did:plc:one",
-      created_at: "2026-01-01T00:00:00Z",
-      topics: Some(["gleam", "atproto"]),
+    DecodedRecord(
+      uri: "at://did:plc:one/sh.tangled.repo/repo-one",
+      cid: "bafy1",
+      value: Repo(
+        name: Some("repo-one"),
+        description: Some("first"),
+        repo_did: "did:plc:one",
+        created_at: "2026-01-01T00:00:00Z",
+        topics: Some(["gleam", "atproto"]),
+        website: None,
+      ),
     ),
-    Repo(
-      name: "repo-two",
-      description: Some(""),
-      repo_did: "did:plc:two",
-      created_at: "2026-02-01T00:00:00Z",
-      topics: Some([]),
+    DecodedRecord(
+      uri: "at://did:plc:two/sh.tangled.repo/repo-two",
+      cid: "bafy2",
+      value: Repo(
+        name: Some("repo-two"),
+        description: Some(""),
+        repo_did: "did:plc:two",
+        created_at: "2026-02-01T00:00:00Z",
+        topics: Some([]),
+        website: None,
+      ),
     ),
   ]
 }
