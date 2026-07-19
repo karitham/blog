@@ -167,6 +167,7 @@ fn template(slug: String) -> String {
   <> "\n"
   <> "tags: []\n"
   <> "draft: true\n"
+  <> "image: \n"
   <> "---\n"
   <> "\n"
   <> "Write your post here.\n"

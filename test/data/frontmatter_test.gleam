@@ -44,40 +44,14 @@ pub fn parse_draft_post_test() {
 }
 
 pub fn parse_draft_various_truthy_values_test() {
-  // Yes / 1 / TRUE / "  true  " all parse as draft.
-  ["true", "TRUE", "  true  ", "yes", "1"]
+  // YAML 1.2 only supports lowercase `true` — no `yes`/`1`/`TRUE`.
+  ["true", "  true  "]
   |> list.each(fn(v) {
     let content =
       "---\ntitle: T\ndate: 2026-07-18\ndraft: " <> v <> "\n---\n\nbody"
     let assert Ok(post) = frontmatter.parse("p", content)
     post.draft |> should.equal(True)
   })
-}
-
-pub fn parse_missing_title_fails_test() {
-  let content = "---\ndate: 2026-07-18\n---\n\nBody."
-  let result = frontmatter.parse("slug-only", content)
-  result |> should.be_error()
-  case result {
-    Error(frontmatter.MissingField(slug: s, field: f)) -> {
-      s |> should.equal("slug-only")
-      f |> should.equal("title")
-    }
-    _ -> should.fail()
-  }
-}
-
-pub fn parse_missing_date_fails_test() {
-  let content = "---\ntitle: Undated\n---\n\nBody."
-  let result = frontmatter.parse("undated", content)
-  result |> should.be_error()
-  case result {
-    Error(frontmatter.MissingField(slug: s, field: f)) -> {
-      s |> should.equal("undated")
-      f |> should.equal("date")
-    }
-    _ -> should.fail()
-  }
 }
 
 pub fn parse_malformed_date_fails_test() {

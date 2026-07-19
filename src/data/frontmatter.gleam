@@ -1,10 +1,12 @@
 //// Frontmatter parser for blog posts.
 ////
-//// Posts in `priv/posts/<slug>/index.md` start with a YAML-ish block:
+//// Posts in `priv/posts/<slug>/index.md` start with a YAML block:
 ////
 ////     ---
 ////     title: My Post
-////     description: short summary
+////     description: >-
+////       A short summary
+////       that can span lines.
 ////     date: 2026-07-18
 ////     tags: [gleam, atproto]
 ////     draft: true
@@ -14,22 +16,24 @@
 //// `ParseError` if anything is wrong). Pure — does no I/O.
 
 import data/model.{type Post, Post}
-import data/util
+import gleam/dynamic/decode
 import gleam/list
 import gleam/result
 import gleam/string
 import gleam/time/timestamp
 import mork
+import yamleam
+import yamleam/error
 
 pub type ParseError {
   MissingField(slug: String, field: String)
   InvalidDate(slug: String, value: String)
+  InvalidYaml(slug: String, error: String)
 }
 
 /// Parse raw markdown content (frontmatter + body) into a Post.
-/// Returns an error if a required field is missing or the date is
-/// malformed — the build fails loudly on those rather than
-/// silently producing a broken post.
+/// Returns an error if a required field is missing, the date is
+/// malformed, or the YAML is invalid.
 pub fn parse(slug: String, content: String) -> Result(Post, ParseError) {
   case string.split(content, on: "\n---\n") {
     [frontmatter, body] -> parse_with_frontmatter(slug, frontmatter, body)
@@ -42,84 +46,40 @@ fn parse_with_frontmatter(
   frontmatter: String,
   body: String,
 ) -> Result(Post, ParseError) {
-  let lines = string.split(frontmatter, "\n")
-  let title = util.extract_field(lines, "title:", "")
-  let description = util.extract_field(lines, "description:", "")
-  let date = util.extract_field(lines, "date:", "")
-  let tags_str = util.extract_field(lines, "tags:", "[]")
-  let draft_str = util.extract_field(lines, "draft:", "false")
-  let image = util.extract_field(lines, "image:", "")
-
-  case title == "", date == "", parse_article_date(date) {
-    True, _, _ -> Error(MissingField(slug, "title"))
-    _, True, _ -> Error(MissingField(slug, "date"))
-    _, _, Error(_) -> Error(InvalidDate(slug, date))
-    False, False, Ok(_) ->
-      Ok(build_post(
-        slug,
-        title,
-        description,
-        date,
-        tags_str,
-        draft_str,
-        body,
-        image,
-      ))
+  let decoder = {
+    use title <- decode.field("title", decode.string)
+    use description <- decode.optional_field("description", "", decode.string)
+    use date <- decode.field("date", decode.string)
+    use tags <- decode.optional_field("tags", [], decode.list(decode.string))
+    use draft <- decode.optional_field("draft", False, decode.bool)
+    use image <- decode.optional_field("image", "", decode.string)
+    decode.success(Post(
+      title:,
+      description:,
+      slug:,
+      date:,
+      content: "",
+      tags:,
+      draft:,
+      image:,
+    ))
   }
-}
 
-fn build_post(
-  slug slug: String,
-  title title: String,
-  description description: String,
-  date date: String,
-  tags_str tags_str: String,
-  draft_str draft_str: String,
-  body body: String,
-  image image: String,
-) -> Post {
-  let html_body =
-    body
-    |> string.trim
-    |> mork.parse
-    |> mork.to_html
-
-  Post(
-    title: title,
-    description: description,
-    slug: slug,
-    date: date,
-    content: html_body,
-    tags: parse_tags_field(tags_str),
-    draft: parse_bool(draft_str),
-    image: image,
-  )
-}
-
-fn parse_tags_field(tags_str: String) -> List(String) {
-  tags_str
-  |> string.trim
-  |> strip_brackets
-  |> split_tags
-}
-
-fn strip_brackets(s: String) -> String {
-  s
-  |> string.drop_start(1)
-  |> string.drop_end(1)
-}
-
-fn split_tags(s: String) -> List(String) {
-  case s {
-    "" -> []
-    _ -> s |> string.split(",") |> list.map(string.trim)
-  }
-}
-
-fn parse_bool(s: String) -> Bool {
-  case string.lowercase(string.trim(s)) {
-    "true" | "yes" | "1" -> True
-    _ -> False
+  case yamleam.parse(frontmatter, decoder) {
+    Ok(post) -> {
+      case parse_article_date(post.date) {
+        Ok(_) -> {
+          let html_body =
+            body
+            |> string.trim
+            |> mork.parse
+            |> mork.to_html
+          Ok(Post(..post, content: html_body))
+        }
+        Error(_) -> Error(InvalidDate(slug, post.date))
+      }
+    }
+    Error(err) -> Error(InvalidYaml(slug, error.to_string(err)))
   }
 }
 

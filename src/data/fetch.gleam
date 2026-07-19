@@ -180,6 +180,8 @@ fn format_parse_error(slug: String, e: frontmatter.ParseError) -> String {
       <> "\" has invalid date \""
       <> value
       <> "\" (expected YYYY-MM-DD)"
+    frontmatter.InvalidYaml(_, error) ->
+      "post \"" <> slug <> "\" has invalid frontmatter: " <> error
   }
 }
 

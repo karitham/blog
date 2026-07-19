@@ -1,3 +1,4 @@
+import api
 import date
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -63,7 +64,7 @@ fn head_children(
     // Open Graph
     html.meta([
       attribute.attribute("property", "og:site_name"),
-      attribute.content("karitham.dev"),
+      attribute.content(string.replace(api.site_url(), "https://", "")),
     ]),
     html.meta([
       attribute.attribute("property", "og:type"),
@@ -359,7 +360,7 @@ pub fn rss_feed(posts: List(#(String, String, String, String))) -> String {
       "  <item>
     <title>" <> title <> "</title>
     <description>" <> description <> "</description>
-    <link>https://karitham.dev/posts/" <> slug <> "/</link>
+    <link>" <> api.site_url() <> "/posts/" <> slug <> "/</link>
     <pubDate>" <> date.to_rfc822(date_str) <> "</pubDate>
   </item>"
     })
@@ -368,10 +369,10 @@ pub fn rss_feed(posts: List(#(String, String, String, String))) -> String {
 <rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">
   <channel>
     <title>Karitham's Thoughts</title>
-    <link>https://karitham.dev</link>
+    <link>" <> api.site_url() <> "</link>
     <description>Kar's thoughts</description>
     <language>en</language>
-    <atom:link href=\"https://karitham.dev/rss.xml\" rel=\"self\" type=\"application/rss+xml\"/>
+    <atom:link href=\"" <> api.site_url() <> "/rss.xml\" rel=\"self\" type=\"application/rss+xml\"/>
     " <> string.join(items, "\n") <> "
   </channel>
 </rss>"

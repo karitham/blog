@@ -14,6 +14,16 @@ just new my-slug     # scaffold a new post
 
 Needs Gleam 1.17+ and Erlang/OTP 28+ — `nix develop` provides everything.
 
+### Environment variables
+
+| Variable   | Default                | Description                          |
+| ---------- | ---------------------- | ------------------------------------ |
+| `BLOG_URL` | `https://karitham.dev` | Base URL for OG tags, RSS, and links |
+
+```sh
+BLOG_URL="http://localhost:8000" just build
+```
+
 ## Adding a post
 
 ```sh
@@ -28,6 +38,7 @@ Or create a directory manually:
 ```
 priv/posts/my-post/
   index.md
+  hero.png          # optional hero/banner image
   diagram.png       # → /posts/my-post/diagram.png
 ```
 
@@ -40,6 +51,7 @@ description: short summary
 date: 2026-07-18
 tags: [gleam, atproto]
 draft: true
+image: hero.png
 ---
 ```
 

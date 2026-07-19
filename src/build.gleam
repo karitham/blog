@@ -1,11 +1,14 @@
+import api
 import data/fetch
 import data/model.{type Post, type SiteData, SiteData}
 import dynamic
 import encode
+import filepath
 import gen/actor/defs.{type ProfileViewDetailed}
 import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/result
 import gleam/string
 import hydration.{HydrationModel}
 import lustre/attribute.{class, id}
@@ -92,7 +95,7 @@ fn write_index(data: SiteData) {
     layout.Meta(
       description: description,
       image: og_image,
-      url: "https://karitham.dev/",
+      url: api.site_url() <> "/",
       logo: data.profile.avatar,
       page_type: layout.Website,
     )
@@ -114,14 +117,14 @@ fn write_single_post(post: Post, profile: ProfileViewDetailed) {
   let title = post.title <> " - Kar"
   let og_image: Option(String) = case post.image {
     "" -> profile.avatar
-    img -> Some(img)
+    img -> Some(resolve_og_image_url(post.slug, img))
   }
 
   let meta =
     layout.Meta(
       description: post.description,
       image: og_image,
-      url: "https://karitham.dev/posts/" <> post.slug <> "/",
+      url: api.site_url() <> "/posts/" <> post.slug <> "/",
       logo: profile.avatar,
       page_type: layout.Article(published_time: post.date, tags: post.tags),
     )
@@ -234,6 +237,23 @@ fn copy_client_js() {
       io.println(
         "  client JS not built — skip 'cd client && gleam build' first",
       )
+  }
+}
+
+fn resolve_og_image_url(slug: String, img: String) -> String {
+  case
+    string.starts_with(img, "http://") || string.starts_with(img, "https://")
+  {
+    True -> img
+    False -> {
+      let expanded = filepath.expand(img) |> result.unwrap(img)
+      case filepath.is_absolute(expanded) {
+        True -> api.site_url() <> expanded
+        False ->
+          api.site_url()
+          <> filepath.join(filepath.join("/posts", slug), expanded)
+      }
+    }
   }
 }
 

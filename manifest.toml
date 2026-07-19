@@ -174,6 +174,11 @@ packages = [
   ], requirements = [
     "gleam_stdlib",
   ], otp_app = "splitter", source = "hex", outer_checksum = "3DFD6B6C49E61EDAF6F7B27A42054A17CFF6CA2135FF553D0CB61C234D281DD0" },
+  { name = "yamleam", version = "1.0.0", build_tools = [
+    "gleam",
+  ], requirements = [
+    "gleam_stdlib",
+  ], otp_app = "yamleam", source = "hex", outer_checksum = "16213706D44FF1A0010ECD9E86F95E7F50E5C4BE4D61219512CF6A118E8CEC83" },
 ]
 
 [requirements]
@@ -191,3 +196,4 @@ lustre = { version = ">= 4.0.0 and < 6.0.0" }
 mork = { version = ">= 1.12.1 and < 2.0.0" }
 shared = { path = "shared" }
 simplifile = { version = ">= 2.0.0 and < 3.0.0" }
+yamleam = { version = ">= 1.0.0 and < 2.0.0" }

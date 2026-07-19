@@ -1,5 +1,18 @@
 import gen/repo.{type Repo}
 import gleam/list
+import gleam/string
+
+/// Returns the site URL, preferring the BLOG_URL environment variable
+/// if set. Falls back to the hardcoded default.
+pub fn site_url() -> String {
+  case os_getenv("BLOG_URL") {
+    Ok(url) -> string.trim(url)
+    Error(_) -> "https://karitham.dev"
+  }
+}
+
+@external(erlang, "api_ffi", "getenv")
+fn os_getenv(name: String) -> Result(String, Nil)
 
 pub const pds_endpoint = "https://eurosky.social"
 
