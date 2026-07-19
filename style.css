@@ -62,63 +62,51 @@ body {
   line-height: 1.6;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* Headings */
+:is(h1, h2, h3, h4, h5, h6) {
   font-family: inherit;
   font-weight: 600;
   margin: 0 0 0.75rem;
   text-wrap: balance;
 }
 
-h1 {
-  font-size: 1.5rem;
-}
+h1 { font-size: 1.5rem; }
 
-h2 {
-  font-size: 1.2rem;
-}
+h2 { font-size: 1.2rem; }
 
-h3 {
-  font-size: 1.05rem;
-}
+h3 { font-size: 1.05rem; }
 
+/* Links — terminal-style invert on hover */
 a {
   color: var(--accent);
   text-decoration: none;
-  transition-property: color, background;
-  transition-duration: 120ms;
-  transition-timing-function: ease-out;
-}
+  transition: color 120ms ease-out, background 120ms ease-out;
 
-a:hover {
-  color: var(--bg);
-  background: var(--accent);
-}
+  &:hover {
+    color: var(--bg);
+    background: var(--accent);
+  }
 
-/* Inline elements inside an anchor should integrate with the link on
-   hover — otherwise the anchor's hover highlight gets hidden behind
-   their own background (e.g. <a><code>nix</code></a>). */
-a code,
-a strong,
-a em,
-a i {
-  color: inherit;
-}
+  /* Inline elements inside an anchor should integrate with the link on
+     hover — otherwise the anchor's hover highlight gets hidden behind
+     their own background (e.g. <a><code>nix</code></a>). */
+  & code,
+  & strong,
+  & em,
+  & i {
+    color: inherit;
+  }
 
-a:hover code {
-  background: transparent;
+  &:hover code {
+    background: transparent;
+  }
 }
 
 strong {
   color: var(--blue);
 }
 
-i,
-em {
+:is(i, em) {
   color: var(--peach);
 }
 
@@ -151,9 +139,7 @@ blockquote {
   color: var(--text-dim);
 }
 
-p,
-ul,
-ol {
+:is(p, ul, ol) {
   line-height: 1.65;
   margin: 0.85rem 0;
   text-wrap: pretty;
@@ -177,9 +163,7 @@ video {
   display: block;
 }
 
-figure {
-  margin: 0;
-}
+figure { margin: 0; }
 
 figcaption {
   font-size: 0.8rem;
@@ -187,13 +171,13 @@ figcaption {
   margin-top: 0.35rem;
 }
 
-.dim {
-  color: var(--text-dim);
-}
+/* ============================================================
+   Utility classes
+   ============================================================ */
 
-.dimmer {
-  color: var(--text-dimmer);
-}
+.dim { color: var(--text-dim); }
+
+.dimmer { color: var(--text-dimmer); }
 
 .emph {
   color: var(--blue);
@@ -235,17 +219,17 @@ figcaption {
   top: 0;
   z-index: 10;
   padding: 0.7rem 1.5rem;
-}
 
-#nav a {
-  color: var(--text-dim);
-  font-size: 0.9rem;
-  font-weight: 500;
-}
+  & a {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    font-weight: 500;
 
-#nav a:hover {
-  color: var(--text);
-  background: none;
+    &:hover {
+      color: var(--text);
+      background: none;
+    }
+  }
 }
 
 /* Footer */
@@ -266,14 +250,14 @@ footer {
   margin-bottom: 1rem;
   border-radius: 4px;
   overflow: hidden;
-}
 
-#banner img {
-  display: block;
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  outline: none;
+  & img {
+    display: block;
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    outline: none;
+  }
 }
 
 /* ============================================================
@@ -284,23 +268,21 @@ footer {
   margin-bottom: 1.75rem;
   border-radius: 4px;
   overflow: hidden;
-}
 
-.hero-image img {
-  display: block;
-  width: 100%;
-  height: 280px;
-  object-fit: cover;
-  outline: none;
+  & img {
+    display: block;
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    outline: none;
+  }
 }
 
 /* ============================================================
    Profile
    ============================================================ */
 
-#profile {
-  padding: 0;
-}
+#profile { padding: 0; }
 
 /* Avatar + text row */
 .profile-header {
@@ -310,9 +292,7 @@ footer {
   padding: 0.5rem 0 0 1.5rem;
 }
 
-.profile-info {
-  padding-bottom: 2px;
-}
+.profile-info { padding-bottom: 2px; }
 
 #profile .avatar {
   width: 64px;
@@ -329,18 +309,16 @@ footer {
   margin: 0;
 }
 
-.handle {
-  margin: 0.15rem 0 0;
-}
+.handle { margin: 0.15rem 0 0; }
 
 .handle a {
   font-size: 0.85rem;
   color: var(--blue);
-}
 
-.handle a:hover {
-  background: var(--blue);
-  color: var(--bg);
+  &:hover {
+    background: var(--blue);
+    color: var(--bg);
+  }
 }
 
 .handle .pronouns {
@@ -366,24 +344,20 @@ footer {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
-}
 
-.profile-stats strong {
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
+  & strong {
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
 }
 
 /* ============================================================
    Sections
    ============================================================ */
 
-.section {
-  margin: 2.5rem 0;
-}
+.section { margin: 2.5rem 0; }
 
-#plays h2::before,
-#repos h2::before,
-.section-header h2::before {
+:is(#plays, #repos, .section-header) h2::before {
   content: "$ ";
   color: var(--accent);
 }
@@ -400,14 +374,8 @@ footer {
 }
 
 @keyframes stale-pulse {
-  0%,
-  100% {
-    opacity: 0.25;
-  }
-
-  50% {
-    opacity: 1;
-  }
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
 }
 
 /* No border-bottom — the rows below carry their own dividers. */
@@ -416,32 +384,29 @@ footer {
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 0.5rem;
-}
 
-.section-header h2 {
-  margin-bottom: 0;
-  font-size: 1.05rem;
+  & h2 {
+    margin-bottom: 0;
+    font-size: 1.05rem;
+  }
 }
 
 /* ============================================================
    Cards (articles + projects) — flat rows
    ============================================================ */
 
+/* Shared card/play-row structure */
+:is(.card, .play-row) {
+  border-bottom: 1px solid var(--border);
+  transition: background 120ms ease-out;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--bg-alt); }
+}
+
 .card {
   padding: 0.85rem 0.5rem;
-  border-bottom: 1px solid var(--border);
   margin-bottom: 0;
-  transition-property: background;
-  transition-duration: 120ms;
-  transition-timing-function: ease-out;
-}
-
-.card:last-child {
-  border-bottom: none;
-}
-
-.card:hover {
-  background: var(--bg-alt);
 }
 
 .card-head {
@@ -456,11 +421,11 @@ footer {
   font-weight: 600;
   font-size: 1rem;
   color: var(--accent);
-}
 
-.card-title:hover {
-  background: var(--accent);
-  color: var(--bg);
+  &:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
 }
 
 .card-date {
@@ -484,9 +449,7 @@ footer {
   font-size: 0.78rem;
 }
 
-.card-tag {
-  color: var(--blue);
-}
+.card-tag { color: var(--blue); }
 
 .card-tag::before {
   content: "#";
@@ -502,17 +465,6 @@ footer {
   align-items: baseline;
   gap: 1rem;
   padding: 0.3rem 0.5rem;
-  border-bottom: 1px solid var(--border);
-  transition-property: background;
-  transition-duration: 120ms;
-}
-
-.play-row:last-child {
-  border-bottom: none;
-}
-
-.play-row:hover {
-  background: var(--bg-alt);
 }
 
 .play-time {
@@ -559,11 +511,11 @@ footer {
 .post h1 {
   margin-bottom: 0.4rem;
   color: var(--text);
-}
 
-.post h1::before {
-  content: "# ";
-  color: var(--blue);
+  &::before {
+    content: "# ";
+    color: var(--blue);
+  }
 }
 
 .post .post-meta {
@@ -581,79 +533,63 @@ footer {
   line-height: 1.7;
   font-size: 1rem;
   text-wrap: pretty;
-}
 
-.post-content h2 {
-  margin-top: 2.5rem;
-}
+  & h2 {
+    margin-top: 2.5rem;
 
-.post-content h2::before {
-  content: "## ";
-  color: var(--accent);
-}
+    &::before {
+      content: "## ";
+      color: var(--accent);
+    }
+  }
 
-.post-content h3 {
-  margin-top: 1.75rem;
-}
+  & h3 {
+    margin-top: 1.75rem;
 
-.post-content h3::before {
-  content: "### ";
-  color: var(--green);
-}
+    &::before {
+      content: "### ";
+      color: var(--green);
+    }
+  }
 
-.post-content h4 {
-  margin-top: 1.25rem;
-  font-size: 1rem;
-}
+  & h4 {
+    margin-top: 1.25rem;
+    font-size: 1rem;
 
-.post-content h4::before {
-  content: "#### ";
-  color: var(--peach);
-}
+    &::before {
+      content: "#### ";
+      color: var(--peach);
+    }
+  }
 
-/* Heading permalinks — text is the clickable link,
-   hit area extended to cover ::before markers */
-.post-content h2,
-.post-content h3,
-.post-content h4 {
-  scroll-margin-top: 5rem;
-}
+  /* Heading permalinks — text is the clickable link,
+     hit area extended to cover ::before markers */
+  & :is(h2, h3, h4) {
+    scroll-margin-top: 5rem;
+  }
 
-.post-content .anchor {
-  color: inherit;
-  text-decoration: none;
-  /* Push hit area left to cover ::before (## / ### / ####) */
-  padding-left: 3.5em;
-  margin-left: -3.5em;
-}
+  & .anchor {
+    color: inherit;
+    text-decoration: none;
+    /* Push hit area left to cover ::before (## / ### / ####) */
+    padding-left: 3.5em;
+    margin-left: -3.5em;
 
-.post-content h2:hover .anchor,
-.post-content h3:hover .anchor,
-.post-content h4:hover .anchor {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
+    &:hover {
+      color: inherit;
+      background: transparent;
+    }
+  }
 
-.post-content .anchor:hover {
-  color: inherit;
-  background: transparent;
-}
+  & :is(h2, h3, h4):hover .anchor {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 
-.post-content pre {
-  margin: 1.25rem 0;
-}
-
-.post-content p {
-  margin: 1rem 0;
-}
-
-.post-content img {
-  margin: 1rem 0;
-}
-
-.post-content ul,
-.post-content ol {
-  padding-left: 1.5rem;
+  & pre { margin: 1.25rem 0; }
+  & p { margin: 1rem 0; }
+  & img { margin: 1rem 0; }
+  & :is(ul, ol) { padding-left: 1.5rem; }
 }
 
 /* ============================================================
@@ -664,128 +600,87 @@ footer {
   display: flex;
   justify-content: center;
   padding: 1rem 0 0.5rem;
-}
 
-#socials a {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  color: var(--text-dimmer);
-  border: 1px solid var(--border);
-  margin-left: -1px;
-  transition-property: color, border-color, background;
-  transition-duration: 120ms;
-  transition-timing-function: ease-out;
-}
+  & a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    color: var(--text-dimmer);
+    border: 1px solid var(--border);
+    margin-left: -1px;
+    transition: color 120ms ease-out, border-color 120ms ease-out,
+      background 120ms ease-out;
 
-#socials a:first-child {
-  margin-left: 0;
-}
+    &:first-child { margin-left: 0; }
 
-#socials a:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--bg-alt);
-}
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--bg-alt);
+      position: relative;
+      z-index: 1;
+    }
+  }
 
-#socials svg {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
+  & svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
 }
 
 /* ============================================================
    Syntax tokens (highlight.js, Catppuccin Macchiato)
    ============================================================ */
 
-.hljs {
-  color: var(--text);
-  background: transparent;
-}
+.hljs { color: var(--text); background: transparent; }
 
-.hljs-comment,
-.hljs-quote {
+:is(.hljs-comment, .hljs-quote) {
   color: var(--text-dimmer);
   font-style: italic;
 }
 
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-literal,
-.hljs-section,
-.hljs-link {
+:is(.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-section, .hljs-link) {
   color: var(--accent);
 }
 
-.hljs-string,
-.hljs-attr,
-.hljs-template-tag,
-.hljs-template-variable,
-.hljs-addition {
+:is(.hljs-string, .hljs-attr, .hljs-template-tag, .hljs-template-variable, .hljs-addition) {
   color: var(--green);
 }
 
-.hljs-number,
-.hljs-symbol,
-.hljs-bullet,
-.hljs-meta .hljs-meta-keyword {
+:is(.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-meta .hljs-meta-keyword) {
   color: var(--peach);
 }
 
-.hljs-type,
-.hljs-class .hljs-title,
-.hljs-title.class_,
-.hljs-tag {
+:is(.hljs-type, .hljs-class .hljs-title, .hljs-title.class_, .hljs-tag) {
   color: var(--yellow);
 }
 
-.hljs-built_in,
-.hljs-builtin-name {
+:is(.hljs-built_in, .hljs-builtin-name) {
   color: var(--teal);
 }
 
-.hljs-title,
-.hljs-title.function_,
-.hljs-function .hljs-title {
+:is(.hljs-title, .hljs-title.function_, .hljs-function .hljs-title) {
   color: var(--blue);
 }
 
-.hljs-variable,
-.hljs-name {
-  color: var(--red);
-}
+:is(.hljs-variable, .hljs-name) { color: var(--red); }
 
-.hljs-property,
-.hljs-attribute {
-  color: var(--blue);
-}
+:is(.hljs-property, .hljs-attribute) { color: var(--blue); }
 
-.hljs-regexp,
-.hljs-deletion {
-  color: var(--pink);
-}
+:is(.hljs-regexp, .hljs-deletion) { color: var(--pink); }
 
-.hljs-meta,
-.hljs-meta-string {
-  color: var(--lavender);
-}
+:is(.hljs-meta, .hljs-meta-string) { color: var(--lavender); }
 
-.hljs-params,
-.hljs-punctuation,
-.hljs-operator {
+:is(.hljs-params, .hljs-punctuation, .hljs-operator) {
   color: var(--text-dim);
 }
 
-.hljs-doctag,
-.hljs-strong {
-  font-weight: 700;
-}
+:is(.hljs-doctag, .hljs-strong) { font-weight: 700; }
 
-.hljs-emphasis {
-  font-style: italic;
-}
+.hljs-emphasis { font-style: italic; }
 
 /* ============================================================
    Reduced motion
