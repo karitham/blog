@@ -7,6 +7,13 @@
     <language>en</language>
     <atom:link href="https://karitham.dev/rss.xml" rel="self" type="application/rss+xml"/>
       <item>
+    <title>I like llms</title>
+    <description>llms are fun! research is fun! copyright is fake and ethics are hard.
+</description>
+    <link>https://karitham.dev/posts/i-like-llms/</link>
+    <pubDate>Sun, 19 Jul 2026 00:00:00 +0000</pubDate>
+  </item>
+  <item>
     <title>Alerting basics</title>
     <description>Alerting is complex, but we have good open source tools to make it painless</description>
     <link>https://karitham.dev/posts/alerting-basics/</link>

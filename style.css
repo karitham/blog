@@ -114,7 +114,7 @@ a:hover code {
 }
 
 strong {
-  color: var(--accent);
+  color: var(--blue);
 }
 
 i,
@@ -587,8 +587,56 @@ footer {
   margin-top: 2.5rem;
 }
 
+.post-content h2::before {
+  content: "## ";
+  color: var(--accent);
+}
+
 .post-content h3 {
   margin-top: 1.75rem;
+}
+
+.post-content h3::before {
+  content: "### ";
+  color: var(--green);
+}
+
+.post-content h4 {
+  margin-top: 1.25rem;
+  font-size: 1rem;
+}
+
+.post-content h4::before {
+  content: "#### ";
+  color: var(--peach);
+}
+
+/* Heading permalinks — text is the clickable link,
+   hit area extended to cover ::before markers */
+.post-content h2,
+.post-content h3,
+.post-content h4 {
+  scroll-margin-top: 5rem;
+}
+
+.post-content .anchor {
+  color: inherit;
+  text-decoration: none;
+  /* Push hit area left to cover ::before (## / ### / ####) */
+  padding-left: 3.5em;
+  margin-left: -3.5em;
+}
+
+.post-content h2:hover .anchor,
+.post-content h3:hover .anchor,
+.post-content h4:hover .anchor {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.post-content .anchor:hover {
+  color: inherit;
+  background: transparent;
 }
 
 .post-content pre {

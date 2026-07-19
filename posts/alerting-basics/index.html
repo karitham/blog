@@ -8,7 +8,7 @@ Obviously you care about your backups right? You do backups right?</p>
 <figcaption>OVH datacenter on fire - 2021-03-10</figcaption></figure>
 <p>Let's assume you want that alerting, but you <em>really</em> don't want to deal with the hassle of manually setting it up for every single job you got.
 That's what prometheus is for! Prometheus scrapes all your software with minimal to no configuration required.</p>
-<h2>Prometheus</h2>
+<h2 id="Prometheus"><a href="#Prometheus" class="anchor">Prometheus</a></h2>
 <p>It scrapes your programs, as well as other software you configure it for. Specifically, that means it can integrate with kubernetes and report on the status of the jobs running in your cluster.</p>
 <p>How many pods are running, how many pods are scheduled etc. That means prometheus knows when your scheduled cronjob isn't starting!
 Whatever the cronjob is, it doesn't make sense for it to suddently stop running right?</p>
@@ -24,7 +24,7 @@ annotations:
 </code></pre>
 <p>This rule is quite explicit: when <code>myjob</code>'s <code>request_latency</code> is more than <code>0.5</code>s for <code>10m</code>, set the following labels and annotations, as well as the <code>HighRequestLatency</code> alert name.</p>
 <p>Promnetheus by itself collects these metrics and tries to match rules like these. When a match hits, it will send a request to the configured alertmanager.</p>
-<h2>Alertmanager</h2>
+<h2 id="Alertmanager"><a href="#Alertmanager" class="anchor">Alertmanager</a></h2>
 <p>Alertmanager is the other half of the pipeline. It takes these notifications, and routes them to you.
 Just want a discord message you will find out about when you wake up? Or would you rather be sent an SMS through Amazon SNS?</p>
 <p>You only need to configure what alerts or severity to send where. Informational alerts? Down <code>/dev/null</code>, critical alerts? Wake me up please!</p>
@@ -42,7 +42,7 @@ Just want a discord message you will find out about when you wake up? Or would y
 </code></pre>
 <p>Alertmanager also has <a href="https://prometheus.io/docs/alerting/latest/configuration/#time_interval_spec">schedules</a> so you can get pinged only during weekdays and not when you sleep.</p>
 <p>Great to avoid warnings waking you up, while still keeping you in the know.</p>
-<h2>Deployment</h2>
+<h2 id="Deployment"><a href="#Deployment" class="anchor">Deployment</a></h2>
 <p>The easiest way to deploy both Alertmanager and Prometheus is through <a href="https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md">Kube Prometheus Stack</a>.</p>
 <p>The default values will give you a bare-bones prometheus, alertmanager and grafana, which you can configure easily through helm values.</p>
 <p>Deploying the software and getting the basics working is actually the easiest part here. Fine-tuning alerts to avoid fatigue is the most painful part of all of this.</p>
