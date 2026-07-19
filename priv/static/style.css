@@ -114,7 +114,7 @@ a:hover code {
 }
 
 strong {
-  color: var(--accent);
+  color: var(--blue);
 }
 
 i,
@@ -587,8 +587,28 @@ footer {
   margin-top: 2.5rem;
 }
 
+.post-content h2::before {
+  content: "## ";
+  color: var(--accent);
+}
+
 .post-content h3 {
   margin-top: 1.75rem;
+}
+
+.post-content h3::before {
+  content: "### ";
+  color: var(--green);
+}
+
+.post-content h4 {
+  margin-top: 1.25rem;
+  font-size: 1rem;
+}
+
+.post-content h4::before {
+  content: "#### ";
+  color: var(--peach);
 }
 
 .post-content pre {

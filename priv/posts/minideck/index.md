@@ -34,7 +34,7 @@ In typst laying stuff out works with the box model just like in HTML, or you can
 
 ```typst
 #grid(
-    columns: (1fr, fr),
+    columns: (1fr, 1fr),
     align: horizon,
     gutter: 1em,
     [
