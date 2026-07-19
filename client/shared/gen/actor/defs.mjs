@@ -6,7 +6,7 @@ import * as $internal from "../../gen/internal.mjs";
 import { toList, CustomType as $CustomType } from "../../gleam.mjs";
 
 export class ProfileViewDetailed extends $CustomType {
-  constructor(avatar, banner, description, did, display_name, followers_count, follows_count, handle, posts_count) {
+  constructor(avatar, banner, description, did, display_name, followers_count, follows_count, handle, posts_count, pronouns) {
     super();
     this.avatar = avatar;
     this.banner = banner;
@@ -17,9 +17,10 @@ export class ProfileViewDetailed extends $CustomType {
     this.follows_count = follows_count;
     this.handle = handle;
     this.posts_count = posts_count;
+    this.pronouns = pronouns;
   }
 }
-export const ProfileViewDetailed$ProfileViewDetailed = (avatar, banner, description, did, display_name, followers_count, follows_count, handle, posts_count) =>
+export const ProfileViewDetailed$ProfileViewDetailed = (avatar, banner, description, did, display_name, followers_count, follows_count, handle, posts_count, pronouns) =>
   new ProfileViewDetailed(avatar,
   banner,
   description,
@@ -28,7 +29,8 @@ export const ProfileViewDetailed$ProfileViewDetailed = (avatar, banner, descript
   followers_count,
   follows_count,
   handle,
-  posts_count);
+  posts_count,
+  pronouns);
 export const ProfileViewDetailed$isProfileViewDetailed = (value) =>
   value instanceof ProfileViewDetailed;
 export const ProfileViewDetailed$ProfileViewDetailed$avatar = (value) =>
@@ -65,6 +67,10 @@ export const ProfileViewDetailed$ProfileViewDetailed$posts_count = (value) =>
   value.posts_count;
 export const ProfileViewDetailed$ProfileViewDetailed$8 = (value) =>
   value.posts_count;
+export const ProfileViewDetailed$ProfileViewDetailed$pronouns = (value) =>
+  value.pronouns;
+export const ProfileViewDetailed$ProfileViewDetailed$9 = (value) =>
+  value.pronouns;
 
 export function profile_view_detailed_fields(value) {
   return $list.flatten(
@@ -80,6 +86,7 @@ export function profile_view_detailed_fields(value) {
       $internal.opt("followersCount", value.followers_count, $json.int),
       $internal.opt("followsCount", value.follows_count, $json.int),
       $internal.opt("postsCount", value.posts_count, $json.int),
+      $internal.opt("pronouns", value.pronouns, $json.string),
     ]),
   );
 }
@@ -132,18 +139,26 @@ export function profile_view_detailed_decoder() {
                                     new $option.None(),
                                     $decode.optional($decode.int),
                                     (posts_count) => {
-                                      return $decode.success(
-                                        new ProfileViewDetailed(
-                                          avatar,
-                                          banner,
-                                          description,
-                                          did,
-                                          display_name,
-                                          followers_count,
-                                          follows_count,
-                                          handle,
-                                          posts_count,
-                                        ),
+                                      return $decode.optional_field(
+                                        "pronouns",
+                                        new $option.None(),
+                                        $decode.optional($decode.string),
+                                        (pronouns) => {
+                                          return $decode.success(
+                                            new ProfileViewDetailed(
+                                              avatar,
+                                              banner,
+                                              description,
+                                              did,
+                                              display_name,
+                                              followers_count,
+                                              follows_count,
+                                              handle,
+                                              posts_count,
+                                              pronouns,
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   );

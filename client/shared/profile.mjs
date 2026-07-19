@@ -1,11 +1,11 @@
 import * as $option from "../gleam_stdlib/gleam/option.mjs";
-import { unwrap } from "../gleam_stdlib/gleam/option.mjs";
+import { None, Some, unwrap } from "../gleam_stdlib/gleam/option.mjs";
 import * as $attribute from "../lustre/lustre/attribute.mjs";
 import { alt, class$, href, id, src, target } from "../lustre/lustre/attribute.mjs";
 import * as $element from "../lustre/lustre/element.mjs";
 import { fragment, none, text } from "../lustre/lustre/element.mjs";
 import * as $html from "../lustre/lustre/element/html.mjs";
-import { a, div, h1, img, p } from "../lustre/lustre/element/html.mjs";
+import { a, div, h1, img, p, span } from "../lustre/lustre/element/html.mjs";
 import * as $defs from "./gen/actor/defs.mjs";
 import { toList } from "./gleam.mjs";
 
@@ -17,10 +17,7 @@ export function profile(profile) {
     _block = none();
   } else {
     let url = $;
-    _block = a(
-      toList([href(bsky_url), target("_blank")]),
-      toList([img(toList([class$("avatar"), src(url), alt("avatar")]))]),
-    );
+    _block = img(toList([class$("avatar"), src(url), alt("avatar")]));
   }
   let avatar = _block;
   let _block$1;
@@ -35,6 +32,18 @@ export function profile(profile) {
     );
   }
   let banner = _block$1;
+  let _block$2;
+  let $2 = profile.pronouns;
+  if ($2 instanceof Some) {
+    let pronouns = $2[0];
+    _block$2 = span(
+      toList([class$("pronouns")]),
+      toList([text(("(" + pronouns) + ")")]),
+    );
+  } else {
+    _block$2 = none();
+  }
+  let pronouns_el = _block$2;
   return div(
     toList([id("profile-section")]),
     toList([
@@ -44,26 +53,30 @@ export function profile(profile) {
           div(
             toList([id("profile")]),
             toList([
-              avatar,
-              h1(
-                toList([]),
+              div(
+                toList([class$("profile-header")]),
                 toList([
-                  a(
+                  avatar,
+                  div(
+                    toList([class$("profile-info")]),
                     toList([
-                      href(bsky_url),
-                      target("_blank"),
-                      class$("profile-name"),
+                      h1(
+                        toList([class$("profile-name")]),
+                        toList([
+                          text(unwrap(profile.display_name, profile.handle)),
+                        ]),
+                      ),
+                      p(
+                        toList([class$("handle")]),
+                        toList([
+                          a(
+                            toList([href(bsky_url), target("_blank")]),
+                            toList([text("@" + profile.handle)]),
+                          ),
+                          pronouns_el,
+                        ]),
+                      ),
                     ]),
-                    toList([text(unwrap(profile.display_name, profile.handle))]),
-                  ),
-                ]),
-              ),
-              p(
-                toList([class$("handle")]),
-                toList([
-                  a(
-                    toList([href(bsky_url), target("_blank")]),
-                    toList([text("@" + profile.handle)]),
                   ),
                 ]),
               ),
