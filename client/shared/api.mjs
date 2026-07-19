@@ -1,4 +1,5 @@
 import * as $list from "../gleam_stdlib/gleam/list.mjs";
+import * as $string from "../gleam_stdlib/gleam/string.mjs";
 import * as $repo from "./gen/repo.mjs";
 
 export const pds_endpoint = "https://eurosky.social";
