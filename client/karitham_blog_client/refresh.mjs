@@ -143,8 +143,13 @@ function poll_tick() {
  * Wires up initial fetches, periodic poll, and visibility listener.
  */
 export function start() {
-  refresh_all();
-  $browser.localize_dates();
-  $browser.set_interval(plays_poll_ms, poll_tick);
-  return $browser.on_visibility_change(on_visibility_change);
+  let $ = $browser.has_element("profile-section");
+  if ($) {
+    refresh_all();
+    $browser.localize_dates();
+    $browser.set_interval(plays_poll_ms, poll_tick);
+    return $browser.on_visibility_change(on_visibility_change);
+  } else {
+    return undefined;
+  }
 }

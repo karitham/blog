@@ -42,6 +42,10 @@ export function remove_attribute(id, name) {
   }
 }
 
+export function has_element(id) {
+  return document.getElementById(id) !== null;
+}
+
 export function log_error(message) {
   console.error(message);
 }

@@ -3,6 +3,7 @@ import {
   set_inner_html,
   set_attribute,
   remove_attribute,
+  has_element,
   log_error,
   set_interval,
   is_visible,
@@ -12,6 +13,7 @@ import {
 
 export {
   fetch_text,
+  has_element,
   is_visible,
   localize_dates,
   log_error,
