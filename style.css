@@ -70,17 +70,25 @@ body {
   text-wrap: balance;
 }
 
-h1 { font-size: 1.5rem; }
+h1 {
+  font-size: 1.5rem;
+}
 
-h2 { font-size: 1.2rem; }
+h2 {
+  font-size: 1.2rem;
+}
 
-h3 { font-size: 1.05rem; }
+h3 {
+  font-size: 1.05rem;
+}
 
 /* Links — terminal-style invert on hover */
 a {
   color: var(--accent);
   text-decoration: none;
-  transition: color 120ms ease-out, background 120ms ease-out;
+  transition:
+    color 120ms ease-out,
+    background 120ms ease-out;
 
   &:hover {
     color: var(--bg);
@@ -163,7 +171,9 @@ video {
   display: block;
 }
 
-figure { margin: 0; }
+figure {
+  margin: 0;
+}
 
 figcaption {
   font-size: 0.8rem;
@@ -175,9 +185,13 @@ figcaption {
    Utility classes
    ============================================================ */
 
-.dim { color: var(--text-dim); }
+.dim {
+  color: var(--text-dim);
+}
 
-.dimmer { color: var(--text-dimmer); }
+.dimmer {
+  color: var(--text-dimmer);
+}
 
 .emph {
   color: var(--blue);
@@ -282,7 +296,9 @@ footer {
    Profile
    ============================================================ */
 
-#profile { padding: 0; }
+#profile {
+  padding: 0;
+}
 
 /* Avatar + text row */
 .profile-header {
@@ -292,7 +308,9 @@ footer {
   padding: 0.5rem 0 0 1.5rem;
 }
 
-.profile-info { padding-bottom: 2px; }
+.profile-info {
+  padding-bottom: 2px;
+}
 
 #profile .avatar {
   width: 64px;
@@ -309,7 +327,9 @@ footer {
   margin: 0;
 }
 
-.handle { margin: 0.15rem 0 0; }
+.handle {
+  margin: 0.15rem 0 0;
+}
 
 .handle a {
   font-size: 0.85rem;
@@ -355,7 +375,9 @@ footer {
    Sections
    ============================================================ */
 
-.section { margin: 2.5rem 0; }
+.section {
+  margin: 2.5rem 0;
+}
 
 :is(#plays, #repos, .section-header) h2::before {
   content: "$ ";
@@ -374,8 +396,13 @@ footer {
 }
 
 @keyframes stale-pulse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* No border-bottom — the rows below carry their own dividers. */
@@ -400,8 +427,12 @@ footer {
   border-bottom: 1px solid var(--border);
   transition: background 120ms ease-out;
 
-  &:last-child { border-bottom: none; }
-  &:hover { background: var(--bg-alt); }
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: var(--bg-alt);
+  }
 }
 
 .card {
@@ -449,7 +480,9 @@ footer {
   font-size: 0.78rem;
 }
 
-.card-tag { color: var(--blue); }
+.card-tag {
+  color: var(--blue);
+}
 
 .card-tag::before {
   content: "#";
@@ -586,10 +619,18 @@ footer {
     text-underline-offset: 4px;
   }
 
-  & pre { margin: 1.25rem 0; }
-  & p { margin: 1rem 0; }
-  & img { margin: 1rem 0; }
-  & :is(ul, ol) { padding-left: 1.5rem; }
+  & pre {
+    margin: 1.25rem 0;
+  }
+  & p {
+    margin: 1rem 0;
+  }
+  & img {
+    margin: 1rem 0;
+  }
+  & :is(ul, ol) {
+    padding-left: 1.5rem;
+  }
 }
 
 /* ============================================================
@@ -610,10 +651,14 @@ footer {
     color: var(--text-dimmer);
     border: 1px solid var(--border);
     margin-left: -1px;
-    transition: color 120ms ease-out, border-color 120ms ease-out,
+    transition:
+      color 120ms ease-out,
+      border-color 120ms ease-out,
       background 120ms ease-out;
 
-    &:first-child { margin-left: 0; }
+    &:first-child {
+      margin-left: 0;
+    }
 
     &:hover {
       color: var(--accent);
@@ -635,18 +680,33 @@ footer {
    Syntax tokens (highlight.js, Catppuccin Macchiato)
    ============================================================ */
 
-.hljs { color: var(--text); background: transparent; }
+.hljs {
+  color: var(--text);
+  background: transparent;
+}
 
 :is(.hljs-comment, .hljs-quote) {
   color: var(--text-dimmer);
   font-style: italic;
 }
 
-:is(.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-section, .hljs-link) {
+:is(
+  .hljs-keyword,
+  .hljs-selector-tag,
+  .hljs-literal,
+  .hljs-section,
+  .hljs-link
+) {
   color: var(--accent);
 }
 
-:is(.hljs-string, .hljs-attr, .hljs-template-tag, .hljs-template-variable, .hljs-addition) {
+:is(
+  .hljs-string,
+  .hljs-attr,
+  .hljs-template-tag,
+  .hljs-template-variable,
+  .hljs-addition
+) {
   color: var(--green);
 }
 
@@ -666,21 +726,33 @@ footer {
   color: var(--blue);
 }
 
-:is(.hljs-variable, .hljs-name) { color: var(--red); }
+:is(.hljs-variable, .hljs-name) {
+  color: var(--red);
+}
 
-:is(.hljs-property, .hljs-attribute) { color: var(--blue); }
+:is(.hljs-property, .hljs-attribute) {
+  color: var(--blue);
+}
 
-:is(.hljs-regexp, .hljs-deletion) { color: var(--pink); }
+:is(.hljs-regexp, .hljs-deletion) {
+  color: var(--pink);
+}
 
-:is(.hljs-meta, .hljs-meta-string) { color: var(--lavender); }
+:is(.hljs-meta, .hljs-meta-string) {
+  color: var(--lavender);
+}
 
 :is(.hljs-params, .hljs-punctuation, .hljs-operator) {
   color: var(--text-dim);
 }
 
-:is(.hljs-doctag, .hljs-strong) { font-weight: 700; }
+:is(.hljs-doctag, .hljs-strong) {
+  font-weight: 700;
+}
 
-.hljs-emphasis { font-style: italic; }
+.hljs-emphasis {
+  font-style: italic;
+}
 
 /* ============================================================
    Reduced motion
