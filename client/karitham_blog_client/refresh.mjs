@@ -27,6 +27,7 @@ function commit_plays(plays_data) {
     "plays",
     $dynamic.render($plays_view.plays_section(plays_data)),
   );
+  $browser.localize_dates();
   return mark_plays_fresh();
 }
 
@@ -143,6 +144,7 @@ function poll_tick() {
  */
 export function start() {
   refresh_all();
+  $browser.localize_dates();
   $browser.set_interval(plays_poll_ms, poll_tick);
   return $browser.on_visibility_change(on_visibility_change);
 }

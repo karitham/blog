@@ -7,11 +7,13 @@ import {
   set_interval,
   is_visible,
   on_visibility_change,
+  localize_dates,
 } from "./browser_ffi.mjs";
 
 export {
   fetch_text,
   is_visible,
+  localize_dates,
   log_error,
   on_visibility_change,
   remove_attribute,

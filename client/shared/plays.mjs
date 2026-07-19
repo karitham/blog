@@ -2,38 +2,41 @@ import * as $list from "../gleam_stdlib/gleam/list.mjs";
 import * as $option from "../gleam_stdlib/gleam/option.mjs";
 import { unwrap } from "../gleam_stdlib/gleam/option.mjs";
 import * as $string from "../gleam_stdlib/gleam/string.mjs";
+import * as $calendar from "../gleam_time/gleam/time/calendar.mjs";
+import * as $timestamp from "../gleam_time/gleam/time/timestamp.mjs";
 import * as $attribute from "../lustre/lustre/attribute.mjs";
-import { class$, href, target } from "../lustre/lustre/attribute.mjs";
+import { attribute, class$, href, target } from "../lustre/lustre/attribute.mjs";
 import * as $element from "../lustre/lustre/element.mjs";
 import { none, text } from "../lustre/lustre/element.mjs";
 import * as $html from "../lustre/lustre/element/html.mjs";
 import { a, div, span } from "../lustre/lustre/element/html.mjs";
+import * as $date from "./date.mjs";
 import * as $play from "./gen/alpha/feed/play.mjs";
-import { toList, Empty as $Empty } from "./gleam.mjs";
+import { Ok, toList, Empty as $Empty } from "./gleam.mjs";
 import * as $section from "./section.mjs";
 
-function extract_time(iso) {
-  let $ = $string.split(iso, "T");
-  if ($ instanceof $Empty) {
-    return "";
+/**
+ * Render a play's `played_time` as `HH:MM` in UTC, and return the
+ * original ISO string for client-side re-localization.
+ * 
+ * @ignore
+ */
+function format_play_time(iso) {
+  let $ = $timestamp.parse_rfc3339(iso);
+  if ($ instanceof Ok) {
+    let ts = $[0];
+    let $1 = $timestamp.to_calendar(ts, $calendar.utc_offset);
+    let time = $1[1];
+    return [($date.pad2(time.hours) + ":") + $date.pad2(time.minutes), iso];
   } else {
-    let $1 = $.tail;
-    if ($1 instanceof $Empty) {
-      return "";
-    } else {
-      let $2 = $1.tail;
-      if ($2 instanceof $Empty) {
-        let rest = $1.head;
-        return $string.slice(rest, 0, 5);
-      } else {
-        return "";
-      }
-    }
+    return ["", iso];
   }
 }
 
 function render_play_row(play) {
-  let time = extract_time(play.played_time);
+  let $ = format_play_time(play.played_time);
+  let time = $[0];
+  let iso = $[1];
   let _block;
   let _pipe = play.artists;
   let _pipe$1 = $list.map(_pipe, (a) => { return a.artist_name; });
@@ -44,7 +47,10 @@ function render_play_row(play) {
   return div(
     toList([class$("play-row")]),
     toList([
-      span(toList([class$("play-time")]), toList([text(time)])),
+      span(
+        toList([class$("play-time"), attribute("data-iso", iso)]),
+        toList([text(time)]),
+      ),
       span(
         toList([class$("play-track")]),
         toList([

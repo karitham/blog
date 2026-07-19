@@ -61,3 +61,24 @@ export function on_visibility_change(callback) {
     callback(!document.hidden);
   });
 }
+
+// Re-localize every `[data-iso]` play-time element from its build-time UTC
+// rendering into the visitor's local timezone. The element already shows
+// correct UTC text; we only swap the text content to local HH:MM.
+export function localize_dates() {
+  var els = document.querySelectorAll("[data-iso]");
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    var iso = el.getAttribute("data-iso");
+    if (!iso) continue;
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) continue;
+      var h = d.getHours();
+      var m = d.getMinutes();
+      el.textContent = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+    } catch (_) {
+      // Keep the build-time UTC text on any failure.
+    }
+  }
+}

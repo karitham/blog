@@ -1,92 +1,127 @@
-import * as $option from "../gleam_stdlib/gleam/option.mjs";
-import { None, Some } from "../gleam_stdlib/gleam/option.mjs";
-import * as $string from "../gleam_stdlib/gleam/string.mjs";
-import { Empty as $Empty } from "./gleam.mjs";
+import * as $float from "../gleam_stdlib/gleam/float.mjs";
+import * as $int from "../gleam_stdlib/gleam/int.mjs";
+import * as $calendar from "../gleam_time/gleam/time/calendar.mjs";
+import * as $timestamp from "../gleam_time/gleam/time/timestamp.mjs";
+import { Ok } from "./gleam.mjs";
 
-function month_name(month) {
-  if (month === "01") {
-    return new Some("January");
-  } else if (month === "1") {
-    return new Some("January");
-  } else if (month === "02") {
-    return new Some("February");
-  } else if (month === "2") {
-    return new Some("February");
-  } else if (month === "03") {
-    return new Some("March");
-  } else if (month === "3") {
-    return new Some("March");
-  } else if (month === "04") {
-    return new Some("April");
-  } else if (month === "4") {
-    return new Some("April");
-  } else if (month === "05") {
-    return new Some("May");
-  } else if (month === "5") {
-    return new Some("May");
-  } else if (month === "06") {
-    return new Some("June");
-  } else if (month === "6") {
-    return new Some("June");
-  } else if (month === "07") {
-    return new Some("July");
-  } else if (month === "7") {
-    return new Some("July");
-  } else if (month === "08") {
-    return new Some("August");
-  } else if (month === "8") {
-    return new Some("August");
-  } else if (month === "09") {
-    return new Some("September");
-  } else if (month === "9") {
-    return new Some("September");
-  } else if (month === "10") {
-    return new Some("October");
-  } else if (month === "11") {
-    return new Some("November");
-  } else if (month === "12") {
-    return new Some("December");
+/**
+ * Format a `timestamp.Timestamp` as `Month DD, YYYY` in UTC.
+ */
+export function format_month_day_year(ts) {
+  let $ = $timestamp.to_calendar(ts, $calendar.utc_offset);
+  let date = $[0];
+  return ((($calendar.month_to_string(date.month) + " ") + $int.to_string(
+    date.day,
+  )) + ", ") + $int.to_string(date.year);
+}
+
+/**
+ * Format a `YYYY-MM-DD` string as `Month DD, YYYY` via `gleam_time`.
+ * Returns the original string unmodified on parse failure.
+ */
+export function format_ymd(date_str) {
+  let $ = $timestamp.parse_rfc3339(date_str + "T00:00:00Z");
+  if ($ instanceof Ok) {
+    let ts = $[0];
+    return format_month_day_year(ts);
   } else {
-    return new None();
+    return date_str;
   }
 }
 
 /**
- * Format a `YYYY-MM-DD` date string as `Month DD, YYYY` (e.g.
- * `"2024-09-21"` → `"September 21, 2024"`). Returns the input
- * unchanged when it can't be parsed so a malformed date surfaces
- * in the page rather than silently becoming a wrong-looking but
- * plausible string.
+ * Zero-pad an integer to two digits.
  */
-export function format_date(date_str) {
-  let $ = $string.split(date_str, "-");
-  if ($ instanceof $Empty) {
-    return date_str;
+export function pad2(n) {
+  let $ = n < 10;
+  if ($) {
+    return "0" + $int.to_string(n);
   } else {
-    let $1 = $.tail;
-    if ($1 instanceof $Empty) {
-      return date_str;
-    } else {
-      let $2 = $1.tail;
-      if ($2 instanceof $Empty) {
-        return date_str;
-      } else {
-        let $3 = $2.tail;
-        if ($3 instanceof $Empty) {
-          let year = $.head;
-          let month = $1.head;
-          let day = $2.head;
-          let $4 = month_name(month);
-          if ($4 instanceof Some) {
-            let name = $4[0];
-            return (((name + " ") + day) + ", ") + year;
-          } else {
-            return date_str;
-          }
-        } else {
-          return date_str;
-        }
-      }
-    }
+    return $int.to_string(n);
+  }
+}
+
+/**
+ * Three-letter month abbreviation for RFC 822.
+ * 
+ * @ignore
+ */
+function month_abbr(month) {
+  if (month instanceof $calendar.January) {
+    return "Jan";
+  } else if (month instanceof $calendar.February) {
+    return "Feb";
+  } else if (month instanceof $calendar.March) {
+    return "Mar";
+  } else if (month instanceof $calendar.April) {
+    return "Apr";
+  } else if (month instanceof $calendar.May) {
+    return "May";
+  } else if (month instanceof $calendar.June) {
+    return "Jun";
+  } else if (month instanceof $calendar.July) {
+    return "Jul";
+  } else if (month instanceof $calendar.August) {
+    return "Aug";
+  } else if (month instanceof $calendar.September) {
+    return "Sep";
+  } else if (month instanceof $calendar.October) {
+    return "Oct";
+  } else if (month instanceof $calendar.November) {
+    return "Nov";
+  } else {
+    return "Dec";
+  }
+}
+
+/**
+ * Derive the three-letter weekday name from Unix epoch seconds.
+ * 1970-01-01 (unix epoch) is a Thursday (index 4).
+ * 
+ * @ignore
+ */
+function weekday_name(unix_seconds) {
+  let w = (4 + (globalThis.Math.trunc(unix_seconds / 86_400))) % 7;
+  if (w === 0) {
+    return "Sun";
+  } else if (w === 1) {
+    return "Mon";
+  } else if (w === 2) {
+    return "Tue";
+  } else if (w === 3) {
+    return "Wed";
+  } else if (w === 4) {
+    return "Thu";
+  } else if (w === 5) {
+    return "Fri";
+  } else if (w === 6) {
+    return "Sat";
+  } else {
+    return "Thu";
+  }
+}
+
+/**
+ * Format a `YYYY-MM-DD` string as an RFC 822 timestamp for RSS
+ * `<pubDate>`, e.g. `"Sat, 21 Sep 2024 00:00:00 +0000"`. The
+ * weekday is derived from the Unix epoch seconds via `gleam_time`.
+ */
+export function to_rfc822(date_str) {
+  let $ = $timestamp.parse_rfc3339(date_str + "T00:00:00Z");
+  if ($ instanceof Ok) {
+    let ts = $[0];
+    let $1 = $timestamp.to_calendar(ts, $calendar.utc_offset);
+    let date = $1[0];
+    let _block;
+    let _pipe = $timestamp.to_unix_seconds(ts);
+    _block = $float.round(_pipe);
+    let seconds = _block;
+    let weekday = weekday_name(seconds);
+    let month = month_abbr(date.month);
+    return ((((((weekday + ", ") + pad2(date.day)) + " ") + month) + " ") + $int.to_string(
+      date.year,
+    )) + " 00:00:00 +0000";
+  } else {
+    return date_str;
   }
 }
