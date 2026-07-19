@@ -10,6 +10,9 @@ pub fn set_attribute(id: String, name: String, value: String) -> Nil
 @external(javascript, "./browser_ffi.mjs", "remove_attribute")
 pub fn remove_attribute(id: String, name: String) -> Nil
 
+@external(javascript, "./browser_ffi.mjs", "has_element")
+pub fn has_element(id: String) -> Bool
+
 @external(javascript, "./browser_ffi.mjs", "log_error")
 pub fn log_error(message: String) -> Nil
 

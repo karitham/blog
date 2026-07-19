@@ -20,10 +20,16 @@ const plays_poll_ms = 30_000
 
 /// Wires up initial fetches, periodic poll, and visibility listener.
 pub fn start() -> Nil {
-  refresh_all()
-  browser.localize_dates()
-  browser.set_interval(plays_poll_ms, poll_tick)
-  browser.on_visibility_change(on_visibility_change)
+  // Guard: only run refresh logic on pages with dynamic sections.
+  case browser.has_element("profile-section") {
+    False -> Nil
+    True -> {
+      refresh_all()
+      browser.localize_dates()
+      browser.set_interval(plays_poll_ms, poll_tick)
+      browser.on_visibility_change(on_visibility_change)
+    }
+  }
 }
 
 fn refresh_all() -> Nil {
