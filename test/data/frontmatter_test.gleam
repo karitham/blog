@@ -75,6 +75,37 @@ pub fn parse_malformed_date_fails_test() {
   })
 }
 
+pub fn parse_headings_get_anchor_links_test() {
+  let content =
+    "---\ntitle: T\ndate: 2026-07-18\n---\n"
+    <> "\n"
+    <> "## Prometheus\n"
+    <> "\n"
+    <> "Some text.\n"
+    <> "\n"
+    <> "### Alertmanager\n"
+    <> "\n"
+    <> "More text.\n"
+
+  let assert Ok(post) = frontmatter.parse("t", content)
+
+  // Each heading gets wrapped in an anchor link (text becomes the link)
+  string.contains(
+    post.content,
+    "<h2 id=\"Prometheus\"><a href=\"#Prometheus\" class=\"anchor\">Prometheus</a></h2>",
+  )
+  |> should.be_true()
+
+  string.contains(
+    post.content,
+    "<h3 id=\"Alertmanager\"><a href=\"#Alertmanager\" class=\"anchor\">Alertmanager</a></h3>",
+  )
+  |> should.be_true()
+
+  // Non-heading content is unaffected
+  string.contains(post.content, "<p>Some text.</p>") |> should.be_true()
+}
+
 pub fn parse_valid_iso_date_test() {
   let cases = ["2024-01-01", "2024-12-31", "2024-02-29", "1999-09-09"]
   list.each(cases, fn(good) {

@@ -69,11 +69,14 @@ fn parse_with_frontmatter(
     Ok(post) -> {
       case parse_article_date(post.date) {
         Ok(_) -> {
+          let options = mork.configure() |> mork.heading_ids(True)
+
           let html_body =
             body
             |> string.trim
-            |> mork.parse
+            |> mork.parse_with_options(options, _)
             |> mork.to_html
+            |> inject_heading_anchors
           Ok(Post(..post, content: html_body))
         }
         Error(_) -> Error(InvalidDate(slug, post.date))
@@ -88,6 +91,55 @@ fn parse_with_frontmatter(
 /// only used to fail the build loudly on a malformed date.
 fn parse_article_date(s: String) -> Result(timestamp.Timestamp, Nil) {
   timestamp.parse_rfc3339(s <> "T00:00:00Z")
+}
+
+/// Post-process mork HTML to inject anchor links inside headings
+/// that have an `id` attribute, so section headings become
+/// clickable permalinks.
+fn inject_heading_anchors(html: String) -> String {
+  ["2", "3", "4"]
+  |> list.fold(html, fn(acc, level) { inject_for_level(acc, level) })
+}
+
+fn inject_for_level(html: String, level: String) -> String {
+  let tag = "<h" <> level <> " id=\""
+  inject_rec(html, tag, level)
+}
+
+fn inject_rec(html: String, tag: String, level: String) -> String {
+  case string.split_once(html, on: tag) {
+    Error(_) -> html
+    Ok(#(before, after)) -> {
+      // `after` starts with the id value (right after `id="`)
+      case string.split_once(after, on: "\"") {
+        Error(_) -> html
+        Ok(#(id, after_id)) -> {
+          // `after_id` starts with `>...` (the closing `>` of the tag)
+          case string.split_once(after_id, on: ">") {
+            Error(_) -> html
+            Ok(#(_, content)) -> {
+              let closing = "</h" <> level <> ">"
+              case string.split_once(content, on: closing) {
+                Error(_) -> html
+                Ok(#(inner, rest)) -> {
+                  let a = "<a href=\"#" <> id <> "\" class=\"anchor\">"
+                  before
+                  <> tag
+                  <> id
+                  <> "\">"
+                  <> a
+                  <> inner
+                  <> "</a>"
+                  <> closing
+                  <> inject_rec(rest, tag, level)
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 const slug_chars = "abcdefghijklmnopqrstuvwxyz0123456789-"
