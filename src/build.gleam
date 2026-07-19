@@ -43,10 +43,12 @@ pub fn build() {
 
   write_index(published_data)
   write_posts(published, published_data.profile)
+  write_posts(drafts, published_data.profile)
   write_style()
   write_highlight()
   write_rss(published)
   copy_post_assets(published)
+  copy_post_assets(drafts)
   copy_favicons()
   copy_client_js()
 

@@ -4,7 +4,7 @@ description: >
   llms are fun! research is fun! copyright is fake and ethics are hard.
 date: 2026-07-19
 tags: [llm, opinion]
-draft: false
+draft: true
 image: ./perceptron.png
 ---
 
