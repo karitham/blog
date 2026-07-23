@@ -22,6 +22,11 @@ includes = ["*.sh", "*.bash"]
 command = "nufmt"
 includes = ["*.nu"]
 
+[formatter.rust]
+command = "rustfmt"
+options = ["--edition", "2024"]
+includes = ["*.rs"]
+
 [formatter.prettier]
 command = "prettier"
 options = ["--write"]

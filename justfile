@@ -28,6 +28,15 @@ test:
 new *ARGS:
 	gleam run new {{ARGS}}
 
+# Fetch fresh listening data from PDS.
+refresh:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	mkdir -p priv/cache
+	curl -sL "https://eurosky.social/xrpc/com.atproto.sync.getRepo?did=did:plc:kcgwlowulc3rac43lregdawo" \
+		-o priv/cache/repo.car
+	cd tools/parse-plays && cargo run --release -- ../../priv/cache/repo.car > ../../priv/cache/plays.json
+
 # Wipe build artifacts.
 clean:
-	rm -rf dist build client/build _build
+	rm -rf dist build client/build _build priv/cache

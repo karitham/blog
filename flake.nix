@@ -14,6 +14,7 @@
       formatters = { pkgs }: [
         pkgs.gleam
         pkgs.nixfmt
+        pkgs.rustfmt
         pkgs.taplo
         pkgs.shfmt
         pkgs.nufmt
@@ -33,6 +34,17 @@
         ''
       );
 
+      packages = forEachSupportedSystem (
+        { pkgs }: {
+          parse-plays = pkgs.rustPlatform.buildRustPackage {
+            pname = "parse-plays";
+            version = "0.1.0";
+            src = ./tools/parse-plays;
+            cargoLock.lockFile = ./tools/parse-plays/Cargo.lock;
+          };
+        }
+      );
+
       devShells = forEachSupportedSystem (
         { pkgs }: {
           default = pkgs.mkShell {
@@ -44,6 +56,12 @@
                 beamMinimal28Packages.rebar3
                 treefmt
                 just
+
+                rustc
+                cargo
+                clippy
+                cargo-edit
+                rust-analyzer
               ]
               ++ (formatters { inherit pkgs; });
           };

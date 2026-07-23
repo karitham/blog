@@ -1,2 +1,5 @@
 build/
 dist/
+priv/cache/
+tools/*/target/
+result
