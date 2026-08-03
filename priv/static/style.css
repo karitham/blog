@@ -538,6 +538,170 @@ footer {
 }
 
 /* ============================================================
+   Music section — view tabs (now playing / stats) + range pills
+   ============================================================ */
+
+/* Radios are the state holder; visually hidden but focusable. */
+:is(.music-radio, .stats-radio) {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+:is(.music-tab, .stats-tab) {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  margin: 0.5rem 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    border-color: var(--text-dimmer);
+    color: var(--text);
+  }
+}
+
+:is(.music-radio, .stats-radio):checked + :is(.music-tab, .stats-tab) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Only the panel matching the checked radio is visible. Selectors are
+   id-specific: a general `:checked ~ .panel` matches every panel
+   (they're all siblings of every radio), showing all at once. The
+   view tabs live in the header row, so they're matched via `:has()`
+   rather than sibling combinators. */
+:is(.music-panel, .stats-panel) {
+  display: none;
+  padding-top: 0.25rem;
+}
+
+#plays:has(#music-now:checked) .music-panel[data-view="now"] {
+  display: block;
+}
+#plays:has(#music-stats:checked) .music-panel[data-view="stats"] {
+  display: block;
+}
+
+/* Pills in the header row sit on the title's baseline, no top margin. */
+#plays .music-tab {
+  margin-top: 0;
+}
+
+#stats-1m:checked ~ .stats-panel[data-range="1m"] {
+  display: block;
+}
+#stats-6m:checked ~ .stats-panel[data-range="6m"] {
+  display: block;
+}
+#stats-1y:checked ~ .stats-panel[data-range="1y"] {
+  display: block;
+}
+#stats-all:checked ~ .stats-panel[data-range="all"] {
+  display: block;
+}
+
+.stats-grid {
+  margin-top: 0.9rem;
+
+  & h3 {
+    margin: 0 0 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dim);
+
+    &::before {
+      content: "# ";
+      color: var(--blue);
+    }
+  }
+}
+
+/* 3x3 grid of cover tiles. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  min-width: 0;
+}
+
+.tile-cover-wrap {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tile-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* No art — a flat surface with the rank standing in for the cover. */
+.tile-cover--none {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--bg-alt) 70%, transparent),
+    var(--bg-alt)
+  );
+}
+
+.tile-rank {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+  background: color-mix(in srgb, var(--bg-nav) 78%, transparent);
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  line-height: 1.4;
+}
+
+.tile-meta {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  min-width: 0;
+}
+
+.tile-name {
+  display: block;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-artist {
+  display: block;
+  color: var(--text-dimmer);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-plays {
+  display: block;
+  color: var(--text-dimmer);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
    Single post page
    ============================================================ */
 

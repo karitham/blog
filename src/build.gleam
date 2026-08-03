@@ -82,6 +82,7 @@ fn write_index(data: SiteData) {
       dynamic.dynamic_sections(
         data.profile,
         data.recent_plays,
+        data.plays_stats,
         list.map(data.repos, fn(record) { record.value }),
       ),
     ])

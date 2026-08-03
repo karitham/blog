@@ -1,26 +1,103 @@
 import date
 import gen/alpha/feed/play.{type AlphaFeedPlay, type ArtistView}
+import gleam/int
 import gleam/list
 import gleam/option.{unwrap}
 import gleam/string
 import gleam/time/calendar
 import gleam/time/timestamp
-import lustre/attribute.{attribute, class, href, target}
-import lustre/element.{type Element, none, text}
-import lustre/element/html.{a, div, span}
-import section
+import lustre/attribute.{
+  alt, attribute, checked, class, classes, for, href, id, loading, name, src,
+  target, type_,
+}
+import lustre/element.{type Element, fragment, none, text}
+import lustre/element/html.{a, div, h2, h3, img, input, label, li, ol, span}
+import stats.{type Range, type RangeStats, type StatsData, type StatsItem}
 
-pub fn plays_section(plays: List(AlphaFeedPlay)) -> Element(msg) {
+/// The full Music section: title and view tabs on one header line,
+/// with the live rows and the top-N grids beneath them. The live
+/// rows live in their own `#plays-rows` container so the client's
+/// 30s poll only replaces that subtree and the view tabs keep their
+/// state. Built manually (not via `section.section`) so the tabs can
+/// sit beside the h2 in a `.section-header` row.
+pub fn plays_section(
+  plays: List(AlphaFeedPlay),
+  data: StatsData,
+) -> Element(msg) {
   case plays {
     [] -> none()
     _ ->
-      section.section(
-        "Now Playing",
-        "plays",
-        True,
-        list.map(plays, render_play_row),
+      div(
+        [
+          id("plays"),
+          class("section"),
+          attribute("data-stale", "true"),
+        ],
+        [
+          div([class("section-header")], [
+            h2([], [text("Music")]),
+            ..music_tabs(data)
+          ]),
+          ..music_panels(plays, data)
+        ],
       )
   }
+}
+
+/// Just the live rows container, re-rendered by the client on poll.
+pub fn plays_rows(plays: List(AlphaFeedPlay)) -> Element(msg) {
+  rows_container(plays)
+}
+
+/// The `now playing` / `stats` pills for the header line. Hidden
+/// entirely when there are no stats to show.
+fn music_tabs(data: StatsData) -> List(Element(msg)) {
+  case stats.is_empty(data) {
+    True -> []
+    False -> [
+      div([class("music-tabs")], [
+        input([
+          class("music-radio"),
+          type_("radio"),
+          name("music-view"),
+          id("music-now"),
+          checked(True),
+        ]),
+        label([class("music-tab"), for("music-now")], [text("now playing")]),
+        input([
+          class("music-radio"),
+          type_("radio"),
+          name("music-view"),
+          id("music-stats"),
+        ]),
+        label([class("music-tab"), for("music-stats")], [text("stats")]),
+      ]),
+    ]
+  }
+}
+
+/// The panels below the header. With stats, the `now playing` view is
+/// shown by default; `:has()` selectors in the CSS switch between the
+/// two based on the checked radio.
+fn music_panels(
+  plays: List(AlphaFeedPlay),
+  data: StatsData,
+) -> List(Element(msg)) {
+  case stats.is_empty(data) {
+    True -> [rows_container(plays)]
+    False -> [
+      div([class("music-panel"), attribute("data-view", "now")], [
+        rows_container(plays),
+      ]),
+      div([class("music-panel"), attribute("data-view", "stats")], [
+        stats_view(data),
+      ]),
+    ]
+  }
+}
+
+fn rows_container(plays: List(AlphaFeedPlay)) -> Element(msg) {
+  div([id("plays-rows")], list.map(plays, render_play_row))
 }
 
 fn render_play_row(play: AlphaFeedPlay) -> Element(msg) {
@@ -74,4 +151,106 @@ fn format_play_time(iso: String) -> #(String, String) {
     }
     Error(_) -> #("", iso)
   }
+}
+
+// ---------------------------------------------------------------- stats view
+
+/// The stats tab content: a radio-driven range switcher (CSS-only
+/// pills) and one stacked panel per range holding the three 3x3 grids.
+fn stats_view(data: StatsData) -> Element(msg) {
+  case stats.is_empty(data) {
+    True -> none()
+    False ->
+      fragment(list.append(
+        range_tabs(data.ranges),
+        list.map(data.ranges, range_panel),
+      ))
+  }
+}
+
+/// `input + label` pairs, one per range. The first range is checked by
+/// default; `input:checked ~ .stats-panel[data-range=...]` in the CSS
+/// picks the matching panel.
+fn range_tabs(ranges: List(#(Range, RangeStats))) -> List(Element(msg)) {
+  ranges
+  |> list.index_map(fn(pair, i) {
+    let #(range, _) = pair
+    let range_id = "stats-" <> stats.range_key(range)
+    [
+      input([
+        class("stats-radio"),
+        type_("radio"),
+        name("stats-range"),
+        id(range_id),
+        checked(i == 0),
+      ]),
+      label([class("stats-tab"), for(range_id)], [
+        text(stats.range_label(range)),
+      ]),
+    ]
+  })
+  |> list.flatten
+}
+
+fn range_panel(pair: #(Range, RangeStats)) -> Element(msg) {
+  let #(range, range_stats) = pair
+  div(
+    [
+      class("stats-panel"),
+      attribute("data-range", stats.range_key(range)),
+    ],
+    [
+      grid("artists", range_stats.artists),
+      grid("albums", range_stats.albums),
+      grid("tracks", range_stats.tracks),
+    ],
+  )
+}
+
+fn grid(title: String, items: List(StatsItem)) -> Element(msg) {
+  case list.is_empty(items) {
+    True -> none()
+    False ->
+      div([class("stats-grid")], [
+        h3([], [text(title)]),
+        ol(
+          [class("tiles")],
+          list.index_map(items, fn(item, i) { tile(i + 1, item) }),
+        ),
+      ])
+  }
+}
+
+fn tile(rank: Int, item: StatsItem) -> Element(msg) {
+  li([class("tile")], [
+    div([class("tile-cover-wrap")], [
+      case item.image {
+        "" ->
+          div(
+            [classes([#("tile-cover", True), #("tile-cover--none", True)])],
+            [],
+          )
+        url ->
+          img([
+            class("tile-cover"),
+            src(url),
+            alt(item.name),
+            loading("lazy"),
+          ])
+      },
+      span([class("tile-rank")], [text(int.to_string(rank))]),
+    ]),
+    div([class("tile-meta")], [
+      span([class("tile-name")], [text(item.name)]),
+      case item.artist {
+        "" -> none()
+        artist -> span([class("tile-artist")], [text(artist)])
+      },
+      span([class("tile-plays")], [text(plays_label(item.plays))]),
+    ]),
+  ])
+}
+
+fn plays_label(plays: Int) -> String {
+  int.to_string(plays) <> " plays"
 }

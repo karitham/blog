@@ -109,8 +109,8 @@ fn on_plays(text: String) -> Nil {
 
 fn commit_plays(plays_data: List(AlphaFeedPlay)) -> Nil {
   browser.set_inner_html(
-    "plays",
-    dynamic.render(plays_view.plays_section(plays_data)),
+    "plays-rows",
+    dynamic.render(plays_view.plays_rows(plays_data)),
   )
   browser.localize_dates()
   mark_plays_fresh()

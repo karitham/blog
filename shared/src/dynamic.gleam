@@ -6,17 +6,19 @@ import lustre/element.{type Element, fragment, to_string}
 import plays
 import profile
 import repos
+import stats.{type StatsData}
 
 /// Renders all three dynamic sections (profile, plays, repos)
 /// into a single fragment. Used by both server (SSG) and client (hydration).
 pub fn dynamic_sections(
   p: ProfileViewDetailed,
   pl: List(AlphaFeedPlay),
+  stats_data: StatsData,
   r: List(Repo),
 ) -> Element(msg) {
   fragment([
     profile.profile(p),
-    plays.plays_section(pl),
+    plays.plays_section(pl, stats_data),
     repos.repos_section(r),
   ])
 }

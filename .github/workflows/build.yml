@@ -1,7 +1,6 @@
 on:
   push:
     branches: [main]
-  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,6 +15,22 @@ jobs:
       - uses: determinatesystems/determinate-nix-action@v3
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix develop -c just test
+      # The plays pipeline (CAR -> stats) lives in Rust; make sure the
+      # flake package and its unit tests stay green too.
+      - run: nix build .#parse-plays
+      - run: nix develop -c cargo test --release --manifest-path tools/parse-plays/Cargo.toml
+      # Cover art lookups (MusicBrainz + Cover Art Archive) are the slow,
+      # network-heavy part of refresh. The cache is append-only, so a
+      # unique key per run plus a prefix restore keeps it growing without
+      # re-hitting the APIs for pairs already resolved.
+      - name: Cache cover art lookups
+        uses: actions/cache@v4
+        with:
+          path: priv/cache/cover-cache.json
+          key: cover-cache-${{ github.run_id }}
+          restore-keys: cover-cache-
+      # Regenerate the listening stats (never committed to the repo).
+      - run: nix develop -c just refresh
       - run: nix develop -c just build
       - uses: actions/upload-artifact@v4
         with:
@@ -23,7 +38,6 @@ jobs:
           path: dist
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
