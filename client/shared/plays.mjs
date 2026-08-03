@@ -40,66 +40,114 @@ function plays_label(plays) {
   return $int.to_string(plays) + " plays";
 }
 
-function tile(rank, item) {
-  return li(
-    toList([class$("tile")]),
+function tile_label(item) {
+  let _block;
+  let $ = item.artist;
+  if ($ === "") {
+    _block = $;
+  } else {
+    let artist = $;
+    _block = " — " + artist;
+  }
+  let artist_part = _block;
+  return ((item.name + artist_part) + ", ") + plays_label(item.plays);
+}
+
+/**
+ * Monogram for image-less tiles: the item's first grapheme, upper-cased.
+ * 
+ * @ignore
+ */
+function initial(name) {
+  let $ = $string.first(name);
+  if ($ instanceof Ok) {
+    let first = $[0];
+    return $string.uppercase(first);
+  } else {
+    return "";
+  }
+}
+
+/**
+ * A pure-image tile: the cover (or a flat placeholder with the item's
+ * initial when there is none), with the name/artist/plays in a hover
+ * popup. Links to the entity's MusicBrainz page when one resolved;
+ * otherwise it's a plain tile. No rank badge — a proper 3x3 mosaic.
+ * 
+ * @ignore
+ */
+function tile(item, category) {
+  let _block;
+  let $ = item.image;
+  if ($ === "") {
+    _block = div(
+      toList([
+        classes(
+          toList([
+            ["tile-cover", true],
+            ["tile-cover--none", true],
+            ["tile-cover--" + category, true],
+          ]),
+        ),
+      ]),
+      toList([
+        span(
+          toList([class$("tile-initial")]),
+          toList([text(initial(item.name))]),
+        ),
+      ]),
+    );
+  } else {
+    let url = $;
+    _block = img(
+      toList([class$("tile-cover"), src(url), alt(""), loading("lazy")]),
+    );
+  }
+  let cover = _block;
+  let popup = div(
+    toList([class$("tile-tooltip")]),
     toList([
-      div(
-        toList([class$("tile-cover-wrap")]),
-        toList([
-          (() => {
-            let $ = item.image;
-            if ($ === "") {
-              return div(
-                toList([
-                  classes(
-                    toList([["tile-cover", true], ["tile-cover--none", true]]),
-                  ),
-                ]),
-                $List$Empty$const,
-              );
-            } else {
-              let url = $;
-              return img(
-                toList([
-                  class$("tile-cover"),
-                  src(url),
-                  alt(item.name),
-                  loading("lazy"),
-                ]),
-              );
-            }
-          })(),
-          span(
-            toList([class$("tile-rank")]),
-            toList([text($int.to_string(rank))]),
-          ),
-        ]),
-      ),
-      div(
-        toList([class$("tile-meta")]),
-        toList([
-          span(toList([class$("tile-name")]), toList([text(item.name)])),
-          (() => {
-            let $ = item.artist;
-            if ($ === "") {
-              return none();
-            } else {
-              let artist = $;
-              return span(
-                toList([class$("tile-artist")]),
-                toList([text(artist)]),
-              );
-            }
-          })(),
-          span(
-            toList([class$("tile-plays")]),
-            toList([text(plays_label(item.plays))]),
-          ),
-        ]),
+      span(toList([class$("tile-name")]), toList([text(item.name)])),
+      (() => {
+        let $1 = item.artist;
+        if ($1 === "") {
+          return none();
+        } else {
+          let artist = $1;
+          return span(toList([class$("tile-artist")]), toList([text(artist)]));
+        }
+      })(),
+      span(
+        toList([class$("tile-plays")]),
+        toList([text(plays_label(item.plays))]),
       ),
     ]),
   );
+  let tile_body = toList([
+    div(toList([class$("tile-cover-wrap")]), toList([cover])),
+    popup,
+  ]);
+  let $1 = item.url;
+  if ($1 === "") {
+    return li(toList([class$("tile")]), tile_body);
+  } else {
+    let url = $1;
+    return li(
+      toList([class$("tile")]),
+      toList([
+        a(
+          toList([
+            class$("tile-link"),
+            href(url),
+            target("_blank"),
+            attribute("rel", "noopener"),
+            attribute("aria-label", tile_label(item)),
+          ]),
+          tile_body,
+        ),
+      ]),
+    );
+  }
 }
 
 function grid(title, items) {
@@ -113,7 +161,7 @@ function grid(title, items) {
         h3($List$Empty$const, toList([text(title)])),
         ol(
           toList([class$("tiles")]),
-          $list.index_map(items, (item, i) => { return tile(i + 1, item); }),
+          $list.map(items, (item) => { return tile(item, title); }),
         ),
       ]),
     );

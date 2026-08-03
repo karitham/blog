@@ -58,17 +58,18 @@ export const RangeStats$RangeStats$tracks = (value) => value.tracks;
 export const RangeStats$RangeStats$2 = (value) => value.tracks;
 
 export class StatsItem extends $CustomType {
-  constructor(name, artist, plays, ms_played, image) {
+  constructor(name, artist, plays, ms_played, image, url) {
     super();
     this.name = name;
     this.artist = artist;
     this.plays = plays;
     this.ms_played = ms_played;
     this.image = image;
+    this.url = url;
   }
 }
-export const StatsItem$StatsItem = (name, artist, plays, ms_played, image) =>
-  new StatsItem(name, artist, plays, ms_played, image);
+export const StatsItem$StatsItem = (name, artist, plays, ms_played, image, url) =>
+  new StatsItem(name, artist, plays, ms_played, image, url);
 export const StatsItem$isStatsItem = (value) => value instanceof StatsItem;
 export const StatsItem$StatsItem$name = (value) => value.name;
 export const StatsItem$StatsItem$0 = (value) => value.name;
@@ -80,6 +81,8 @@ export const StatsItem$StatsItem$ms_played = (value) => value.ms_played;
 export const StatsItem$StatsItem$3 = (value) => value.ms_played;
 export const StatsItem$StatsItem$image = (value) => value.image;
 export const StatsItem$StatsItem$4 = (value) => value.image;
+export const StatsItem$StatsItem$url = (value) => value.url;
+export const StatsItem$StatsItem$5 = (value) => value.url;
 
 export function all_ranges() {
   return toList([
@@ -148,8 +151,22 @@ function stats_item_decoder() {
                     "",
                     $decode.string,
                     (image) => {
-                      return $decode.success(
-                        new StatsItem(name, artist, plays, ms_played, image),
+                      return $decode.optional_field(
+                        "url",
+                        "",
+                        $decode.string,
+                        (url) => {
+                          return $decode.success(
+                            new StatsItem(
+                              name,
+                              artist,
+                              plays,
+                              ms_played,
+                              image,
+                              url,
+                            ),
+                          );
+                        },
                       );
                     },
                   );
