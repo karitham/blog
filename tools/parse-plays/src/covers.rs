@@ -117,6 +117,38 @@ fn artist_cache_key(name: &str) -> String {
     format!("\u{1f}{}", stats::normalize(name))
 }
 
+/// Cache key for an artist's MusicBrainz page URL. Two leading
+/// separators — distinct from artist images (one) and album keys
+/// (none). `normalize` drops non-alphanumerics, so separators can
+/// never appear inside a name.
+fn artist_url_cache_key(name: &str) -> String {
+    format!("\u{1f}\u{1f}{}", stats::normalize(name))
+}
+
+/// Cache key for an album's MusicBrainz release URL: the album cover
+/// key plus a suffix. Album keys contain no separator, so the suffix
+/// is unambiguous.
+fn album_url_cache_key(artist: &str, album: &str) -> String {
+    format!("{}\u{1f}url", cache_key(artist, album))
+}
+
+/// Cache key for a track's MusicBrainz recording URL. Three leading
+/// separators; includes the artist so same-named tracks don't collide.
+fn track_url_cache_key(artist: &str, track: &str) -> String {
+    format!(
+        "\u{1f}\u{1f}\u{1f}{}\u{1f}{}",
+        stats::normalize(artist),
+        stats::normalize(track)
+    )
+}
+
+fn load_cache(path: &str) -> HashMap<String, String> {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
 fn save_cache_atomically(path: &str, cache: &HashMap<String, String>) {
     let Ok(serialized) = serde_json::to_string_pretty(cache) else {
         return;
@@ -141,10 +173,7 @@ pub fn resolve(
         return HashMap::new();
     };
 
-    let mut cache: HashMap<String, String> = std::fs::read_to_string(path)
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default();
+    let mut cache = load_cache(path);
 
     let mut out: HashMap<(String, String), String> = HashMap::new();
     let missing: Vec<(String, String, Option<String>)> = pairs
@@ -263,17 +292,15 @@ pub fn resolve(
     out
 }
 
-/// Resolve real artist images via the iTunes Search API — MusicBrainz
-/// has no artist art. Cache-first, same append-only pattern.
+/// Resolve real artist images via the Wikidata chain (MusicBrainz
+/// artist search → url-rels → P18 → Commons). Cache-first, same
+/// append-only pattern.
 pub fn resolve_artists(artists: &[String], cache_path: Option<&str>) -> HashMap<String, String> {
     let Some(path) = cache_path else {
         return HashMap::new();
     };
 
-    let mut cache: HashMap<String, String> = std::fs::read_to_string(path)
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default();
+    let mut cache = load_cache(path);
 
     let mut out: HashMap<String, String> = HashMap::new();
     let missing: Vec<String> = artists
@@ -436,5 +463,225 @@ fn percent_encode(s: &str) -> String {
             _ => out.push_str(&format!("%{b:02X}")),
         }
     }
+    out
+}
+
+/// MusicBrainz recording search → best-guess recording MBID.
+fn musicbrainz_recording(agent: &ureq::Agent, artist: &str, track: &str) -> Option<String> {
+    let query = format!(
+        "recording:\"{}\" AND artist:\"{}\"",
+        clean_query(track),
+        clean_query(artist)
+    );
+    for attempt in 0..3u32 {
+        match agent
+            .get("https://musicbrainz.org/ws/2/recording")
+            .query("query", &query)
+            .query("fmt", "json")
+            .query("limit", "1")
+            .call()
+        {
+            Ok(resp) => {
+                let body: serde_json::Value =
+                    serde_json::from_str(&resp.into_string().ok()?).ok()?;
+                return body["recordings"]
+                    .as_array()?
+                    .first()?
+                    .get("id")?
+                    .as_str()
+                    .map(str::to_string);
+            }
+            Err(ureq::Error::Status(code, _)) if is_retryable(code) => {
+                std::thread::sleep(Duration::from_secs(1 << attempt));
+            }
+            Err(_) => return None,
+        }
+    }
+    None
+}
+
+/// Resolve MusicBrainz release pages for the top albums. Cache-first,
+/// like `resolve`: provided MBIDs are used directly, otherwise a name
+/// search finds one. Keys in the returned map are normalized
+/// (artist, album) pairs.
+pub fn resolve_album_urls(
+    pairs: &[(String, String, Option<String>)],
+    cache_path: Option<&str>,
+) -> HashMap<(String, String), String> {
+    let Some(path) = cache_path else {
+        return HashMap::new();
+    };
+
+    let mut cache = load_cache(path);
+
+    let mut out: HashMap<(String, String), String> = HashMap::new();
+    let missing: Vec<(String, String, Option<String>)> = pairs
+        .iter()
+        .filter_map(
+            |(artist, album, mbid)| match cache.get(&album_url_cache_key(artist, album)) {
+                Some(url) => {
+                    out.insert(
+                        (stats::normalize(artist), stats::normalize(album)),
+                        url.clone(),
+                    );
+                    None
+                }
+                None => Some((artist.clone(), album.clone(), mbid.clone())),
+            },
+        )
+        .collect();
+
+    if missing.is_empty() {
+        return out;
+    }
+
+    let agent = ureq::AgentBuilder::new()
+        .user_agent(USER_AGENT)
+        .timeout(Duration::from_secs(15))
+        .build();
+
+    let limiter = &Limiter::new(3.0);
+    let results: Vec<(String, String, String)> = missing
+        .par_iter()
+        .filter_map(|(artist, album, mbid)| {
+            limiter.acquire();
+            let mbid = match mbid {
+                Some(mbid) => mbid.clone(),
+                None => musicbrainz_release(&agent, artist, album)?,
+            };
+            Some((
+                artist.clone(),
+                album.clone(),
+                format!("https://musicbrainz.org/release/{mbid}"),
+            ))
+        })
+        .collect();
+
+    for (artist, album, url) in results {
+        cache.insert(album_url_cache_key(&artist, &album), url.clone());
+        out.insert((stats::normalize(&artist), stats::normalize(&album)), url);
+        save_cache_atomically(path, &cache);
+    }
+
+    out
+}
+
+/// Resolve MusicBrainz artist pages for the top artists. Cache-first;
+/// a miss does the same artist search as the image pipeline. Keys are
+/// normalized artist names.
+pub fn resolve_artist_urls(
+    artists: &[String],
+    cache_path: Option<&str>,
+) -> HashMap<String, String> {
+    let Some(path) = cache_path else {
+        return HashMap::new();
+    };
+
+    let mut cache = load_cache(path);
+
+    let mut out: HashMap<String, String> = HashMap::new();
+    let missing: Vec<String> = artists
+        .iter()
+        .filter_map(|name| match cache.get(&artist_url_cache_key(name)) {
+            Some(url) => {
+                out.insert(stats::normalize(name), url.clone());
+                None
+            }
+            None => Some(name.clone()),
+        })
+        .collect();
+
+    if missing.is_empty() {
+        return out;
+    }
+
+    let agent = ureq::AgentBuilder::new()
+        .user_agent(USER_AGENT)
+        .timeout(Duration::from_secs(15))
+        .build();
+
+    let limiter = &Limiter::new(3.0);
+    let results: Vec<(String, String)> = missing
+        .par_iter()
+        .filter_map(|name| {
+            limiter.acquire();
+            musicbrainz_artist_mbid(&agent, name).map(|mbid| {
+                (
+                    name.clone(),
+                    format!("https://musicbrainz.org/artist/{mbid}"),
+                )
+            })
+        })
+        .collect();
+
+    for (name, url) in results {
+        cache.insert(artist_url_cache_key(&name), url.clone());
+        out.insert(stats::normalize(&name), url);
+        save_cache_atomically(path, &cache);
+    }
+
+    out
+}
+
+/// Resolve MusicBrainz recording pages for the top tracks. Cache-first;
+/// a miss does a `recording:"..." AND artist:"..."` search. Keys are
+/// normalized (artist, track) pairs.
+pub fn resolve_track_urls(
+    tracks: &[(String, String)],
+    cache_path: Option<&str>,
+) -> HashMap<(String, String), String> {
+    let Some(path) = cache_path else {
+        return HashMap::new();
+    };
+
+    let mut cache = load_cache(path);
+
+    let mut out: HashMap<(String, String), String> = HashMap::new();
+    let missing: Vec<(String, String)> = tracks
+        .iter()
+        .filter_map(
+            |(artist, track)| match cache.get(&track_url_cache_key(artist, track)) {
+                Some(url) => {
+                    out.insert(
+                        (stats::normalize(artist), stats::normalize(track)),
+                        url.clone(),
+                    );
+                    None
+                }
+                None => Some((artist.clone(), track.clone())),
+            },
+        )
+        .collect();
+
+    if missing.is_empty() {
+        return out;
+    }
+
+    let agent = ureq::AgentBuilder::new()
+        .user_agent(USER_AGENT)
+        .timeout(Duration::from_secs(15))
+        .build();
+
+    let limiter = &Limiter::new(3.0);
+    let results: Vec<(String, String, String)> = missing
+        .par_iter()
+        .filter_map(|(artist, track)| {
+            limiter.acquire();
+            musicbrainz_recording(&agent, artist, track).map(|mbid| {
+                (
+                    artist.clone(),
+                    track.clone(),
+                    format!("https://musicbrainz.org/recording/{mbid}"),
+                )
+            })
+        })
+        .collect();
+
+    for (artist, track, url) in results {
+        cache.insert(track_url_cache_key(&artist, &track), url.clone());
+        out.insert((stats::normalize(&artist), stats::normalize(&track)), url);
+        save_cache_atomically(path, &cache);
+    }
+
     out
 }

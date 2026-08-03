@@ -608,39 +608,62 @@ footer {
 .stats-grid {
   margin-top: 0.9rem;
 
+  /* Grid subtitles read as article h2s: same size, marker, and
+     weight, only the (smaller) margin differs to fit the panel. */
   & h3 {
-    margin: 0 0 0.4rem;
-    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+    font-size: 1.2rem;
     font-weight: 600;
-    color: var(--text-dim);
+    color: var(--text);
 
     &::before {
-      content: "# ";
-      color: var(--blue);
+      content: "## ";
+      color: var(--accent);
     }
   }
 }
 
-/* 3x3 grid of cover tiles. */
+/* 3x3 grid of cover tiles. Pure images — the name/plays live in a
+   hover popup so the grid reads as a proper mosaic. */
 .tiles {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .tile {
+  position: relative;
   min-width: 0;
 }
 
+.tile-link {
+  display: block;
+  transition-property: transform;
+  transition-duration: 100ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
 .tile-cover-wrap {
-  position: relative;
   aspect-ratio: 1;
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  /* Ring instead of border: with zero gap, adjacent rings overlap
+     1:1, so interior lines stay 1px (a real border would double to
+     2px between tiles) and partial rows get no stray frame. */
+  box-shadow: 0 0 0 1px var(--border);
   overflow: hidden;
+  /* Sizes the placeholder monogram relative to the tile. */
+  container-type: inline-size;
 }
 
 .tile-cover {
@@ -650,8 +673,12 @@ footer {
   object-fit: cover;
 }
 
-/* No art — a flat surface with the rank standing in for the cover. */
+/* No art — a flat gradient surface with the item's monogram; the
+   popup still names it. */
 .tile-cover--none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--bg-alt) 70%, transparent),
@@ -659,40 +686,103 @@ footer {
   );
 }
 
-.tile-rank {
-  position: absolute;
-  top: 0.25rem;
-  left: 0.25rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text);
-  background: color-mix(in srgb, var(--bg-nav) 78%, transparent);
-  padding: 0.05rem 0.35rem;
-  border-radius: 3px;
-  line-height: 1.4;
+.tile-initial {
+  font-size: 32cqw;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-dimmer);
+  user-select: none;
 }
 
-.tile-meta {
-  margin-top: 0.25rem;
+/* Monogram tinted per grid, so a coverless tile still reads as
+   artists / albums / tracks at a glance. */
+.tile-cover--artists .tile-initial {
+  color: var(--lavender);
+}
+
+.tile-cover--albums .tile-initial {
+  color: var(--teal);
+}
+
+.tile-cover--tracks .tile-initial {
+  color: var(--peach);
+}
+
+/* Hover popup: name, artist, plays. Anchored above the tile and
+   edge-aligned on the first/last columns so it never clips off the
+   container. */
+.tile-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.6rem);
+  z-index: 3;
+  width: max-content;
+  max-width: 14rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-nav);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-depth), var(--shadow-ring);
   font-size: 0.78rem;
-  line-height: 1.35;
-  min-width: 0;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(var(--tt-x, -50%), 2px) scale(0.98);
+  transform-origin: bottom center;
+  transition-property: opacity, transform;
+  transition-duration: 120ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.tiles li:first-child .tile-tooltip {
+  left: 0;
+  --tt-x: 0%;
+  transform-origin: bottom left;
+}
+
+.tiles li:last-child .tile-tooltip {
+  left: auto;
+  right: 0;
+  --tt-x: 0%;
+  transform-origin: bottom right;
+}
+
+.tile:hover .tile-tooltip,
+.tile:focus-within .tile-tooltip {
+  opacity: 1;
+  transform: translate(var(--tt-x, -50%), 0) scale(1);
+}
+
+/* Caret: outer triangle in the border color, inner in the surface. */
+.tile-tooltip::before,
+.tile-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+}
+
+.tile-tooltip::before {
+  border-top-color: var(--border);
+}
+
+.tile-tooltip::after {
+  top: calc(100% - 1px);
+  border-width: 5px;
+  border-top-color: var(--bg-nav);
 }
 
 .tile-name {
   display: block;
+  font-weight: 600;
   color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .tile-artist {
   display: block;
   color: var(--text-dimmer);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .tile-plays {

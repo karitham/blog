@@ -100,9 +100,9 @@ async fn cmd_refresh(args: &[String]) -> Result<(), String> {
     write_stats(&agg, cache_path, stats_out)
 }
 
-/// Shared tail of `stats` and `refresh`: resolve covers and artist
-/// images for the top-N entries, serialize the grids, write the stats
-/// file.
+/// Shared tail of `stats` and `refresh`: resolve covers, artist
+/// images, and MusicBrainz page links for the top-N entries, serialize
+/// the grids, write the stats file.
 fn write_stats(
     agg: &stats::Aggregated,
     cache_path: Option<&str>,
@@ -110,14 +110,19 @@ fn write_stats(
 ) -> Result<(), String> {
     let pairs = stats::needed_pairs(agg);
     let artists = stats::needed_artists(agg);
+    let tracks = stats::needed_tracks(agg);
 
     eprintln!(
-        "resolving {} album covers, {} artist images",
+        "resolving {} album covers, {} artist images, {} links",
         pairs.len(),
-        artists.len()
+        artists.len(),
+        pairs.len() + artists.len() + tracks.len()
     );
     let cover_map = covers::resolve(&pairs, cache_path);
     let artist_map = covers::resolve_artists(&artists, cache_path);
+    let album_url_map = covers::resolve_album_urls(&pairs, cache_path);
+    let artist_url_map = covers::resolve_artist_urls(&artists, cache_path);
+    let track_url_map = covers::resolve_track_urls(&tracks, cache_path);
     let cover = |artist: &str, album: &str| -> String {
         cover_map
             .get(&(stats::normalize(artist), stats::normalize(album)))
@@ -130,8 +135,33 @@ fn write_stats(
             .cloned()
             .unwrap_or_default()
     };
+    let album_url = |artist: &str, album: &str| -> String {
+        album_url_map
+            .get(&(stats::normalize(artist), stats::normalize(album)))
+            .cloned()
+            .unwrap_or_default()
+    };
+    let artist_url = |name: &str| -> String {
+        artist_url_map
+            .get(&stats::normalize(name))
+            .cloned()
+            .unwrap_or_default()
+    };
+    let track_url = |artist: &str, track: &str| -> String {
+        track_url_map
+            .get(&(stats::normalize(artist), stats::normalize(track)))
+            .cloned()
+            .unwrap_or_default()
+    };
+    let lookups = stats::Lookups {
+        cover: &cover,
+        artist_cover: &artist_cover,
+        album_url: &album_url,
+        artist_url: &artist_url,
+        track_url: &track_url,
+    };
 
-    let stats_json = stats::build_ranges(agg, &cover, &artist_cover);
+    let stats_json = stats::build_ranges(agg, &lookups);
     let doc = json!({ "ranges": stats_json });
     std::fs::write(
         stats_out,

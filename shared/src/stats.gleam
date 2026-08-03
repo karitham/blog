@@ -14,8 +14,8 @@
 //
 // Each grid item:
 //   { "name": "...", "artist": "...", "plays": 123,
-//     "ms_played": 456, "image": "https://..." }
-// `artist` and `image` are omitted when empty.
+//     "ms_played": 456, "image": "https://...", "url": "https://..." }
+// `artist`, `image` and `url` are omitted when empty.
 
 import gleam/dynamic
 import gleam/dynamic/decode
@@ -71,6 +71,7 @@ pub type StatsItem {
     plays: Int,
     ms_played: Int,
     image: String,
+    url: String,
   )
 }
 
@@ -117,7 +118,8 @@ fn stats_item_decoder() -> decode.Decoder(StatsItem) {
   use plays <- decode.field("plays", decode.int)
   use ms_played <- decode.field("ms_played", decode.int)
   use image <- decode.optional_field("image", "", decode.string)
-  decode.success(StatsItem(name:, artist:, plays:, ms_played:, image:))
+  use url <- decode.optional_field("url", "", decode.string)
+  decode.success(StatsItem(name:, artist:, plays:, ms_played:, image:, url:))
 }
 
 /// Is there anything to show? The view hides the aside when false.

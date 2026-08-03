@@ -213,42 +213,78 @@ fn grid(title: String, items: List(StatsItem)) -> Element(msg) {
     False ->
       div([class("stats-grid")], [
         h3([], [text(title)]),
-        ol(
-          [class("tiles")],
-          list.index_map(items, fn(item, i) { tile(i + 1, item) }),
-        ),
+        ol([class("tiles")], list.map(items, fn(item) { tile(item, title) })),
       ])
   }
 }
 
-fn tile(rank: Int, item: StatsItem) -> Element(msg) {
-  li([class("tile")], [
-    div([class("tile-cover-wrap")], [
-      case item.image {
-        "" ->
-          div(
-            [classes([#("tile-cover", True), #("tile-cover--none", True)])],
-            [],
-          )
-        url ->
-          img([
-            class("tile-cover"),
-            src(url),
-            alt(item.name),
-            loading("lazy"),
-          ])
-      },
-      span([class("tile-rank")], [text(int.to_string(rank))]),
-    ]),
-    div([class("tile-meta")], [
+/// A pure-image tile: the cover (or a flat placeholder with the item's
+/// initial when there is none), with the name/artist/plays in a hover
+/// popup. Links to the entity's MusicBrainz page when one resolved;
+/// otherwise it's a plain tile. No rank badge — a proper 3x3 mosaic.
+fn tile(item: StatsItem, category: String) -> Element(msg) {
+  let cover = case item.image {
+    "" ->
+      div(
+        [
+          classes([
+            #("tile-cover", True),
+            #("tile-cover--none", True),
+            #("tile-cover--" <> category, True),
+          ]),
+        ],
+        [span([class("tile-initial")], [text(initial(item.name))])],
+      )
+    url ->
+      img([
+        class("tile-cover"),
+        src(url),
+        alt(""),
+        loading("lazy"),
+      ])
+  }
+  let popup =
+    div([class("tile-tooltip")], [
       span([class("tile-name")], [text(item.name)]),
       case item.artist {
         "" -> none()
         artist -> span([class("tile-artist")], [text(artist)])
       },
       span([class("tile-plays")], [text(plays_label(item.plays))]),
-    ]),
-  ])
+    ])
+  let tile_body = [div([class("tile-cover-wrap")], [cover]), popup]
+  case item.url {
+    "" -> li([class("tile")], tile_body)
+    url ->
+      li([class("tile")], [
+        a(
+          [
+            class("tile-link"),
+            href(url),
+            target("_blank"),
+            attribute("rel", "noopener"),
+            attribute("aria-label", tile_label(item)),
+          ],
+          tile_body,
+        ),
+      ])
+  }
+}
+
+/// Monogram for image-less tiles: the item's first grapheme, upper-cased.
+fn initial(name: String) -> String {
+  case string.first(name) {
+    Ok(first) -> string.uppercase(first)
+    Error(_) -> ""
+  }
+}
+
+fn tile_label(item: StatsItem) -> String {
+  let artist_part = case item.artist {
+    "" -> ""
+    artist -> " — " <> artist
+  }
+  item.name <> artist_part <> ", " <> plays_label(item.plays)
 }
 
 fn plays_label(plays: Int) -> String {

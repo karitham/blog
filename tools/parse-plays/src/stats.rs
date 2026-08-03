@@ -100,6 +100,8 @@ struct StatsItem {
     ms_played: u64,
     #[serde(skip_serializing_if = "String::is_empty")]
     image: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    url: String,
 }
 
 #[derive(Serialize)]
@@ -346,6 +348,35 @@ pub fn needed_artists(agg: &Aggregated) -> Vec<String> {
     seen.into_iter().collect()
 }
 
+/// Top-N (artist, track) display-name pairs across all ranges — the
+/// set we need MusicBrainz recording links for. Deduplicated.
+pub fn needed_tracks(agg: &Aggregated) -> Vec<(String, String)> {
+    use std::collections::HashSet;
+
+    let mut seen: HashSet<(String, String)> = HashSet::new();
+    for range in Range::ALL {
+        if let Some(map) = agg.tracks.get(&range) {
+            for (artist_key, track_key) in top_keys(map.iter().map(|(key, value)| (key, &value.0)))
+            {
+                seen.insert((artist_key.clone(), track_key.clone()));
+            }
+        }
+    }
+
+    // Display names live in the all-time map, which contains every
+    // track ever played (so any range top is present there).
+    let all_tracks = agg.tracks.get(&Range::AllTime);
+    let mut out = Vec::new();
+    for (artist_key, track_key) in seen {
+        if let Some((_, artist_display, track_display, _)) =
+            all_tracks.and_then(|map| map.get(&(artist_key.clone(), track_key.clone())))
+        {
+            out.push((artist_display.clone(), track_display.clone()));
+        }
+    }
+    out
+}
+
 // ---------------------------------------------------------------- covers
 
 /// Cover art URL for an artist tile: the artist's own image when
@@ -354,8 +385,8 @@ pub fn needed_artists(agg: &Aggregated) -> Vec<String> {
 fn artist_image(
     agg: &Aggregated,
     artist_key: &str,
-    cover: &impl Fn(&str, &str) -> String,
-    artist_cover: &impl Fn(&str) -> String,
+    cover: &dyn Fn(&str, &str) -> String,
+    artist_cover: &dyn Fn(&str) -> String,
 ) -> String {
     let Some(artist_display) = agg.artist_names.get(artist_key) else {
         return String::new();
@@ -373,13 +404,20 @@ fn artist_image(
     cover(artist_display, &album_display)
 }
 
+/// Lookup closures handed to `build_ranges`: image URLs and page
+/// links for the top-N entries. Keys are normalized display names, so
+/// the callers resolve case/spelling variants the same way the
+/// aggregation does.
+pub struct Lookups<'a> {
+    pub cover: &'a dyn Fn(&str, &str) -> String,
+    pub artist_cover: &'a dyn Fn(&str) -> String,
+    pub album_url: &'a dyn Fn(&str, &str) -> String,
+    pub artist_url: &'a dyn Fn(&str) -> String,
+    pub track_url: &'a dyn Fn(&str, &str) -> String,
+}
+
 /// Build the top-N lists for one range.
-fn build_range_stats(
-    agg: &Aggregated,
-    range: Range,
-    cover: &impl Fn(&str, &str) -> String,
-    artist_cover: &impl Fn(&str) -> String,
-) -> RangeStats {
+fn build_range_stats(agg: &Aggregated, range: Range, lookups: &Lookups) -> RangeStats {
     let artists = agg.artists.get(&range).map_or(vec![], |map| {
         sort_top(
             map.iter().map(|(key, value)| (key, &value.0)),
@@ -390,7 +428,8 @@ fn build_range_stats(
                     artist: String::new(),
                     plays: counter.plays,
                     ms_played: counter.ms_played,
-                    image: artist_image(agg, artist_key, cover, artist_cover),
+                    image: artist_image(agg, artist_key, lookups.cover, lookups.artist_cover),
+                    url: (lookups.artist_url)(display),
                 }
             },
         )
@@ -406,7 +445,8 @@ fn build_range_stats(
                     artist: entry.artist_display.clone(),
                     plays: entry.counter.plays,
                     ms_played: entry.counter.ms_played,
-                    image: cover(&entry.artist_display, &entry.album_display),
+                    image: (lookups.cover)(&entry.artist_display, &entry.album_display),
+                    url: (lookups.album_url)(&entry.artist_display, &entry.album_display),
                 }
             },
         )
@@ -422,7 +462,7 @@ fn build_range_stats(
                     String::new()
                 } else {
                     album_display_for(agg, artist_key, album_key)
-                        .map_or(String::new(), |ad| cover(artist_display, &ad))
+                        .map_or(String::new(), |ad| (lookups.cover)(artist_display, &ad))
                 };
                 StatsItem {
                     name: track_display.clone(),
@@ -430,6 +470,7 @@ fn build_range_stats(
                     plays: counter.plays,
                     ms_played: counter.ms_played,
                     image,
+                    url: (lookups.track_url)(artist_display, track_display),
                 }
             },
         )
@@ -494,17 +535,12 @@ pub fn needed_pairs(agg: &Aggregated) -> Vec<(String, String, Option<String>)> {
 
 // ---------------------------------------------------------------- serialize
 
-/// Serialize every range's top-N grids. `cover` maps (artist, album)
-/// display names to a cover URL (or "" when there is none);
-/// `artist_cover` maps artist display names to a real artist image.
-pub fn build_ranges(
-    agg: &Aggregated,
-    cover: &impl Fn(&str, &str) -> String,
-    artist_cover: &impl Fn(&str) -> String,
-) -> serde_json::Value {
+/// Serialize every range's top-N grids. `lookups` maps display names
+/// to cover art, artist images, and page links (or "" when none).
+pub fn build_ranges(agg: &Aggregated, lookups: &Lookups) -> serde_json::Value {
     let mut ranges = serde_json::Map::new();
     for range in Range::ALL {
-        let rs = build_range_stats(agg, range, cover, artist_cover);
+        let rs = build_range_stats(agg, range, lookups);
         ranges.insert(
             range.key().to_string(),
             serde_json::to_value(rs).expect("serialize range stats"),
@@ -596,9 +632,16 @@ mod tests {
             })
             .collect();
         let agg = aggregate(&plays, today);
-        let cover = |_: &str, _: &str| String::new();
-        let artist_cover = |_: &str| String::new();
-        let rs = build_range_stats(&agg, Range::OneMonth, &cover, &artist_cover);
+        let empty = |_: &str| String::new();
+        let empty_pair = |_: &str, _: &str| String::new();
+        let lookups = Lookups {
+            cover: &empty_pair,
+            artist_cover: &empty,
+            album_url: &empty_pair,
+            artist_url: &empty,
+            track_url: &empty_pair,
+        };
+        let rs = build_range_stats(&agg, Range::OneMonth, &lookups);
         assert_eq!(rs.artists.len(), TOP_N);
         assert_eq!(rs.albums.len(), TOP_N);
         assert_eq!(rs.tracks.len(), TOP_N);
