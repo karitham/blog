@@ -9,6 +9,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   makeError,
   toBitArray,
@@ -271,7 +272,7 @@ export function chunk_string(s, size) {
       return listPrepend(chunk, chunk_string(rest, size));
     }
   } else {
-    return toList([]);
+    return $List$Empty$const;
   }
 }
 
@@ -371,14 +372,14 @@ function parse_ipv6_compressed(ip) {
       let right = _use0[1];
       let _block;
       if (left === "") {
-        _block = toList([]);
+        _block = $List$Empty$const;
       } else {
         _block = $string.split(left, ":");
       }
       let left_parts = _block;
       let _block$1;
       if (right === "") {
-        _block$1 = toList([]);
+        _block$1 = $List$Empty$const;
       } else {
         _block$1 = $string.split(right, ":");
       }

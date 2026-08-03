@@ -5,7 +5,8 @@ import * as $node from "../../gleam/erlang/node.mjs";
  * A normal application start.
  */
 export class Normal extends $CustomType {}
-export const StartType$Normal = () => new Normal();
+export const StartType$Normal$const = new Normal();
+export const StartType$Normal = () => StartType$Normal$const;
 export const StartType$isNormal = (value) => value instanceof Normal;
 
 /**

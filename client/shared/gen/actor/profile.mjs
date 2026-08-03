@@ -40,7 +40,7 @@ export function encode_actor_profile(value) {
 export function actor_profile_decoder() {
   return $decode.optional_field(
     "pinnedRepositories",
-    new $option.None(),
+    $option.Option$None$const,
     $decode.optional($decode.list($decode.string)),
     (pinned_repositories) => {
       return $decode.success(new ActorProfile(pinned_repositories));

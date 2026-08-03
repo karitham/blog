@@ -24,19 +24,23 @@ import {
 export { digest, hash_chunk, hmac, new_hasher, strong_random_bytes };
 
 export class Sha224 extends $CustomType {}
-export const HashAlgorithm$Sha224 = () => new Sha224();
+export const HashAlgorithm$Sha224$const = new Sha224();
+export const HashAlgorithm$Sha224 = () => HashAlgorithm$Sha224$const;
 export const HashAlgorithm$isSha224 = (value) => value instanceof Sha224;
 
 export class Sha256 extends $CustomType {}
-export const HashAlgorithm$Sha256 = () => new Sha256();
+export const HashAlgorithm$Sha256$const = new Sha256();
+export const HashAlgorithm$Sha256 = () => HashAlgorithm$Sha256$const;
 export const HashAlgorithm$isSha256 = (value) => value instanceof Sha256;
 
 export class Sha384 extends $CustomType {}
-export const HashAlgorithm$Sha384 = () => new Sha384();
+export const HashAlgorithm$Sha384$const = new Sha384();
+export const HashAlgorithm$Sha384 = () => HashAlgorithm$Sha384$const;
 export const HashAlgorithm$isSha384 = (value) => value instanceof Sha384;
 
 export class Sha512 extends $CustomType {}
-export const HashAlgorithm$Sha512 = () => new Sha512();
+export const HashAlgorithm$Sha512$const = new Sha512();
+export const HashAlgorithm$Sha512 = () => HashAlgorithm$Sha512$const;
 export const HashAlgorithm$isSha512 = (value) => value instanceof Sha512;
 
 /**
@@ -45,7 +49,8 @@ export const HashAlgorithm$isSha512 = (value) => value instanceof Sha512;
  * compatibility with existing systems.
  */
 export class Md5 extends $CustomType {}
-export const HashAlgorithm$Md5 = () => new Md5();
+export const HashAlgorithm$Md5$const = new Md5();
+export const HashAlgorithm$Md5 = () => HashAlgorithm$Md5$const;
 export const HashAlgorithm$isMd5 = (value) => value instanceof Md5;
 
 /**
@@ -54,7 +59,8 @@ export const HashAlgorithm$isMd5 = (value) => value instanceof Md5;
  * compatibility with existing systems.
  */
 export class Sha1 extends $CustomType {}
-export const HashAlgorithm$Sha1 = () => new Sha1();
+export const HashAlgorithm$Sha1$const = new Sha1();
+export const HashAlgorithm$Sha1 = () => HashAlgorithm$Sha1$const;
 export const HashAlgorithm$isSha1 = (value) => value instanceof Sha1;
 
 /**
@@ -217,7 +223,7 @@ export function verify_signed_message(message, secret) {
                                     protected$.bitSize === 40 &&
                                     protected$.byteAt(4) === 52
                                   ) {
-                                    return new Ok(new Sha224());
+                                    return new Ok(HashAlgorithm$Sha224$const);
                                   } else {
                                     return new Error(undefined);
                                   }
@@ -226,7 +232,7 @@ export function verify_signed_message(message, secret) {
                                   protected$.bitSize === 40 &&
                                   protected$.byteAt(4) === 54
                                 ) {
-                                  return new Ok(new Sha256());
+                                  return new Ok(HashAlgorithm$Sha256$const);
                                 } else {
                                   return new Error(undefined);
                                 }
@@ -240,7 +246,7 @@ export function verify_signed_message(message, secret) {
                                 protected$.bitSize === 40 &&
                                 protected$.byteAt(4) === 52
                               ) {
-                                return new Ok(new Sha384());
+                                return new Ok(HashAlgorithm$Sha384$const);
                               } else {
                                 return new Error(undefined);
                               }
@@ -251,7 +257,7 @@ export function verify_signed_message(message, secret) {
                                 protected$.bitSize === 40 &&
                                 protected$.byteAt(4) === 50
                               ) {
-                                return new Ok(new Sha512());
+                                return new Ok(HashAlgorithm$Sha512$const);
                               } else {
                                 return new Error(undefined);
                               }
@@ -259,7 +265,7 @@ export function verify_signed_message(message, secret) {
                               protected$.bitSize === 24 &&
                               protected$.byteAt(2) === 49
                             ) {
-                              return new Ok(new Sha1());
+                              return new Ok(HashAlgorithm$Sha1$const);
                             } else {
                               return new Error(undefined);
                             }
@@ -273,7 +279,7 @@ export function verify_signed_message(message, secret) {
                           protected$.bitSize === 32 &&
                           protected$.byteAt(3) === 53
                         ) {
-                          return new Ok(new Md5());
+                          return new Ok(HashAlgorithm$Md5$const);
                         } else {
                           return new Error(undefined);
                         }

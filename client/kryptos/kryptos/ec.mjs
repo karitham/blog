@@ -41,28 +41,32 @@ export {
  * NIST P-256 curve (secp256r1, prime256v1). 256-bit key size.
  */
 export class P256 extends $CustomType {}
-export const Curve$P256 = () => new P256();
+export const Curve$P256$const = new P256();
+export const Curve$P256 = () => Curve$P256$const;
 export const Curve$isP256 = (value) => value instanceof P256;
 
 /**
  * NIST P-384 curve (secp384r1). 384-bit key size.
  */
 export class P384 extends $CustomType {}
-export const Curve$P384 = () => new P384();
+export const Curve$P384$const = new P384();
+export const Curve$P384 = () => Curve$P384$const;
 export const Curve$isP384 = (value) => value instanceof P384;
 
 /**
  * NIST P-521 curve (secp521r1). 521-bit key size.
  */
 export class P521 extends $CustomType {}
-export const Curve$P521 = () => new P521();
+export const Curve$P521$const = new P521();
+export const Curve$P521 = () => Curve$P521$const;
 export const Curve$isP521 = (value) => value instanceof P521;
 
 /**
  * Koblitz curve used by Bitcoin and Ethereum. 256-bit key size.
  */
 export class Secp256k1 extends $CustomType {}
-export const Curve$Secp256k1 = () => new Secp256k1();
+export const Curve$Secp256k1$const = new Secp256k1();
+export const Curve$Secp256k1 = () => Curve$Secp256k1$const;
 export const Curve$isSecp256k1 = (value) => value instanceof Secp256k1;
 
 /**

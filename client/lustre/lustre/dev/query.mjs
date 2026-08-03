@@ -5,6 +5,7 @@ import {
   Ok,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -1311,9 +1312,9 @@ function find_all_direct_children(loop$parent, loop$selector) {
       let children = parent.children;
       return find_all_matching_in_list(children, selector);
     } else if (parent instanceof Text) {
-      return toList([]);
+      return $List$Empty$const;
     } else if (parent instanceof UnsafeInnerHtml) {
-      return toList([]);
+      return $List$Empty$const;
     } else if (parent instanceof Map) {
       let child$1 = parent.child;
       loop$parent = child$1;
@@ -1348,9 +1349,9 @@ function find_all_descendants(parent, selector) {
     let children = parent.children;
     _block = find_all_descendants_in_list(children, selector);
   } else if (parent instanceof Text) {
-    _block = toList([]);
+    _block = $List$Empty$const;
   } else if (parent instanceof UnsafeInnerHtml) {
-    _block = toList([]);
+    _block = $List$Empty$const;
   } else if (parent instanceof Map) {
     let child$1 = parent.child;
     _block = find_all_descendants(child$1, selector);
@@ -1385,9 +1386,9 @@ function find_all_in_children(loop$element, loop$query) {
       let children = element.children;
       return find_all_in_list(children, query);
     } else if (element instanceof Text) {
-      return toList([]);
+      return $List$Empty$const;
     } else if (element instanceof UnsafeInnerHtml) {
-      return toList([]);
+      return $List$Empty$const;
     } else if (element instanceof Map) {
       let child$1 = element.child;
       loop$element = child$1;
@@ -1490,13 +1491,13 @@ function sort_selectors(selectors) {
             return $;
           }
         } else if (b instanceof HasAttribute) {
-          return new $order.Lt();
+          return $order.Order$Lt$const;
         } else if (b instanceof HasClass) {
-          return new $order.Lt();
+          return $order.Order$Lt$const;
         } else if (b instanceof HasStyle) {
-          return new $order.Lt();
+          return $order.Order$Lt$const;
         } else {
-          return new $order.Lt();
+          return $order.Order$Lt$const;
         }
       } else if (a instanceof HasAttribute) {
         if (b instanceof All) {
@@ -1510,7 +1511,7 @@ function sort_selectors(selectors) {
             {}
           )
         } else if (b instanceof Type) {
-          return new $order.Gt();
+          return $order.Order$Gt$const;
         } else if (b instanceof HasAttribute) {
           let $ = a.name;
           if ($ === "id") {
@@ -1518,12 +1519,12 @@ function sort_selectors(selectors) {
             if ($1 === "id") {
               return $string.compare(a.value, b.value);
             } else {
-              return new $order.Lt();
+              return $order.Order$Lt$const;
             }
           } else {
             let $1 = b.name;
             if ($1 === "id") {
-              return new $order.Gt();
+              return $order.Order$Gt$const;
             } else {
               let $2 = $string.compare(a.name, b.name);
               if ($2 instanceof $order.Eq) {
@@ -1536,23 +1537,23 @@ function sort_selectors(selectors) {
         } else if (b instanceof HasClass) {
           let $ = a.name;
           if ($ === "id") {
-            return new $order.Lt();
+            return $order.Order$Lt$const;
           } else {
-            return new $order.Lt();
+            return $order.Order$Lt$const;
           }
         } else if (b instanceof HasStyle) {
           let $ = a.name;
           if ($ === "id") {
-            return new $order.Lt();
+            return $order.Order$Lt$const;
           } else {
-            return new $order.Lt();
+            return $order.Order$Lt$const;
           }
         } else {
           let $ = a.name;
           if ($ === "id") {
-            return new $order.Lt();
+            return $order.Order$Lt$const;
           } else {
-            return new $order.Lt();
+            return $order.Order$Lt$const;
           }
         }
       } else if (a instanceof HasClass) {
@@ -1567,20 +1568,20 @@ function sort_selectors(selectors) {
             {}
           )
         } else if (b instanceof Type) {
-          return new $order.Gt();
+          return $order.Order$Gt$const;
         } else if (b instanceof HasAttribute) {
           let $ = b.name;
           if ($ === "id") {
-            return new $order.Gt();
+            return $order.Order$Gt$const;
           } else {
-            return new $order.Gt();
+            return $order.Order$Gt$const;
           }
         } else if (b instanceof HasClass) {
           return $string.compare(a.name, b.name);
         } else if (b instanceof HasStyle) {
-          return new $order.Gt();
+          return $order.Order$Gt$const;
         } else {
-          return new $order.Lt();
+          return $order.Order$Lt$const;
         }
       } else if (a instanceof HasStyle) {
         if (b instanceof All) {
@@ -1594,20 +1595,20 @@ function sort_selectors(selectors) {
             {}
           )
         } else if (b instanceof Type) {
-          return new $order.Gt();
+          return $order.Order$Gt$const;
         } else if (b instanceof HasAttribute) {
           let $ = b.name;
           if ($ === "id") {
-            return new $order.Gt();
+            return $order.Order$Gt$const;
           } else {
-            return new $order.Gt();
+            return $order.Order$Gt$const;
           }
         } else if (b instanceof HasClass) {
-          return new $order.Lt();
+          return $order.Order$Lt$const;
         } else if (b instanceof HasStyle) {
           return $string.compare(a.name, b.name);
         } else {
-          return new $order.Lt();
+          return $order.Order$Lt$const;
         }
       } else if (b instanceof All) {
         throw makeError(
@@ -1620,18 +1621,18 @@ function sort_selectors(selectors) {
           {}
         )
       } else if (b instanceof Type) {
-        return new $order.Gt();
+        return $order.Order$Gt$const;
       } else if (b instanceof HasAttribute) {
         let $ = b.name;
         if ($ === "id") {
-          return new $order.Gt();
+          return $order.Order$Gt$const;
         } else {
-          return new $order.Gt();
+          return $order.Order$Gt$const;
         }
       } else if (b instanceof HasClass) {
-        return new $order.Gt();
+        return $order.Order$Gt$const;
       } else if (b instanceof HasStyle) {
-        return new $order.Gt();
+        return $order.Order$Gt$const;
       } else {
         return $string.compare(a.content, b.content);
       }

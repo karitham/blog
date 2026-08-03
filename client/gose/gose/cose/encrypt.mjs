@@ -11,6 +11,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -31,7 +32,9 @@ const FILEPATH = "src/gose/cose/encrypt.gleam";
  * ECDH-ES + HKDF-256 (COSE algorithm -25)
  */
 export class EcdhEsHkdf256 extends $CustomType {}
-export const EcdhEsDirectVariant$EcdhEsHkdf256 = () => new EcdhEsHkdf256();
+export const EcdhEsDirectVariant$EcdhEsHkdf256$const = new EcdhEsHkdf256();
+export const EcdhEsDirectVariant$EcdhEsHkdf256 = () =>
+  EcdhEsDirectVariant$EcdhEsHkdf256$const;
 export const EcdhEsDirectVariant$isEcdhEsHkdf256 = (value) =>
   value instanceof EcdhEsHkdf256;
 
@@ -39,7 +42,9 @@ export const EcdhEsDirectVariant$isEcdhEsHkdf256 = (value) =>
  * ECDH-ES + HKDF-512 (COSE algorithm -26)
  */
 export class EcdhEsHkdf512 extends $CustomType {}
-export const EcdhEsDirectVariant$EcdhEsHkdf512 = () => new EcdhEsHkdf512();
+export const EcdhEsDirectVariant$EcdhEsHkdf512$const = new EcdhEsHkdf512();
+export const EcdhEsDirectVariant$EcdhEsHkdf512 = () =>
+  EcdhEsDirectVariant$EcdhEsHkdf512$const;
 export const EcdhEsDirectVariant$isEcdhEsHkdf512 = (value) =>
   value instanceof EcdhEsHkdf512;
 
@@ -114,8 +119,8 @@ export function new$(enc) {
         new UnencryptedEncrypt(
           enc,
           toList([new $cose.Alg(alg_id)]),
-          toList([]),
-          toList([]),
+          $List$Empty$const,
+          $List$Empty$const,
           toBitArray([]),
         ),
       );
@@ -129,8 +134,8 @@ function new_pending(alg, key, ecdh_es_variant) {
       alg,
       key,
       ecdh_es_variant,
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
   );
 }
@@ -139,10 +144,10 @@ function new_pending(alg, key, ecdh_es_variant) {
  * Build a direct-shared-secret recipient.
  */
 export function new_direct_recipient(key) {
-  let alg = new $gose.Direct();
+  let alg = $gose.KeyEncryptionAlg$Direct$const;
   return $result.try$(
     $key_helpers.validate_key_for_jwe_encryption(alg, key),
-    (_) => { return new Ok(new_pending(alg, key, new $option.None())); },
+    (_) => { return new Ok(new_pending(alg, key, $option.Option$None$const)); },
   );
 }
 
@@ -150,10 +155,10 @@ export function new_direct_recipient(key) {
  * Build an AES Key Wrap recipient.
  */
 export function new_aes_kw_recipient(size, key) {
-  let alg = new $gose.AesKeyWrap(new $gose.AesKw(), size);
+  let alg = new $gose.AesKeyWrap($gose.AesKwMode$AesKw$const, size);
   return $result.try$(
     $key_helpers.validate_key_for_jwe_encryption(alg, key),
-    (_) => { return new Ok(new_pending(alg, key, new $option.None())); },
+    (_) => { return new Ok(new_pending(alg, key, $option.Option$None$const)); },
   );
 }
 
@@ -167,7 +172,9 @@ export function new_rsa_recipient(rsa_alg, key) {
     (_) => {
       return $result.try$(
         $key_helpers.validate_key_for_jwe_encryption(alg, key),
-        (_) => { return new Ok(new_pending(alg, key, new $option.None())); },
+        (_) => {
+          return new Ok(new_pending(alg, key, $option.Option$None$const));
+        },
       );
     },
   );
@@ -177,7 +184,7 @@ export function new_rsa_recipient(rsa_alg, key) {
  * Build an ECDH-ES direct recipient with a specific HKDF variant.
  */
 export function new_ecdh_es_direct_recipient(variant, key) {
-  let alg = new $gose.EcdhEs(new $gose.EcdhEsDirect());
+  let alg = new $gose.EcdhEs($gose.EcdhEsAlg$EcdhEsDirect$const);
   return $result.try$(
     $key_helpers.validate_key_for_jwe_encryption(alg, key),
     (_) => { return new Ok(new_pending(alg, key, new $option.Some(variant))); },
@@ -191,7 +198,7 @@ export function new_ecdh_es_aes_kw_recipient(size, key) {
   let alg = new $gose.EcdhEs(new $gose.EcdhEsAesKw(size));
   return $result.try$(
     $key_helpers.validate_key_for_jwe_encryption(alg, key),
-    (_) => { return new Ok(new_pending(alg, key, new $option.None())); },
+    (_) => { return new Ok(new_pending(alg, key, $option.Option$None$const)); },
   );
 }
 
@@ -440,11 +447,11 @@ function encode_party_info(identity) {
     let bytes = identity[0];
     _block = new $cbor.Bytes(bytes);
   } else {
-    _block = new $cbor.Null();
+    _block = $cbor.Value$Null$const;
   }
   let identity_value = _block;
   return new $cbor.Array(
-    toList([identity_value, new $cbor.Null(), new $cbor.Null()]),
+    toList([identity_value, $cbor.Value$Null$const, $cbor.Value$Null$const]),
   );
 }
 
@@ -475,7 +482,7 @@ export function derive_cose_ecdh_key(
   let _pipe = $crypto.hkdf(
     hash_algorithm,
     shared_secret,
-    new $option.None(),
+    $option.Option$None$const,
     context,
     key_data_length,
   );
@@ -516,7 +523,7 @@ function encrypt_ecdh_es_aes_kw_recipient(key, cek, size, apu, apv) {
         (_use0) => {
           let shared_secret = _use0[0];
           let epk = _use0[1];
-          let protected$ = append_party_headers(toList([]), apu, apv);
+          let protected$ = append_party_headers($List$Empty$const, apu, apv);
           let protected_serialized = $cose_structure.serialize_protected(
             protected$,
           );
@@ -524,7 +531,7 @@ function encrypt_ecdh_es_aes_kw_recipient(key, cek, size, apu, apv) {
           return $result.try$(
             derive_cose_ecdh_key(
               shared_secret,
-              new $hash.Sha256(),
+              $hash.HashAlgorithm$Sha256$const,
               aes_kw_cose_id(size),
               kw_key_len,
               protected_serialized,
@@ -576,9 +583,9 @@ function rsa_hash_for_alg(rsa_alg) {
       new $gose.InvalidState("RSA-PKCS1v15 is not supported in COSE"),
     );
   } else if (rsa_alg instanceof $gose.RsaOaepSha1) {
-    return new Ok(new $hash.Sha1());
+    return new Ok($hash.HashAlgorithm$Sha1$const);
   } else {
-    return new Ok(new $hash.Sha256());
+    return new Ok($hash.HashAlgorithm$Sha256$const);
   }
 }
 
@@ -594,7 +601,7 @@ function encrypt_rsa_oaep_recipient(key, cek, rsa_alg) {
             (encrypted_cek) => {
               return new Ok(
                 new EncryptedRecipient(
-                  toList([]),
+                  $List$Empty$const,
                   toBitArray([]),
                   toList([new $cose.Alg(alg_id)]),
                   encrypted_cek,
@@ -611,7 +618,7 @@ function encrypt_rsa_oaep_recipient(key, cek, rsa_alg) {
 function encrypt_aes_kw_recipient(key, cek, size) {
   return $result.try$(
     $cose.key_encryption_alg_to_int(
-      new $gose.AesKeyWrap(new $gose.AesKw(), size),
+      new $gose.AesKeyWrap($gose.AesKwMode$AesKw$const, size),
     ),
     (alg_id) => {
       return $result.try$(
@@ -619,7 +626,7 @@ function encrypt_aes_kw_recipient(key, cek, size) {
         (encrypted_cek) => {
           return new Ok(
             new EncryptedRecipient(
-              toList([]),
+              $List$Empty$const,
               toBitArray([]),
               toList([new $cose.Alg(alg_id)]),
               encrypted_cek,
@@ -695,9 +702,9 @@ function wrap_recipient(recipient, cek) {
 
 function ecdh_variant_hash_algorithm(variant) {
   if (variant instanceof EcdhEsHkdf256) {
-    return new $hash.Sha256();
+    return $hash.HashAlgorithm$Sha256$const;
   } else {
-    return new $hash.Sha512();
+    return $hash.HashAlgorithm$Sha512$const;
   }
 }
 
@@ -757,7 +764,7 @@ function encrypt_ecdh_es_direct(key, content_alg, variant, apu, apv) {
 function encrypt_direct_recipient() {
   return new Ok(
     new EncryptedRecipient(
-      toList([]),
+      $List$Empty$const,
       toBitArray([]),
       toList([new $cose.Alg(-6)]),
       toBitArray([]),
@@ -991,7 +998,7 @@ export function encrypt(message, plaintext) {
  */
 export function decryptor(key_alg, content_alg, keys) {
   return $bool.guard(
-    isEqual(key_alg, new $gose.EcdhEs(new $gose.EcdhEsDirect())),
+    isEqual(key_alg, new $gose.EcdhEs($gose.EcdhEsAlg$EcdhEsDirect$const)),
     new Error(
       new $gose.InvalidState(
         "use ecdh_es_direct_decryptor to choose HKDF variant",
@@ -1020,7 +1027,7 @@ export function decryptor(key_alg, content_alg, keys) {
                       key_alg,
                       content_alg,
                       keys,
-                      new $option.None(),
+                      $option.Option$None$const,
                     ),
                   );
                 },
@@ -1040,7 +1047,7 @@ export function decryptor(key_alg, content_alg, keys) {
  * encrypted with ECDH-ES+HKDF-512 (COSE algorithm -26).
  */
 export function ecdh_es_direct_decryptor(variant, content_alg, keys) {
-  let key_alg = new $gose.EcdhEs(new $gose.EcdhEsDirect());
+  let key_alg = new $gose.EcdhEs($gose.EcdhEsAlg$EcdhEsDirect$const);
   return $key_helpers.require_non_empty_keys(
     keys,
     () => {
@@ -1069,7 +1076,7 @@ function find_unknown_bytes(loop$headers, loop$label) {
     let headers = loop$headers;
     let label = loop$label;
     if (headers instanceof $Empty) {
-      return new $option.None();
+      return $option.Option$None$const;
     } else {
       let $ = headers.head;
       if ($ instanceof $cose.Unknown) {
@@ -1260,7 +1267,7 @@ function unwrap_ecdh_es_aes_kw(recipient, key, size) {
           return $result.try$(
             derive_cose_ecdh_key(
               shared_secret,
-              new $hash.Sha256(),
+              $hash.HashAlgorithm$Sha256$const,
               aes_kw_cose_id(size),
               kw_key_len,
               recipient.protected_serialized,

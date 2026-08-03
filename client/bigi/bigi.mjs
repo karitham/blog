@@ -46,7 +46,7 @@ import {
 import {
   Ok,
   Error,
-  toList,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -92,20 +92,24 @@ export {
 const FILEPATH = "src/bigi.gleam";
 
 export class LittleEndian extends $CustomType {}
-export const Endianness$LittleEndian = () => new LittleEndian();
+export const Endianness$LittleEndian$const = new LittleEndian();
+export const Endianness$LittleEndian = () => Endianness$LittleEndian$const;
 export const Endianness$isLittleEndian = (value) =>
   value instanceof LittleEndian;
 
 export class BigEndian extends $CustomType {}
-export const Endianness$BigEndian = () => new BigEndian();
+export const Endianness$BigEndian$const = new BigEndian();
+export const Endianness$BigEndian = () => Endianness$BigEndian$const;
 export const Endianness$isBigEndian = (value) => value instanceof BigEndian;
 
 export class Signed extends $CustomType {}
-export const Signedness$Signed = () => new Signed();
+export const Signedness$Signed$const = new Signed();
+export const Signedness$Signed = () => Signedness$Signed$const;
 export const Signedness$isSigned = (value) => value instanceof Signed;
 
 export class Unsigned extends $CustomType {}
-export const Signedness$Unsigned = () => new Unsigned();
+export const Signedness$Unsigned$const = new Unsigned();
+export const Signedness$Unsigned = () => Signedness$Unsigned$const;
 export const Signedness$isUnsigned = (value) => value instanceof Unsigned;
 
 /**
@@ -205,7 +209,7 @@ function get_digit(loop$bigint, loop$digits, loop$divisor) {
  * The list is ordered starting from the most significant digit.
  */
 export function digits(bigint) {
-  return get_digit(bigint, toList([]), ten());
+  return get_digit(bigint, $List$Empty$const, ten());
 }
 
 /**

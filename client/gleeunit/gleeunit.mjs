@@ -5,8 +5,10 @@ import { CustomType as $CustomType } from "./gleam.mjs";
 import { main as do_main } from "./gleeunit_ffi.mjs";
 
 class Utf8 extends $CustomType {}
+const Encoding$Utf8$const = new Utf8();
 
 class GleeunitProgress extends $CustomType {}
+const ReportModuleName$GleeunitProgress$const = new GleeunitProgress();
 
 class Colored extends $CustomType {
   constructor($0) {
@@ -16,8 +18,10 @@ class Colored extends $CustomType {
 }
 
 class Verbose extends $CustomType {}
+const EunitOption$Verbose$const = new Verbose();
 
 class NoTty extends $CustomType {}
+const EunitOption$NoTty$const = new NoTty();
 
 class Report extends $CustomType {
   constructor($0) {

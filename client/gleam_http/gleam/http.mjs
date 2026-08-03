@@ -6,7 +6,7 @@ import * as $string from "../../gleam_stdlib/gleam/string.mjs";
 import {
   Ok,
   Error,
-  toList,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -20,39 +20,48 @@ import {
 const FILEPATH = "src/gleam/http.gleam";
 
 export class Get extends $CustomType {}
-export const Method$Get = () => new Get();
+export const Method$Get$const = new Get();
+export const Method$Get = () => Method$Get$const;
 export const Method$isGet = (value) => value instanceof Get;
 
 export class Post extends $CustomType {}
-export const Method$Post = () => new Post();
+export const Method$Post$const = new Post();
+export const Method$Post = () => Method$Post$const;
 export const Method$isPost = (value) => value instanceof Post;
 
 export class Head extends $CustomType {}
-export const Method$Head = () => new Head();
+export const Method$Head$const = new Head();
+export const Method$Head = () => Method$Head$const;
 export const Method$isHead = (value) => value instanceof Head;
 
 export class Put extends $CustomType {}
-export const Method$Put = () => new Put();
+export const Method$Put$const = new Put();
+export const Method$Put = () => Method$Put$const;
 export const Method$isPut = (value) => value instanceof Put;
 
 export class Delete extends $CustomType {}
-export const Method$Delete = () => new Delete();
+export const Method$Delete$const = new Delete();
+export const Method$Delete = () => Method$Delete$const;
 export const Method$isDelete = (value) => value instanceof Delete;
 
 export class Trace extends $CustomType {}
-export const Method$Trace = () => new Trace();
+export const Method$Trace$const = new Trace();
+export const Method$Trace = () => Method$Trace$const;
 export const Method$isTrace = (value) => value instanceof Trace;
 
 export class Connect extends $CustomType {}
-export const Method$Connect = () => new Connect();
+export const Method$Connect$const = new Connect();
+export const Method$Connect = () => Method$Connect$const;
 export const Method$isConnect = (value) => value instanceof Connect;
 
 export class Options extends $CustomType {}
-export const Method$Options = () => new Options();
+export const Method$Options$const = new Options();
+export const Method$Options = () => Method$Options$const;
 export const Method$isOptions = (value) => value instanceof Options;
 
 export class Patch extends $CustomType {}
-export const Method$Patch = () => new Patch();
+export const Method$Patch$const = new Patch();
+export const Method$Patch = () => Method$Patch$const;
 export const Method$isPatch = (value) => value instanceof Patch;
 
 /**
@@ -69,11 +78,13 @@ export const Method$isOther = (value) => value instanceof Other;
 export const Method$Other$0 = (value) => value[0];
 
 export class Http extends $CustomType {}
-export const Scheme$Http = () => new Http();
+export const Scheme$Http$const = new Http();
+export const Scheme$Http = () => Scheme$Http$const;
 export const Scheme$isHttp = (value) => value instanceof Http;
 
 export class Https extends $CustomType {}
-export const Scheme$Https = () => new Https();
+export const Scheme$Https$const = new Https();
+export const Scheme$Https = () => Scheme$Https$const;
 export const Scheme$isHttps = (value) => value instanceof Https;
 
 /**
@@ -428,23 +439,23 @@ function is_valid_token(token) {
 
 export function parse_method(method) {
   if (method === "CONNECT") {
-    return new Ok(new Connect());
+    return new Ok(Method$Connect$const);
   } else if (method === "DELETE") {
-    return new Ok(new Delete());
+    return new Ok(Method$Delete$const);
   } else if (method === "GET") {
-    return new Ok(new Get());
+    return new Ok(Method$Get$const);
   } else if (method === "HEAD") {
-    return new Ok(new Head());
+    return new Ok(Method$Head$const);
   } else if (method === "OPTIONS") {
-    return new Ok(new Options());
+    return new Ok(Method$Options$const);
   } else if (method === "PATCH") {
-    return new Ok(new Patch());
+    return new Ok(Method$Patch$const);
   } else if (method === "POST") {
-    return new Ok(new Post());
+    return new Ok(Method$Post$const);
   } else if (method === "PUT") {
-    return new Ok(new Put());
+    return new Ok(Method$Put$const);
   } else if (method === "TRACE") {
-    return new Ok(new Trace());
+    return new Ok(Method$Trace$const);
   } else {
     let method$1 = method;
     let $ = is_valid_token(method$1);
@@ -512,9 +523,9 @@ export function scheme_to_string(scheme) {
 export function scheme_from_string(scheme) {
   let $ = $string.lowercase(scheme);
   if ($ === "http") {
-    return new Ok(new Http());
+    return new Ok(Scheme$Http$const);
   } else if ($ === "https") {
-    return new Ok(new Https());
+    return new Ok(Scheme$Https$const);
   } else {
     return new Error(undefined);
   }
@@ -832,7 +843,7 @@ function do_parse_headers(data) {
     ) {
       if (data.bitSize % 8 === 0) {
         let data$1 = bitArraySlice(data, 32);
-        return new Ok(new MultipartHeaders(toList([]), data$1));
+        return new Ok(new MultipartHeaders($List$Empty$const, data$1));
       } else {
         return new Error(undefined);
       }
@@ -841,14 +852,14 @@ function do_parse_headers(data) {
       data.bitSize % 8 === 0
     ) {
       let data$1 = bitArraySlice(data, 16);
-      return parse_header_name(data$1, toList([]));
+      return parse_header_name(data$1, $List$Empty$const);
     } else {
       return new Error(undefined);
     }
   } else if (data.bitSize >= 16) {
     if (data.byteAt(0) === 13 && data.byteAt(1) === 10 && data.bitSize % 8 === 0) {
       let data$1 = bitArraySlice(data, 16);
-      return parse_header_name(data$1, toList([]));
+      return parse_header_name(data$1, $List$Empty$const);
     } else {
       return new Error(undefined);
     }
@@ -1037,7 +1048,7 @@ function do_parse_multipart_headers(data, boundary, boundary_bytes) {
       if (rest.bitSize >= 16) {
         if (rest.byteAt(0) === 45 && rest.byteAt(1) === 45) {
           let rest$1 = bitArraySlice(rest, 16);
-          return new Ok(new MultipartHeaders(toList([]), rest$1));
+          return new Ok(new MultipartHeaders($List$Empty$const, rest$1));
         } else {
           return do_parse_headers(rest);
         }
@@ -1544,21 +1555,21 @@ function parse_content_disposition_type(loop$header, loop$name) {
       let $1 = $[0][0];
       if ($1 === " ") {
         let rest = $[0][1];
-        let result = parse_rfc_2045_parameters(rest, toList([]));
+        let result = parse_rfc_2045_parameters(rest, $List$Empty$const);
         return $result.map(
           result,
           (parameters) => { return new ContentDisposition(name, parameters); },
         );
       } else if ($1 === "\t") {
         let rest = $[0][1];
-        let result = parse_rfc_2045_parameters(rest, toList([]));
+        let result = parse_rfc_2045_parameters(rest, $List$Empty$const);
         return $result.map(
           result,
           (parameters) => { return new ContentDisposition(name, parameters); },
         );
       } else if ($1 === ";") {
         let rest = $[0][1];
-        let result = parse_rfc_2045_parameters(rest, toList([]));
+        let result = parse_rfc_2045_parameters(rest, $List$Empty$const);
         return $result.map(
           result,
           (parameters) => { return new ContentDisposition(name, parameters); },
@@ -1570,7 +1581,7 @@ function parse_content_disposition_type(loop$header, loop$name) {
         loop$name = name + $string.lowercase(grapheme);
       }
     } else {
-      return new Ok(new ContentDisposition(name, toList([])));
+      return new Ok(new ContentDisposition(name, $List$Empty$const));
     }
   }
 }

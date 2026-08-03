@@ -4,6 +4,7 @@ import { Empty as $Empty, prepend as listPrepend, CustomType as $CustomType } fr
 import * as $constants from "../../lustre/internals/constants.mjs";
 
 class Root extends $CustomType {}
+const Path$Root$const = new Root();
 
 class Key extends $CustomType {
   constructor(key, parent) {
@@ -46,7 +47,7 @@ export const separator_event = "\n";
 /**
  *
  */
-export const root = /* @__PURE__ */ new Root();
+export const root = Path$Root$const;
 
 function finish_to_string(acc) {
   if (acc instanceof $Empty) {

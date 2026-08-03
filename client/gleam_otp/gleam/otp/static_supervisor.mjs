@@ -2,7 +2,12 @@ import * as $atom from "../../../gleam_erlang/gleam/erlang/atom.mjs";
 import * as $process from "../../../gleam_erlang/gleam/erlang/process.mjs";
 import * as $dynamic from "../../../gleam_stdlib/gleam/dynamic.mjs";
 import * as $list from "../../../gleam_stdlib/gleam/list.mjs";
-import { Ok, toList, prepend as listPrepend, CustomType as $CustomType } from "../../gleam.mjs";
+import {
+  Ok,
+  List$Empty$const as $List$Empty$const,
+  prepend as listPrepend,
+  CustomType as $CustomType,
+} from "../../gleam.mjs";
 import * as $actor from "../../gleam/otp/actor.mjs";
 import * as $supervision from "../../gleam/otp/supervision.mjs";
 
@@ -18,7 +23,8 @@ class Supervisor extends $CustomType {
  * process is affected. This is the default restart strategy.
  */
 export class OneForOne extends $CustomType {}
-export const Strategy$OneForOne = () => new OneForOne();
+export const Strategy$OneForOne$const = new OneForOne();
+export const Strategy$OneForOne = () => Strategy$OneForOne$const;
 export const Strategy$isOneForOne = (value) => value instanceof OneForOne;
 
 /**
@@ -26,7 +32,8 @@ export const Strategy$isOneForOne = (value) => value instanceof OneForOne;
  * processes are terminated and then all child processes are restarted.
  */
 export class OneForAll extends $CustomType {}
-export const Strategy$OneForAll = () => new OneForAll();
+export const Strategy$OneForAll$const = new OneForAll();
+export const Strategy$OneForAll = () => Strategy$OneForAll$const;
 export const Strategy$isOneForAll = (value) => value instanceof OneForAll;
 
 /**
@@ -36,7 +43,8 @@ export const Strategy$isOneForAll = (value) => value instanceof OneForAll;
  * process and all child processes after it are restarted.
  */
 export class RestForOne extends $CustomType {}
-export const Strategy$RestForOne = () => new RestForOne();
+export const Strategy$RestForOne$const = new RestForOne();
+export const Strategy$RestForOne = () => Strategy$RestForOne$const;
 export const Strategy$isRestForOne = (value) => value instanceof RestForOne;
 
 /**
@@ -46,7 +54,8 @@ export const Strategy$isRestForOne = (value) => value instanceof RestForOne;
  * set to true are considered invalid and will be rejected.
  */
 export class Never extends $CustomType {}
-export const AutoShutdown$Never = () => new Never();
+export const AutoShutdown$Never$const = new Never();
+export const AutoShutdown$Never = () => AutoShutdown$Never$const;
 export const AutoShutdown$isNever = (value) => value instanceof Never;
 
 /**
@@ -56,7 +65,9 @@ export const AutoShutdown$isNever = (value) => value instanceof Never;
  * abnormally.
  */
 export class AnySignificant extends $CustomType {}
-export const AutoShutdown$AnySignificant = () => new AnySignificant();
+export const AutoShutdown$AnySignificant$const = new AnySignificant();
+export const AutoShutdown$AnySignificant = () =>
+  AutoShutdown$AnySignificant$const;
 export const AutoShutdown$isAnySignificant = (value) =>
   value instanceof AnySignificant;
 
@@ -66,7 +77,9 @@ export const AutoShutdown$isAnySignificant = (value) =>
  * The same rules as for any_significant apply.
  */
 export class AllSignificant extends $CustomType {}
-export const AutoShutdown$AllSignificant = () => new AllSignificant();
+export const AutoShutdown$AllSignificant$const = new AllSignificant();
+export const AutoShutdown$AllSignificant = () =>
+  AutoShutdown$AllSignificant$const;
 export const AutoShutdown$isAllSignificant = (value) =>
   value instanceof AllSignificant;
 
@@ -155,7 +168,13 @@ class Shutdown extends $CustomType {
  * Create a new supervisor builder, ready for further configuration.
  */
 export function new$(strategy) {
-  return new Builder(strategy, 2, 5, new Never(), toList([]));
+  return new Builder(
+    strategy,
+    2,
+    5,
+    AutoShutdown$Never$const,
+    $List$Empty$const,
+  );
 }
 
 /**

@@ -9,7 +9,7 @@ import {
 } from "../gleam.mjs";
 import * as $list from "../gleam/list.mjs";
 import * as $option from "../gleam/option.mjs";
-import { None, Some } from "../gleam/option.mjs";
+import { Some, Option$None$const } from "../gleam/option.mjs";
 import * as $order from "../gleam/order.mjs";
 import * as $string_tree from "../gleam/string_tree.mjs";
 import {
@@ -59,8 +59,10 @@ export {
 };
 
 class Leading extends $CustomType {}
+const Direction$Leading$const = new Leading();
 
 class Trailing extends $CustomType {}
+const Direction$Trailing$const = new Trailing();
 
 /**
  * Determines if a `String` is empty.
@@ -140,13 +142,13 @@ export function replace(string, pattern, substitute) {
 export function compare(a, b) {
   let $ = a === b;
   if ($) {
-    return new $order.Eq();
+    return $order.Order$Eq$const;
   } else {
     let $1 = less_than(a, b);
     if ($1) {
-      return new $order.Lt();
+      return $order.Order$Lt$const;
     } else {
-      return new $order.Gt();
+      return $order.Order$Gt$const;
     }
   }
 }
@@ -581,7 +583,7 @@ export function utf_codepoint(value) {
  */
 export function to_option(string) {
   if (string === "") {
-    return new None();
+    return Option$None$const;
   } else {
     return new Some(string);
   }

@@ -69,7 +69,8 @@ export const Error$ElementNotFound$selector = (value) => value.selector;
 export const Error$ElementNotFound$0 = (value) => value.selector;
 
 export class NotABrowser extends $CustomType {}
-export const Error$NotABrowser = () => new NotABrowser();
+export const Error$NotABrowser$const = new NotABrowser();
+export const Error$NotABrowser = () => Error$NotABrowser$const;
 export const Error$isNotABrowser = (value) => value instanceof NotABrowser;
 
 /**
@@ -82,7 +83,13 @@ export const Error$isNotABrowser = (value) => value instanceof NotABrowser;
  * [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).
  */
 export function application(init, update, view) {
-  return new App(new $option.None(), init, update, view, $app.default_config);
+  return new App(
+    $option.Option$None$const,
+    init,
+    update,
+    view,
+    $app.default_config,
+  );
 }
 
 /**
@@ -136,7 +143,7 @@ export function simple(init, update, view) {
  */
 export function component(init, update, view, options) {
   return new App(
-    new $option.None(),
+    $option.Option$None$const,
     init,
     update,
     view,
@@ -184,7 +191,7 @@ export function named(app, name) {
 export function start(app, selector, arguments$) {
   return $bool.guard(
     !is_browser(),
-    new Error(new NotABrowser()),
+    new Error(Error$NotABrowser$const),
     () => { return do_start(app, selector, arguments$); },
   );
 }
@@ -249,5 +256,5 @@ export function dispatch(message) {
  * clients.
  */
 export function shutdown() {
-  return new $runtime.SystemRequestedShutdown();
+  return $runtime.Message$SystemRequestedShutdown$const;
 }

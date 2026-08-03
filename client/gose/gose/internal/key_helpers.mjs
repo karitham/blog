@@ -11,14 +11,17 @@ import * as $gose from "../../gose.mjs";
  * Sign a JWS or derive a CEK for JWE
  */
 export class ForSigning extends $CustomType {}
-export const KeyPurpose$ForSigning = () => new ForSigning();
+export const KeyPurpose$ForSigning$const = new ForSigning();
+export const KeyPurpose$ForSigning = () => KeyPurpose$ForSigning$const;
 export const KeyPurpose$isForSigning = (value) => value instanceof ForSigning;
 
 /**
  * Verify a JWS signature
  */
 export class ForVerification extends $CustomType {}
-export const KeyPurpose$ForVerification = () => new ForVerification();
+export const KeyPurpose$ForVerification$const = new ForVerification();
+export const KeyPurpose$ForVerification = () =>
+  KeyPurpose$ForVerification$const;
 export const KeyPurpose$isForVerification = (value) =>
   value instanceof ForVerification;
 
@@ -26,7 +29,8 @@ export const KeyPurpose$isForVerification = (value) =>
  * Encrypt content or wrap a CEK
  */
 export class ForEncryption extends $CustomType {}
-export const KeyPurpose$ForEncryption = () => new ForEncryption();
+export const KeyPurpose$ForEncryption$const = new ForEncryption();
+export const KeyPurpose$ForEncryption = () => KeyPurpose$ForEncryption$const;
 export const KeyPurpose$isForEncryption = (value) =>
   value instanceof ForEncryption;
 
@@ -34,7 +38,8 @@ export const KeyPurpose$isForEncryption = (value) =>
  * Decrypt content or unwrap a CEK
  */
 export class ForDecryption extends $CustomType {}
-export const KeyPurpose$ForDecryption = () => new ForDecryption();
+export const KeyPurpose$ForDecryption$const = new ForDecryption();
+export const KeyPurpose$ForDecryption = () => KeyPurpose$ForDecryption$const;
 export const KeyPurpose$isForDecryption = (value) =>
   value instanceof ForDecryption;
 
@@ -42,7 +47,9 @@ export const KeyPurpose$isForDecryption = (value) =>
  * ECDH key agreement (deriveKey/deriveBits)
  */
 export class ForKeyAgreement extends $CustomType {}
-export const KeyPurpose$ForKeyAgreement = () => new ForKeyAgreement();
+export const KeyPurpose$ForKeyAgreement$const = new ForKeyAgreement();
+export const KeyPurpose$ForKeyAgreement = () =>
+  KeyPurpose$ForKeyAgreement$const;
 export const KeyPurpose$isForKeyAgreement = (value) =>
   value instanceof ForKeyAgreement;
 
@@ -194,13 +201,13 @@ export function validate_signing_key_type(alg, key) {
       if ($ instanceof $gose.Ecdsa) {
         let $1 = $[0];
         if ($1 instanceof $gose.EcdsaP256) {
-          return validate_ec_curve(key, new $ec.P256());
+          return validate_ec_curve(key, $ec.Curve$P256$const);
         } else if ($1 instanceof $gose.EcdsaP384) {
-          return validate_ec_curve(key, new $ec.P384());
+          return validate_ec_curve(key, $ec.Curve$P384$const);
         } else if ($1 instanceof $gose.EcdsaP521) {
-          return validate_ec_curve(key, new $ec.P521());
+          return validate_ec_curve(key, $ec.Curve$P521$const);
         } else {
-          return validate_ec_curve(key, new $ec.Secp256k1());
+          return validate_ec_curve(key, $ec.Curve$Secp256k1$const);
         }
       } else {
         return new Error(
@@ -407,27 +414,27 @@ function validate_ops_for_purpose(ops, purpose) {
   let _block;
   if (purpose instanceof ForSigning) {
     _block = [
-      toList([new $gose.Sign()]),
+      toList([$gose.KeyOp$Sign$const]),
       "key_ops does not include 'sign' operation",
     ];
   } else if (purpose instanceof ForVerification) {
     _block = [
-      toList([new $gose.Verify()]),
+      toList([$gose.KeyOp$Verify$const]),
       "key_ops does not include 'verify' operation",
     ];
   } else if (purpose instanceof ForEncryption) {
     _block = [
-      toList([new $gose.Encrypt(), new $gose.WrapKey()]),
+      toList([$gose.KeyOp$Encrypt$const, $gose.KeyOp$WrapKey$const]),
       "key_ops does not include 'encrypt' or 'wrapKey' operation",
     ];
   } else if (purpose instanceof ForDecryption) {
     _block = [
-      toList([new $gose.Decrypt(), new $gose.UnwrapKey()]),
+      toList([$gose.KeyOp$Decrypt$const, $gose.KeyOp$UnwrapKey$const]),
       "key_ops does not include 'decrypt' or 'unwrapKey' operation",
     ];
   } else {
     _block = [
-      toList([new $gose.DeriveKey(), new $gose.DeriveBits()]),
+      toList([$gose.KeyOp$DeriveKey$const, $gose.KeyOp$DeriveBits$const]),
       "key_ops does not include 'deriveKey' or 'deriveBits' operation",
     ];
   }
@@ -527,10 +534,10 @@ export function validate_key_for_signing_verification(alg, key) {
     validate_signing_key_type(alg, key),
     (_) => {
       return $result.try$(
-        validate_key_use(key, new ForVerification()),
+        validate_key_use(key, KeyPurpose$ForVerification$const),
         (_) => {
           return $result.try$(
-            validate_key_ops(key, new ForVerification()),
+            validate_key_ops(key, KeyPurpose$ForVerification$const),
             (_) => { return validate_key_algorithm_signing(key, alg); },
           );
         },
@@ -541,7 +548,7 @@ export function validate_key_for_signing_verification(alg, key) {
 
 function jwe_key_ops_purpose(alg, base_purpose) {
   if (alg instanceof $gose.EcdhEs) {
-    return new ForKeyAgreement();
+    return KeyPurpose$ForKeyAgreement$const;
   } else {
     return base_purpose;
   }
@@ -553,7 +560,7 @@ function jwe_key_ops_purpose(alg, base_purpose) {
  * Checks key use, key ops, and algorithm matching.
  */
 export function validate_key_for_jwe_decryption(alg, key) {
-  let ops_purpose = jwe_key_ops_purpose(alg, new ForDecryption());
+  let ops_purpose = jwe_key_ops_purpose(alg, KeyPurpose$ForDecryption$const);
   return $result.try$(
     validate_jwe_key_type(alg, key),
     (_) => {
@@ -576,7 +583,7 @@ export function validate_key_for_jwe_decryption(alg, key) {
  * Checks key use, key ops, and algorithm matching.
  */
 export function validate_key_for_jwe_encryption(alg, key) {
-  let ops_purpose = jwe_key_ops_purpose(alg, new ForEncryption());
+  let ops_purpose = jwe_key_ops_purpose(alg, KeyPurpose$ForEncryption$const);
   return $result.try$(
     validate_jwe_key_type(alg, key),
     (_) => {
@@ -663,10 +670,10 @@ export function validate_key_for_content_encryption(alg, key) {
     validate_content_key_type(alg, key),
     (_) => {
       return $result.try$(
-        validate_key_use(key, new ForEncryption()),
+        validate_key_use(key, KeyPurpose$ForEncryption$const),
         (_) => {
           return $result.try$(
-            validate_key_ops(key, new ForEncryption()),
+            validate_key_ops(key, KeyPurpose$ForEncryption$const),
             (_) => { return validate_key_algorithm_content(key, alg); },
           );
         },
@@ -685,10 +692,10 @@ export function validate_key_for_content_decryption(alg, key) {
     validate_content_key_type(alg, key),
     (_) => {
       return $result.try$(
-        validate_key_use(key, new ForDecryption()),
+        validate_key_use(key, KeyPurpose$ForDecryption$const),
         (_) => {
           return $result.try$(
-            validate_key_ops(key, new ForDecryption()),
+            validate_key_ops(key, KeyPurpose$ForDecryption$const),
             (_) => { return validate_key_algorithm_content(key, alg); },
           );
         },

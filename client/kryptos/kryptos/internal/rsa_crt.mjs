@@ -13,8 +13,8 @@ function to_bytes_trimmed(value, max_byte_len) {
   return $result.try$(
     $bigi.to_bytes(
       value,
-      new $bigi.BigEndian(),
-      new $bigi.Unsigned(),
+      $bigi.Endianness$BigEndian$const,
+      $bigi.Signedness$Unsigned$const,
       max_byte_len,
     ),
     (bytes) => { return new Ok($utils.strip_leading_zeros(bytes)); },
@@ -155,8 +155,8 @@ function to_bytes_minimal(value) {
     return $result.try$(
       $bigi.to_bytes(
         value,
-        new $bigi.BigEndian(),
-        new $bigi.Unsigned(),
+        $bigi.Endianness$BigEndian$const,
+        $bigi.Signedness$Unsigned$const,
         byte_len,
       ),
       (bytes) => { return new Ok($utils.strip_leading_zeros(bytes)); },
@@ -166,7 +166,12 @@ function to_bytes_minimal(value) {
 
 function mod_pow(base, exp, mod, byte_len) {
   return $result.try$(
-    $bigi.to_bytes(base, new $bigi.BigEndian(), new $bigi.Unsigned(), byte_len),
+    $bigi.to_bytes(
+      base,
+      $bigi.Endianness$BigEndian$const,
+      $bigi.Signedness$Unsigned$const,
+      byte_len,
+    ),
     (base_bytes) => {
       return $result.try$(
         to_bytes_minimal(exp),
@@ -174,16 +179,16 @@ function mod_pow(base, exp, mod, byte_len) {
           return $result.try$(
             $bigi.to_bytes(
               mod,
-              new $bigi.BigEndian(),
-              new $bigi.Unsigned(),
+              $bigi.Endianness$BigEndian$const,
+              $bigi.Signedness$Unsigned$const,
               byte_len,
             ),
             (mod_bytes) => {
               let result_bytes = mod_pow_ffi(base_bytes, exp_bytes, mod_bytes);
               return $bigi.from_bytes(
                 result_bytes,
-                new $bigi.BigEndian(),
-                new $bigi.Unsigned(),
+                $bigi.Endianness$BigEndian$const,
+                $bigi.Signedness$Unsigned$const,
               );
             },
           );
@@ -317,8 +322,8 @@ function factor_rsa_modulus(n, e, d, byte_len, attempts_left) {
     let g_bytes = $crypto.random_bytes(byte_len);
     let $1 = $bigi.from_bytes(
       g_bytes,
-      new $bigi.BigEndian(),
-      new $bigi.Unsigned(),
+      $bigi.Endianness$BigEndian$const,
+      $bigi.Signedness$Unsigned$const,
     );
     let g_raw;
     if ($1 instanceof Ok) {
@@ -378,16 +383,24 @@ function validate_components(n, e, d, next) {
  */
 export function compute_crt_params(n_bytes, e_bytes, d_bytes) {
   return $result.try$(
-    $bigi.from_bytes(n_bytes, new $bigi.BigEndian(), new $bigi.Unsigned()),
+    $bigi.from_bytes(
+      n_bytes,
+      $bigi.Endianness$BigEndian$const,
+      $bigi.Signedness$Unsigned$const,
+    ),
     (n) => {
       return $result.try$(
-        $bigi.from_bytes(e_bytes, new $bigi.BigEndian(), new $bigi.Unsigned()),
+        $bigi.from_bytes(
+          e_bytes,
+          $bigi.Endianness$BigEndian$const,
+          $bigi.Signedness$Unsigned$const,
+        ),
         (e) => {
           return $result.try$(
             $bigi.from_bytes(
               d_bytes,
-              new $bigi.BigEndian(),
-              new $bigi.Unsigned(),
+              $bigi.Endianness$BigEndian$const,
+              $bigi.Signedness$Unsigned$const,
             ),
             (d) => {
               return validate_components(

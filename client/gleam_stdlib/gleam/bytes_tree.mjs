@@ -1,6 +1,7 @@
 import {
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
 } from "../gleam.mjs";
@@ -43,7 +44,7 @@ export function concat(trees) {
  * trees together.
  */
 export function new$() {
-  return concat(toList([]));
+  return concat($List$Empty$const);
 }
 
 function wrap_list(bits) {
@@ -204,7 +205,7 @@ function to_list(loop$stack, loop$acc) {
  */
 export function to_bit_array(tree) {
   let _pipe = toList([toList([tree])]);
-  let _pipe$1 = to_list(_pipe, toList([]));
+  let _pipe$1 = to_list(_pipe, $List$Empty$const);
   let _pipe$2 = $list.reverse(_pipe$1);
   return $bit_array.concat(_pipe$2);
 }
@@ -216,7 +217,7 @@ export function to_bit_array(tree) {
  */
 export function byte_size(tree) {
   let _pipe = toList([toList([tree])]);
-  let _pipe$1 = to_list(_pipe, toList([]));
+  let _pipe$1 = to_list(_pipe, $List$Empty$const);
   return $list.fold(
     _pipe$1,
     0,

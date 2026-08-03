@@ -2,7 +2,13 @@ import * as $list from "../../../gleam_stdlib/gleam/list.mjs";
 import * as $option from "../../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $string from "../../../gleam_stdlib/gleam/string.mjs";
-import { Ok, toList, prepend as listPrepend, CustomType as $CustomType } from "../../gleam.mjs";
+import {
+  Ok,
+  toList,
+  List$Empty$const as $List$Empty$const,
+  prepend as listPrepend,
+  CustomType as $CustomType,
+} from "../../gleam.mjs";
 import * as $http from "../../gleam/http.mjs";
 import * as $cookie from "../../gleam/http/cookie.mjs";
 
@@ -51,7 +57,7 @@ export function try_map(response, transform) {
  * call to `set_body`.
  */
 export function new$(status) {
-  return new Response(status, toList([]), "");
+  return new Response(status, $List$Empty$const, "");
 }
 
 /**
@@ -125,7 +131,7 @@ export function get_cookies(resp) {
         let value = header[1];
         return $cookie.parse(value);
       } else {
-        return toList([]);
+        return $List$Empty$const;
       }
     },
   );

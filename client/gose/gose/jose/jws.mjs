@@ -13,6 +13,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -135,9 +136,9 @@ export function new$(alg) {
   return new UnsignedJws(
     new JwsHeader(
       alg,
-      new $option.None(),
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
+      $option.Option$None$const,
       $dict.new$(),
     ),
     toBitArray([]),
@@ -644,7 +645,7 @@ function header_to_json(header, unencoded_payload) {
       ["crit", $json.array(toList(["b64"]), $json.string)],
     ]);
   } else {
-    _block = toList([]);
+    _block = $List$Empty$const;
   }
   let b64_fields = _block;
   let _block$1;
@@ -703,10 +704,16 @@ export function sign(jws, key, payload) {
     $key_helpers.validate_signing_key_type(header.alg, key),
     (_) => {
       return $result.try$(
-        $key_helpers.validate_key_use(key, new $key_helpers.ForSigning()),
+        $key_helpers.validate_key_use(
+          key,
+          $key_helpers.KeyPurpose$ForSigning$const,
+        ),
         (_) => {
           return $result.try$(
-            $key_helpers.validate_key_ops(key, new $key_helpers.ForSigning()),
+            $key_helpers.validate_key_ops(
+              key,
+              $key_helpers.KeyPurpose$ForSigning$const,
+            ),
             (_) => {
               return $result.try$(
                 $key_helpers.validate_key_algorithm_signing(key, header.alg),
@@ -738,7 +745,7 @@ export function sign(jws, key, payload) {
                           return new Ok(
                             new SignedJws(
                               header,
-                              new $option.None(),
+                              $option.Option$None$const,
                               payload,
                               detached,
                               unencoded_payload,
@@ -746,7 +753,7 @@ export function sign(jws, key, payload) {
                               payload_segment,
                               signature,
                               unprotected,
-                              new $option.None(),
+                              $option.Option$None$const,
                             ),
                           );
                         },
@@ -793,10 +800,16 @@ function do_verify(jws, key) {
     )
   }
   return $result.try$(
-    $key_helpers.validate_key_use(key, new $key_helpers.ForVerification()),
+    $key_helpers.validate_key_use(
+      key,
+      $key_helpers.KeyPurpose$ForVerification$const,
+    ),
     (_) => {
       return $result.try$(
-        $key_helpers.validate_key_ops(key, new $key_helpers.ForVerification()),
+        $key_helpers.validate_key_ops(
+          key,
+          $key_helpers.KeyPurpose$ForVerification$const,
+        ),
         (_) => {
           return $result.try$(
             $key_helpers.validate_key_algorithm_signing(key, header.alg),
@@ -854,10 +867,16 @@ function do_verify_with_payload(jws, payload, key) {
     )
   }
   return $result.try$(
-    $key_helpers.validate_key_use(key, new $key_helpers.ForVerification()),
+    $key_helpers.validate_key_use(
+      key,
+      $key_helpers.KeyPurpose$ForVerification$const,
+    ),
     (_) => {
       return $result.try$(
-        $key_helpers.validate_key_ops(key, new $key_helpers.ForVerification()),
+        $key_helpers.validate_key_ops(
+          key,
+          $key_helpers.KeyPurpose$ForVerification$const,
+        ),
         (_) => {
           return $result.try$(
             $key_helpers.validate_key_algorithm_signing(key, header.alg),
@@ -929,7 +948,7 @@ function try_verify_keys(loop$jws, loop$keys) {
     let jws = loop$jws;
     let keys = loop$keys;
     if (keys instanceof $Empty) {
-      return new Error(new $gose.VerificationFailed());
+      return new Error($gose.GoseError$VerificationFailed$const);
     } else {
       let key = keys.head;
       let rest = keys.tail;
@@ -986,7 +1005,7 @@ function try_verify_detached_keys(loop$jws, loop$payload, loop$keys) {
     let payload = loop$payload;
     let keys = loop$keys;
     if (keys instanceof $Empty) {
-      return new Error(new $gose.VerificationFailed());
+      return new Error($gose.GoseError$VerificationFailed$const);
     } else {
       let key = keys.head;
       let rest = keys.tail;
@@ -1049,27 +1068,27 @@ function parse_header_json(json_bits) {
     (alg) => {
       return $decode.optional_field(
         "kid",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.string),
         (kid) => {
           return $decode.optional_field(
             "typ",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (typ) => {
               return $decode.optional_field(
                 "cty",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.string),
                 (cty) => {
                   return $decode.optional_field(
                     "crit",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.list($decode.string)),
                     (crit) => {
                       return $decode.optional_field(
                         "b64",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.bool),
                         (b64) => {
                           return $decode.success(
@@ -1215,7 +1234,7 @@ function build_signed_jws(protected_b64, payload_segment, sig_b64, detached) {
                   payload_segment,
                   signature,
                   $dict.new$(),
-                  new $option.None(),
+                  $option.Option$None$const,
                 ),
               );
             },
@@ -1650,7 +1669,7 @@ function parse_unprotected_header(header_raw, protected$, protected_custom_keys)
       },
     );
   } else {
-    return new Ok([$dict.new$(), new $option.None()]);
+    return new Ok([$dict.new$(), $option.Option$None$const]);
   }
 }
 
@@ -1665,12 +1684,12 @@ function parse_json_flattened(json_str) {
         (signature) => {
           return $decode.optional_field(
             "payload",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (payload_opt) => {
               return $decode.optional_field(
                 "header",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.dynamic),
                 (unprotected_header_raw) => {
                   return $decode.success(
@@ -1747,7 +1766,7 @@ function signature_decoder() {
         (signature) => {
           return $decode.optional_field(
             "header",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.dynamic),
             (header_raw) => {
               return $decode.success([protected$, signature, header_raw]);
@@ -1774,7 +1793,7 @@ function parse_json_general(json_str) {
     (signatures) => {
       return $decode.optional_field(
         "payload",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.string),
         (payload_opt) => { return $decode.success([signatures, payload_opt]); },
       );

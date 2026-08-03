@@ -41,6 +41,7 @@ class Local extends $CustomType {
 }
 
 class SimpleOneForOne extends $CustomType {}
+const Strategy$SimpleOneForOne$const = new SimpleOneForOne();
 
 class Strategy extends $CustomType {
   constructor($0) {
@@ -102,7 +103,7 @@ const default_period = 5;
 
 const default_intensity = 2;
 
-const default_restart_strategy = /* @__PURE__ */ new $supervision.Transient();
+const default_restart_strategy = $supervision.Restart$Transient$const;
 
 /**
  * Get a reference to a supervisor using its registered name.
@@ -136,7 +137,7 @@ export function worker_child(template) {
     default_restart_strategy,
     default_intensity,
     default_period,
-    new $option.None(),
+    $option.Option$None$const,
   );
 }
 
@@ -151,12 +152,12 @@ export function worker_child(template) {
  */
 export function supervisor_child(template) {
   return new Builder(
-    new $supervision.Supervisor(),
+    $supervision.ChildType$Supervisor$const,
     template,
     default_restart_strategy,
     default_intensity,
     default_period,
-    new $option.None(),
+    $option.Option$None$const,
   );
 }
 

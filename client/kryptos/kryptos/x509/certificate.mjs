@@ -11,6 +11,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -38,7 +39,9 @@ const FILEPATH = "src/kryptos/x509/certificate.gleam";
  * Failed to parse the certificate data.
  */
 export class ParseError extends $CustomType {}
-export const CertificateError$ParseError = () => new ParseError();
+export const CertificateError$ParseError$const = new ParseError();
+export const CertificateError$ParseError = () =>
+  CertificateError$ParseError$const;
 export const CertificateError$isParseError = (value) =>
   value instanceof ParseError;
 
@@ -61,8 +64,10 @@ export const CertificateError$UnsupportedAlgorithm$0 = (value) => value[0];
  * Cryptographic signature verification failed.
  */
 export class SignatureVerificationFailed extends $CustomType {}
-export const CertificateError$SignatureVerificationFailed = () =>
+export const CertificateError$SignatureVerificationFailed$const =
   new SignatureVerificationFailed();
+export const CertificateError$SignatureVerificationFailed = () =>
+  CertificateError$SignatureVerificationFailed$const;
 export const CertificateError$isSignatureVerificationFailed = (value) =>
   value instanceof SignatureVerificationFailed;
 
@@ -103,7 +108,9 @@ class ExtensionsAcc extends $CustomType {
  * Automatically compute SKI as SHA-1 hash of the public key (RFC 5280 method 1).
  */
 export class SkiAuto extends $CustomType {}
-export const SubjectKeyIdentifierConfig$SkiAuto = () => new SkiAuto();
+export const SubjectKeyIdentifierConfig$SkiAuto$const = new SkiAuto();
+export const SubjectKeyIdentifierConfig$SkiAuto = () =>
+  SubjectKeyIdentifierConfig$SkiAuto$const;
 export const SubjectKeyIdentifierConfig$isSkiAuto = (value) =>
   value instanceof SkiAuto;
 
@@ -126,7 +133,9 @@ export const SubjectKeyIdentifierConfig$SkiExplicit$0 = (value) => value[0];
  * Automatically compute AKI as SHA-1 hash of the signing key (default).
  */
 export class AkiAuto extends $CustomType {}
-export const AuthorityKeyIdentifierConfig$AkiAuto = () => new AkiAuto();
+export const AuthorityKeyIdentifierConfig$AkiAuto$const = new AkiAuto();
+export const AuthorityKeyIdentifierConfig$AkiAuto = () =>
+  AuthorityKeyIdentifierConfig$AkiAuto$const;
 export const AuthorityKeyIdentifierConfig$isAkiAuto = (value) =>
   value instanceof AkiAuto;
 
@@ -149,7 +158,9 @@ export const AuthorityKeyIdentifierConfig$AkiExplicit$0 = (value) => value[0];
  * Exclude the AKI extension entirely.
  */
 export class AkiExclude extends $CustomType {}
-export const AuthorityKeyIdentifierConfig$AkiExclude = () => new AkiExclude();
+export const AuthorityKeyIdentifierConfig$AkiExclude$const = new AkiExclude();
+export const AuthorityKeyIdentifierConfig$AkiExclude = () =>
+  AuthorityKeyIdentifierConfig$AkiExclude$const;
 export const AuthorityKeyIdentifierConfig$isAkiExclude = (value) =>
   value instanceof AkiExclude;
 
@@ -231,15 +242,15 @@ const oid_extended_key_usage = /* @__PURE__ */ new $x509.Oid(
 );
 
 const key_usages = /* @__PURE__ */ toList([
-  /* @__PURE__ */ new $x509.DigitalSignature(),
-  /* @__PURE__ */ new $x509.NonRepudiation(),
-  /* @__PURE__ */ new $x509.KeyEncipherment(),
-  /* @__PURE__ */ new $x509.DataEncipherment(),
-  /* @__PURE__ */ new $x509.KeyAgreement(),
-  /* @__PURE__ */ new $x509.KeyCertSign(),
-  /* @__PURE__ */ new $x509.CrlSign(),
-  /* @__PURE__ */ new $x509.EncipherOnly(),
-  /* @__PURE__ */ new $x509.DecipherOnly(),
+  $x509.KeyUsage$DigitalSignature$const,
+  $x509.KeyUsage$NonRepudiation$const,
+  $x509.KeyUsage$KeyEncipherment$const,
+  $x509.KeyUsage$DataEncipherment$const,
+  $x509.KeyUsage$KeyAgreement$const,
+  $x509.KeyUsage$KeyCertSign$const,
+  $x509.KeyUsage$CrlSign$const,
+  $x509.KeyUsage$EncipherOnly$const,
+  $x509.KeyUsage$DecipherOnly$const,
 ]);
 
 const oid_key_usage = /* @__PURE__ */ new $x509.Oid(
@@ -264,13 +275,13 @@ const pem_begin = "-----BEGIN CERTIFICATE-----";
 
 function empty_extensions_acc() {
   return new ExtensionsAcc(
-    new $option.None(),
-    toList([]),
-    toList([]),
-    toList([]),
-    new $option.None(),
-    new $option.None(),
-    toList([]),
+    $option.Option$None$const,
+    $List$Empty$const,
+    $List$Empty$const,
+    $List$Empty$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $List$Empty$const,
     $set.new$(),
   );
 }
@@ -283,15 +294,15 @@ function empty_extensions_acc() {
  */
 export function new$() {
   return new Builder(
-    $x509.name(toList([])),
-    new $option.None(),
-    new $option.None(),
-    toList([]),
-    toList([]),
-    toList([]),
-    new $option.None(),
-    new $option.None(),
-    new AkiAuto(),
+    $x509.name($List$Empty$const),
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $List$Empty$const,
+    $List$Empty$const,
+    $List$Empty$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    AuthorityKeyIdentifierConfig$AkiAuto$const,
   );
 }
 
@@ -341,7 +352,7 @@ export function with_basic_constraints(builder, ca, path_len_constraint) {
   if (ca) {
     _block = path_len_constraint;
   } else {
-    _block = new $option.None();
+    _block = $option.Option$None$const;
   }
   let effective_path_len = _block;
   return new Builder(
@@ -606,7 +617,9 @@ function compute_ski(spki) {
   let _pipe$1 = $x509_internal.extract_spki_public_key_bytes(_pipe);
   return $result.try$(
     _pipe$1,
-    (_capture) => { return $crypto.hash(new $hash.Sha1(), _capture); },
+    (_capture) => {
+      return $crypto.hash($hash.HashAlgorithm$Sha1$const, _capture);
+    },
   );
 }
 
@@ -1026,7 +1039,10 @@ export function self_signed_with_rsa(builder, key, hash) {
         (sig_alg) => {
           let public_key$1 = $rsa.public_key_from_private_key(key);
           return $result.try$(
-            $rsa.public_key_to_der(public_key$1, new $rsa.Spki()),
+            $rsa.public_key_to_der(
+              public_key$1,
+              $rsa.PublicKeyFormat$Spki$const,
+            ),
             (spki) => {
               let _block;
               let $ = builder.serial_number;
@@ -1040,7 +1056,12 @@ export function self_signed_with_rsa(builder, key, hash) {
               return $result.try$(
                 encode_tbs_certificate(builder, serial, sig_alg, spki, validity),
                 (tbs) => {
-                  let signature = $rsa.sign(key, tbs, hash, new $rsa.Pkcs1v15());
+                  let signature = $rsa.sign(
+                    key,
+                    tbs,
+                    hash,
+                    $rsa.SignPadding$Pkcs1v15$const,
+                  );
                   return $result.try$(
                     encode_certificate(tbs, sig_alg, signature),
                     (cert_der) => {
@@ -1167,7 +1188,7 @@ function parse_aki_fields(bytes, key_id, issuer, serial) {
           return $result.try$(
             $x509_internal.parse_general_names(
               issuer_content,
-              toList([]),
+              $List$Empty$const,
               false,
             ),
             (parsed_issuers) => {
@@ -1226,9 +1247,9 @@ function parse_authority_key_identifier_ext(bytes) {
         () => {
           return parse_aki_fields(
             inner,
-            new $option.None(),
-            new $option.None(),
-            new $option.None(),
+            $option.Option$None$const,
+            $option.Option$None$const,
+            $option.Option$None$const,
           );
         },
       );
@@ -1258,46 +1279,46 @@ function parse_eku_oids(bytes, acc, is_critical) {
     return $result.try$(
       (() => {
         let _pipe = $der.parse_oid(bytes);
-        return $result.replace_error(_pipe, new ParseError());
+        return $result.replace_error(_pipe, CertificateError$ParseError$const);
       })(),
       (_use0) => {
         let oid_components = _use0[0];
         let rest = _use0[1];
         let _block;
         if (oid_components instanceof $Empty) {
-          _block = new $option.None();
+          _block = $option.Option$None$const;
         } else {
           let $ = oid_components.tail;
           if ($ instanceof $Empty) {
-            _block = new $option.None();
+            _block = $option.Option$None$const;
           } else {
             let $1 = $.tail;
             if ($1 instanceof $Empty) {
-              _block = new $option.None();
+              _block = $option.Option$None$const;
             } else {
               let $2 = $1.tail;
               if ($2 instanceof $Empty) {
-                _block = new $option.None();
+                _block = $option.Option$None$const;
               } else {
                 let $3 = $2.tail;
                 if ($3 instanceof $Empty) {
-                  _block = new $option.None();
+                  _block = $option.Option$None$const;
                 } else {
                   let $4 = $3.tail;
                   if ($4 instanceof $Empty) {
-                    _block = new $option.None();
+                    _block = $option.Option$None$const;
                   } else {
                     let $5 = $4.tail;
                     if ($5 instanceof $Empty) {
-                      _block = new $option.None();
+                      _block = $option.Option$None$const;
                     } else {
                       let $6 = $5.tail;
                       if ($6 instanceof $Empty) {
-                        _block = new $option.None();
+                        _block = $option.Option$None$const;
                       } else {
                         let $7 = $6.tail;
                         if ($7 instanceof $Empty) {
-                          _block = new $option.None();
+                          _block = $option.Option$None$const;
                         } else {
                           let $8 = $7.tail;
                           if ($8 instanceof $Empty) {
@@ -1320,53 +1341,53 @@ function parse_eku_oids(bytes, acc, is_critical) {
                                             let $17 = $7.head;
                                             if ($17 === 1) {
                                               _block = new $option.Some(
-                                                new $x509.ServerAuth(),
+                                                $x509.ExtendedKeyUsage$ServerAuth$const,
                                               );
                                             } else if ($17 === 2) {
                                               _block = new $option.Some(
-                                                new $x509.ClientAuth(),
+                                                $x509.ExtendedKeyUsage$ClientAuth$const,
                                               );
                                             } else if ($17 === 3) {
                                               _block = new $option.Some(
-                                                new $x509.CodeSigning(),
+                                                $x509.ExtendedKeyUsage$CodeSigning$const,
                                               );
                                             } else if ($17 === 4) {
                                               _block = new $option.Some(
-                                                new $x509.EmailProtection(),
+                                                $x509.ExtendedKeyUsage$EmailProtection$const,
                                               );
                                             } else if ($17 === 9) {
                                               _block = new $option.Some(
-                                                new $x509.OcspSigning(),
+                                                $x509.ExtendedKeyUsage$OcspSigning$const,
                                               );
                                             } else {
-                                              _block = new $option.None();
+                                              _block = $option.Option$None$const;
                                             }
                                           } else {
-                                            _block = new $option.None();
+                                            _block = $option.Option$None$const;
                                           }
                                         } else {
-                                          _block = new $option.None();
+                                          _block = $option.Option$None$const;
                                         }
                                       } else {
-                                        _block = new $option.None();
+                                        _block = $option.Option$None$const;
                                       }
                                     } else {
-                                      _block = new $option.None();
+                                      _block = $option.Option$None$const;
                                     }
                                   } else {
-                                    _block = new $option.None();
+                                    _block = $option.Option$None$const;
                                   }
                                 } else {
-                                  _block = new $option.None();
+                                  _block = $option.Option$None$const;
                                 }
                               } else {
-                                _block = new $option.None();
+                                _block = $option.Option$None$const;
                               }
                             } else {
-                              _block = new $option.None();
+                              _block = $option.Option$None$const;
                             }
                           } else {
-                            _block = new $option.None();
+                            _block = $option.Option$None$const;
                           }
                         }
                       }
@@ -1397,11 +1418,11 @@ function parse_extended_key_usage_ext(bytes, is_critical) {
   return $result.try$(
     (() => {
       let _pipe = $der.parse_sequence(bytes);
-      return $result.replace_error(_pipe, new ParseError());
+      return $result.replace_error(_pipe, CertificateError$ParseError$const);
     })(),
     (_use0) => {
       let seq_content = _use0[0];
-      return parse_eku_oids(seq_content, toList([]), is_critical);
+      return parse_eku_oids(seq_content, $List$Empty$const, is_critical);
     },
   );
 }
@@ -1428,14 +1449,14 @@ function decode_key_usage_bits(bytes) {
     let rest = bitArraySlice(bytes, 8);
     let _block;
     let _pipe = toList([
-      [digital_signature, new $x509.DigitalSignature()],
-      [non_repudiation, new $x509.NonRepudiation()],
-      [key_encipherment, new $x509.KeyEncipherment()],
-      [data_encipherment, new $x509.DataEncipherment()],
-      [key_agreement, new $x509.KeyAgreement()],
-      [key_cert_sign, new $x509.KeyCertSign()],
-      [crl_sign, new $x509.CrlSign()],
-      [encipher_only, new $x509.EncipherOnly()],
+      [digital_signature, $x509.KeyUsage$DigitalSignature$const],
+      [non_repudiation, $x509.KeyUsage$NonRepudiation$const],
+      [key_encipherment, $x509.KeyUsage$KeyEncipherment$const],
+      [data_encipherment, $x509.KeyUsage$DataEncipherment$const],
+      [key_agreement, $x509.KeyUsage$KeyAgreement$const],
+      [key_cert_sign, $x509.KeyUsage$KeyCertSign$const],
+      [crl_sign, $x509.KeyUsage$CrlSign$const],
+      [encipher_only, $x509.KeyUsage$EncipherOnly$const],
     ]);
     _block = $list.filter_map(
       _pipe,
@@ -1452,12 +1473,12 @@ function decode_key_usage_bits(bytes) {
     );
     let usages = _block;
     if (rest.bitSize >= 1 && bitArraySliceToInt(rest, 0, 1, true, false) === 1) {
-      return listPrepend(new $x509.DecipherOnly(), usages);
+      return listPrepend($x509.KeyUsage$DecipherOnly$const, usages);
     } else {
       return usages;
     }
   } else {
-    return toList([]);
+    return $List$Empty$const;
   }
 }
 
@@ -1512,7 +1533,7 @@ function parse_basic_constraints_ext(bytes) {
         () => {
           return $bool.guard(
             $bit_array.byte_size(seq_content) === 0,
-            new Ok(new $x509.BasicConstraints(false, new $option.None())),
+            new Ok(new $x509.BasicConstraints(false, $option.Option$None$const)),
             () => {
               return $result.try$(
                 $der.parse_bool(seq_content),
@@ -1521,12 +1542,17 @@ function parse_basic_constraints_ext(bytes) {
                   let after_ca = _use0[1];
                   return $bool.guard(
                     $bit_array.byte_size(after_ca) === 0,
-                    new Ok(new $x509.BasicConstraints(ca, new $option.None())),
+                    new Ok(
+                      new $x509.BasicConstraints(ca, $option.Option$None$const),
+                    ),
                     () => {
                       return $bool.guard(
                         !ca,
                         new Ok(
-                          new $x509.BasicConstraints(false, new $option.None()),
+                          new $x509.BasicConstraints(
+                            false,
+                            $option.Option$None$const,
+                          ),
                         ),
                         () => {
                           return $result.try$(
@@ -1614,7 +1640,10 @@ function process_extension(acc, ext) {
                   let $8 = $3.head;
                   if ($8 === 19) {
                     let _pipe = parse_basic_constraints_ext(value);
-                    let _pipe$1 = $result.replace_error(_pipe, new ParseError());
+                    let _pipe$1 = $result.replace_error(
+                      _pipe,
+                      CertificateError$ParseError$const,
+                    );
                     return $result.map(
                       _pipe$1,
                       (bc) => {
@@ -1632,7 +1661,10 @@ function process_extension(acc, ext) {
                     );
                   } else if ($8 === 15) {
                     let _pipe = parse_key_usage_ext(value);
-                    let _pipe$1 = $result.replace_error(_pipe, new ParseError());
+                    let _pipe$1 = $result.replace_error(
+                      _pipe,
+                      CertificateError$ParseError$const,
+                    );
                     return $result.map(
                       _pipe$1,
                       (key_usage) => {
@@ -1670,7 +1702,10 @@ function process_extension(acc, ext) {
                       value,
                       is_critical,
                     );
-                    let _pipe$1 = $result.replace_error(_pipe, new ParseError());
+                    let _pipe$1 = $result.replace_error(
+                      _pipe,
+                      CertificateError$ParseError$const,
+                    );
                     return $result.map(
                       _pipe$1,
                       (subject_alt_names) => {
@@ -1688,7 +1723,10 @@ function process_extension(acc, ext) {
                     );
                   } else if ($8 === 14) {
                     let _pipe = parse_subject_key_identifier_ext(value);
-                    let _pipe$1 = $result.replace_error(_pipe, new ParseError());
+                    let _pipe$1 = $result.replace_error(
+                      _pipe,
+                      CertificateError$ParseError$const,
+                    );
                     return $result.map(
                       _pipe$1,
                       (ski) => {
@@ -1706,7 +1744,10 @@ function process_extension(acc, ext) {
                     );
                   } else if ($8 === 35) {
                     let _pipe = parse_authority_key_identifier_ext(value);
-                    let _pipe$1 = $result.replace_error(_pipe, new ParseError());
+                    let _pipe$1 = $result.replace_error(
+                      _pipe,
+                      CertificateError$ParseError$const,
+                    );
                     return $result.map(
                       _pipe$1,
                       (aki) => {
@@ -1785,8 +1826,8 @@ function parse_raw_extensions(bytes, acc) {
 function parse_extensions_content(bytes) {
   return $result.try$(
     (() => {
-      let _pipe = parse_raw_extensions(bytes, toList([]));
-      return $result.replace_error(_pipe, new ParseError());
+      let _pipe = parse_raw_extensions(bytes, $List$Empty$const);
+      return $result.replace_error(_pipe, CertificateError$ParseError$const);
     })(),
     (raw) => {
       let _pipe = $list.try_fold(
@@ -1797,7 +1838,7 @@ function parse_extensions_content(bytes) {
           components = ext[0].components;
           let $ = $set.contains(acc.seen_oids, components);
           if ($) {
-            return new Error(new ParseError());
+            return new Error(CertificateError$ParseError$const);
           } else {
             let _pipe = new ExtensionsAcc(
               acc.basic_constraints,
@@ -1842,28 +1883,28 @@ function parse_optional_unique_ids(bytes, version) {
     if (bytes.byteAt(0) === 129) {
       return $bool.guard(
         version < 1,
-        new Error(new ParseError()),
+        new Error(CertificateError$ParseError$const),
         () => {
           let $ = $der.parse_tlv(bytes);
           if ($ instanceof Ok) {
             let remaining = $[0][2];
             return parse_optional_unique_ids(remaining, version);
           } else {
-            return new Error(new ParseError());
+            return new Error(CertificateError$ParseError$const);
           }
         },
       );
     } else if (bytes.byteAt(0) === 130) {
       return $bool.guard(
         version < 1,
-        new Error(new ParseError()),
+        new Error(CertificateError$ParseError$const),
         () => {
           let $ = $der.parse_tlv(bytes);
           if ($ instanceof Ok) {
             let remaining = $[0][2];
             return parse_optional_unique_ids(remaining, version);
           } else {
-            return new Error(new ParseError());
+            return new Error(CertificateError$ParseError$const);
           }
         },
       );
@@ -1889,12 +1930,15 @@ function parse_certificate_extensions(bytes, version) {
         let exts_content = $[0][0];
         return $bool.guard(
           version < 2,
-          new Error(new ParseError()),
+          new Error(CertificateError$ParseError$const),
           () => {
             return $result.try$(
               (() => {
                 let _pipe = $der.parse_sequence(exts_content);
-                return $result.replace_error(_pipe, new ParseError());
+                return $result.replace_error(
+                  _pipe,
+                  CertificateError$ParseError$const,
+                );
               })(),
               (_use0) => {
                 let exts_seq = _use0[0];
@@ -1928,7 +1972,7 @@ function parse_validity(bytes) {
   return $result.try$(
     (() => {
       let _pipe = parse_time(bytes);
-      return $result.replace_error(_pipe, new ParseError());
+      return $result.replace_error(_pipe, CertificateError$ParseError$const);
     })(),
     (_use0) => {
       let not_before = _use0[0];
@@ -1936,7 +1980,7 @@ function parse_validity(bytes) {
       return $result.try$(
         (() => {
           let _pipe = parse_time(after_not_before);
-          return $result.replace_error(_pipe, new ParseError());
+          return $result.replace_error(_pipe, CertificateError$ParseError$const);
         })(),
         (_use0) => {
           let not_after = _use0[0];
@@ -1955,7 +1999,7 @@ function parse_certificate_version(bytes) {
     return $result.try$(
       (() => {
         let _pipe = $der.parse_integer(version_content);
-        return $result.replace_error(_pipe, new ParseError());
+        return $result.replace_error(_pipe, CertificateError$ParseError$const);
       })(),
       (_use0) => {
         let version_bytes = _use0[0];
@@ -1967,10 +2011,10 @@ function parse_certificate_version(bytes) {
           } else if (version_bytes.byteAt(0) === 2) {
             return new Ok([2, rest]);
           } else {
-            return new Error(new ParseError());
+            return new Error(CertificateError$ParseError$const);
           }
         } else {
-          return new Error(new ParseError());
+          return new Error(CertificateError$ParseError$const);
         }
       },
     );
@@ -1993,21 +2037,24 @@ export function from_der(der) {
   return $result.try$(
     (() => {
       let _pipe = $der.parse_sequence(der);
-      return $result.replace_error(_pipe, new ParseError());
+      return $result.replace_error(_pipe, CertificateError$ParseError$const);
     })(),
     (_use0) => {
       let cert_content = _use0[0];
       let remaining = _use0[1];
       return $bool.guard(
         $bit_array.byte_size(remaining) !== 0,
-        new Error(new ParseError()),
+        new Error(CertificateError$ParseError$const),
         () => {
           return $result.try$(
             (() => {
               let _pipe = $x509_internal.parse_sequence_with_header(
                 cert_content,
               );
-              return $result.replace_error(_pipe, new ParseError());
+              return $result.replace_error(
+                _pipe,
+                CertificateError$ParseError$const,
+              );
             })(),
             (_use0) => {
               let tbs_bytes = _use0[0];
@@ -2015,7 +2062,10 @@ export function from_der(der) {
               return $result.try$(
                 (() => {
                   let _pipe = $der.parse_sequence(tbs_bytes);
-                  return $result.replace_error(_pipe, new ParseError());
+                  return $result.replace_error(
+                    _pipe,
+                    CertificateError$ParseError$const,
+                  );
                 })(),
                 (_use0) => {
                   let tbs_content = _use0[0];
@@ -2027,7 +2077,10 @@ export function from_der(der) {
                       return $result.try$(
                         (() => {
                           let _pipe = $der.parse_integer(after_version);
-                          return $result.replace_error(_pipe, new ParseError());
+                          return $result.replace_error(
+                            _pipe,
+                            CertificateError$ParseError$const,
+                          );
                         })(),
                         (_use0) => {
                           let serial_number$1 = _use0[0];
@@ -2037,7 +2090,7 @@ export function from_der(der) {
                               let _pipe = $der.parse_sequence(after_serial);
                               return $result.replace_error(
                                 _pipe,
-                                new ParseError(),
+                                CertificateError$ParseError$const,
                               );
                             })(),
                             (_use0) => {
@@ -2063,7 +2116,7 @@ export function from_der(der) {
                                       );
                                       return $result.replace_error(
                                         _pipe,
-                                        new ParseError(),
+                                        CertificateError$ParseError$const,
                                       );
                                     })(),
                                     (_use0) => {
@@ -2076,7 +2129,7 @@ export function from_der(der) {
                                           );
                                           return $result.replace_error(
                                             _pipe,
-                                            new ParseError(),
+                                            CertificateError$ParseError$const,
                                           );
                                         })(),
                                         (issuer) => {
@@ -2087,7 +2140,7 @@ export function from_der(der) {
                                               );
                                               return $result.replace_error(
                                                 _pipe,
-                                                new ParseError(),
+                                                CertificateError$ParseError$const,
                                               );
                                             })(),
                                             (_use0) => {
@@ -2103,7 +2156,7 @@ export function from_der(der) {
                                                       );
                                                       return $result.replace_error(
                                                         _pipe,
-                                                        new ParseError(),
+                                                        CertificateError$ParseError$const,
                                                       );
                                                     })(),
                                                     (_use0) => {
@@ -2116,7 +2169,7 @@ export function from_der(der) {
                                                           );
                                                           return $result.replace_error(
                                                             _pipe,
-                                                            new ParseError(),
+                                                            CertificateError$ParseError$const,
                                                           );
                                                         })(),
                                                         (subject) => {
@@ -2127,7 +2180,7 @@ export function from_der(der) {
                                                               );
                                                               return $result.replace_error(
                                                                 _pipe,
-                                                                new ParseError(),
+                                                                CertificateError$ParseError$const,
                                                               );
                                                             })(),
                                                             (_use0) => {
@@ -2145,7 +2198,7 @@ export function from_der(der) {
                                                                       if (
                                                                         $ instanceof $Empty
                                                                       ) {
-                                                                        return new ParseError();
+                                                                        return CertificateError$ParseError$const;
                                                                       } else {
                                                                         return new UnsupportedAlgorithm(
                                                                           oid,
@@ -2168,7 +2221,7 @@ export function from_der(der) {
                                                                           );
                                                                           return $result.replace_error(
                                                                             _pipe,
-                                                                            new ParseError(),
+                                                                            CertificateError$ParseError$const,
                                                                           );
                                                                         })(),
                                                                         (_use0) => {
@@ -2181,7 +2234,7 @@ export function from_der(der) {
                                                                               );
                                                                               return $result.replace_error(
                                                                                 _pipe,
-                                                                                new ParseError(),
+                                                                                CertificateError$ParseError$const,
                                                                               );
                                                                             })(),
                                                                             (
@@ -2193,7 +2246,7 @@ export function from_der(der) {
                                                                                   outer_signature_algorithm
                                                                                 ),
                                                                                 new Error(
-                                                                                  new ParseError(),
+                                                                                  CertificateError$ParseError$const,
                                                                                 ),
                                                                                 (
                                                                                     
@@ -2205,7 +2258,7 @@ export function from_der(der) {
                                                                                       );
                                                                                       return $result.replace_error(
                                                                                         _pipe,
-                                                                                        new ParseError(),
+                                                                                        CertificateError$ParseError$const,
                                                                                       );
                                                                                     })(),
                                                                                     (
@@ -2289,7 +2342,7 @@ export function from_der(der) {
  */
 export function from_pem(pem) {
   let _pipe = $x509_internal.decode_pem_all(pem, pem_begin, pem_end);
-  let _pipe$1 = $result.replace_error(_pipe, new ParseError());
+  let _pipe$1 = $result.replace_error(_pipe, CertificateError$ParseError$const);
   return $result.try$(
     _pipe$1,
     (_capture) => { return $list.try_map(_capture, from_der); },
@@ -2736,7 +2789,7 @@ export function verify(cert, issuer_public_key) {
     () => {
       let _block;
       let _pipe = xdh_key_oid(issuer_public_key);
-      _block = $result.unwrap(_pipe, new $x509.Oid(toList([])));
+      _block = $result.unwrap(_pipe, new $x509.Oid($List$Empty$const));
       let oid = _block;
       return new Error(new UnsupportedAlgorithm(oid));
     },
@@ -2750,7 +2803,7 @@ export function verify(cert, issuer_public_key) {
       if (verified) {
         return new Ok(undefined);
       } else {
-        return new Error(new SignatureVerificationFailed());
+        return new Error(CertificateError$SignatureVerificationFailed$const);
       }
     },
   );

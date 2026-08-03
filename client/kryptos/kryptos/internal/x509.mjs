@@ -9,6 +9,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -29,8 +30,10 @@ import * as $xdh from "../../kryptos/xdh.mjs";
 const FILEPATH = "src/kryptos/internal/x509.gleam";
 
 class PemNotFound extends $CustomType {}
+const PemError$PemNotFound$const = new PemNotFound();
 
 class PemMalformed extends $CustomType {}
+const PemError$PemMalformed$const = new PemMalformed();
 
 export class SigAlgInfo extends $CustomType {
   constructor(oid, include_null_params) {
@@ -135,21 +138,21 @@ export function eddsa_sig_alg_info(curve) {
 
 function sig_alg_to_hash(sig_alg) {
   if (sig_alg instanceof $x509.RsaSha1) {
-    return new Ok(new $hash.Sha1());
+    return new Ok($hash.HashAlgorithm$Sha1$const);
   } else if (sig_alg instanceof $x509.RsaSha256) {
-    return new Ok(new $hash.Sha256());
+    return new Ok($hash.HashAlgorithm$Sha256$const);
   } else if (sig_alg instanceof $x509.RsaSha384) {
-    return new Ok(new $hash.Sha384());
+    return new Ok($hash.HashAlgorithm$Sha384$const);
   } else if (sig_alg instanceof $x509.RsaSha512) {
-    return new Ok(new $hash.Sha512());
+    return new Ok($hash.HashAlgorithm$Sha512$const);
   } else if (sig_alg instanceof $x509.EcdsaSha1) {
-    return new Ok(new $hash.Sha1());
+    return new Ok($hash.HashAlgorithm$Sha1$const);
   } else if (sig_alg instanceof $x509.EcdsaSha256) {
-    return new Ok(new $hash.Sha256());
+    return new Ok($hash.HashAlgorithm$Sha256$const);
   } else if (sig_alg instanceof $x509.EcdsaSha384) {
-    return new Ok(new $hash.Sha384());
+    return new Ok($hash.HashAlgorithm$Sha384$const);
   } else if (sig_alg instanceof $x509.EcdsaSha512) {
-    return new Ok(new $hash.Sha512());
+    return new Ok($hash.HashAlgorithm$Sha512$const);
   } else if (sig_alg instanceof $x509.Ed25519) {
     return new Error(undefined);
   } else {
@@ -182,7 +185,13 @@ export function verify_signature(
     let $ = sig_alg_to_hash(sig_alg);
     if ($ instanceof Ok) {
       let hash_alg = $[0];
-      return $rsa.verify(key, data, signature, hash_alg, new $rsa.Pkcs1v15());
+      return $rsa.verify(
+        key,
+        data,
+        signature,
+        hash_alg,
+        $rsa.SignPadding$Pkcs1v15$const,
+      );
     } else {
       return false;
     }
@@ -283,9 +292,9 @@ export function parse_signature_algorithm(bytes) {
                   if ($7 === 101) {
                     let $8 = $3.head;
                     if ($8 === 112) {
-                      return new Ok(new $x509.Ed25519());
+                      return new Ok($x509.SignatureAlgorithm$Ed25519$const);
                     } else if ($8 === 113) {
-                      return new Ok(new $x509.Ed448());
+                      return new Ok($x509.SignatureAlgorithm$Ed448$const);
                     } else {
                       return new Error(new $x509.Oid(oid_components));
                     }
@@ -317,7 +326,9 @@ export function parse_signature_algorithm(bytes) {
                           if ($11 === 4) {
                             let $12 = $5.head;
                             if ($12 === 1) {
-                              return new Ok(new $x509.EcdsaSha1());
+                              return new Ok(
+                                $x509.SignatureAlgorithm$EcdsaSha1$const,
+                              );
                             } else {
                               return new Error(new $x509.Oid(oid_components));
                             }
@@ -353,13 +364,21 @@ export function parse_signature_algorithm(bytes) {
                               if ($13 === 1) {
                                 let $14 = $6.head;
                                 if ($14 === 5) {
-                                  return new Ok(new $x509.RsaSha1());
+                                  return new Ok(
+                                    $x509.SignatureAlgorithm$RsaSha1$const,
+                                  );
                                 } else if ($14 === 11) {
-                                  return new Ok(new $x509.RsaSha256());
+                                  return new Ok(
+                                    $x509.SignatureAlgorithm$RsaSha256$const,
+                                  );
                                 } else if ($14 === 12) {
-                                  return new Ok(new $x509.RsaSha384());
+                                  return new Ok(
+                                    $x509.SignatureAlgorithm$RsaSha384$const,
+                                  );
                                 } else if ($14 === 13) {
-                                  return new Ok(new $x509.RsaSha512());
+                                  return new Ok(
+                                    $x509.SignatureAlgorithm$RsaSha512$const,
+                                  );
                                 } else {
                                   return new Error(
                                     new $x509.Oid(oid_components),
@@ -378,11 +397,17 @@ export function parse_signature_algorithm(bytes) {
                               if ($13 === 3) {
                                 let $14 = $6.head;
                                 if ($14 === 2) {
-                                  return new Ok(new $x509.EcdsaSha256());
+                                  return new Ok(
+                                    $x509.SignatureAlgorithm$EcdsaSha256$const,
+                                  );
                                 } else if ($14 === 3) {
-                                  return new Ok(new $x509.EcdsaSha384());
+                                  return new Ok(
+                                    $x509.SignatureAlgorithm$EcdsaSha384$const,
+                                  );
                                 } else if ($14 === 4) {
-                                  return new Ok(new $x509.EcdsaSha512());
+                                  return new Ok(
+                                    $x509.SignatureAlgorithm$EcdsaSha512$const,
+                                  );
                                 } else {
                                   return new Error(
                                     new $x509.Oid(oid_components),
@@ -417,7 +442,7 @@ export function parse_signature_algorithm(bytes) {
       }
     }
   } else {
-    return new Error(new $x509.Oid(toList([])));
+    return new Error(new $x509.Oid($List$Empty$const));
   }
 }
 
@@ -532,7 +557,7 @@ function parse_rdns(bytes, acc) {
       (_use0) => {
         let rdn_bytes = _use0[0];
         let rest = _use0[1];
-        let _pipe = parse_rdn_attributes(rdn_bytes, toList([]));
+        let _pipe = parse_rdn_attributes(rdn_bytes, $List$Empty$const);
         return $result.try$(
           _pipe,
           (attributes) => {
@@ -551,7 +576,7 @@ function parse_rdns(bytes, acc) {
  * Returns Error(Nil) if the encoding is invalid.
  */
 export function parse_name(bytes) {
-  let _pipe = parse_rdns(bytes, toList([]));
+  let _pipe = parse_rdns(bytes, $List$Empty$const);
   return $result.map(_pipe, (var0) => { return new $x509.Name(var0); });
 }
 
@@ -745,7 +770,7 @@ function dispatch_public_key_parse(alg_oid, spki_bytes) {
                               if ($13 === 1) {
                                 let _pipe = $rsa.public_key_from_der(
                                   spki_bytes,
-                                  new $rsa.Spki(),
+                                  $rsa.PublicKeyFormat$Spki$const,
                                 );
                                 let _pipe$1 = $result.map(
                                   _pipe,
@@ -821,7 +846,7 @@ export function parse_public_key(spki_bytes) {
       );
     },
   );
-  _block = $result.replace_error(_pipe, new $x509.Oid(toList([])));
+  _block = $result.replace_error(_pipe, new $x509.Oid($List$Empty$const));
   let result = _block;
   let _pipe$1 = result;
   return $result.try$(
@@ -1064,7 +1089,7 @@ export function parse_san_extension(bytes, is_critical) {
     $der.parse_sequence(bytes),
     (_use0) => {
       let san_content = _use0[0];
-      return parse_general_names(san_content, toList([]), is_critical);
+      return parse_general_names(san_content, $List$Empty$const, is_critical);
     },
   );
 }
@@ -1136,9 +1161,9 @@ function extract_pem_body(
     let end_marker = loop$end_marker;
     if (lines instanceof $Empty) {
       if (in_body) {
-        return new Error(new PemMalformed());
+        return new Error(PemError$PemMalformed$const);
       } else {
-        return new Error(new PemNotFound());
+        return new Error(PemError$PemNotFound$const);
       }
     } else if (in_body) {
       let line = lines.head;
@@ -1185,7 +1210,13 @@ function extract_all_pem_bodies(
     let begin_marker = loop$begin_marker;
     let end_marker = loop$end_marker;
     let acc = loop$acc;
-    let $ = extract_pem_body(lines, false, toList([]), begin_marker, end_marker);
+    let $ = extract_pem_body(
+      lines,
+      false,
+      $List$Empty$const,
+      begin_marker,
+      end_marker,
+    );
     if ($ instanceof Ok) {
       let body = $[0][0];
       let remaining = $[0][1];
@@ -1214,7 +1245,7 @@ export function decode_pem_all(pem, begin_marker, end_marker) {
   let lines = $string.split(pem, "\n");
   let lines$1 = $list.map(lines, $string.trim);
   return $result.try$(
-    extract_all_pem_bodies(lines$1, begin_marker, end_marker, toList([])),
+    extract_all_pem_bodies(lines$1, begin_marker, end_marker, $List$Empty$const),
     (blocks) => {
       return $list.try_map(
         blocks,

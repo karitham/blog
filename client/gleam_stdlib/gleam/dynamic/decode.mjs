@@ -3,6 +3,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   isEqual,
@@ -140,7 +141,7 @@ export const string = /* @__PURE__ */ new Decoder(decode_string);
 export const bool = /* @__PURE__ */ new Decoder(decode_bool);
 
 function decode_dynamic(data) {
-  return [data, toList([])];
+  return [data, $List$Empty$const];
 }
 
 /**
@@ -174,12 +175,12 @@ function run_dynamic_function(data, name, f) {
   let $ = f(data);
   if ($ instanceof Ok) {
     let data$1 = $[0];
-    return [data$1, toList([])];
+    return [data$1, $List$Empty$const];
   } else {
     let placeholder = $[0];
     return [
       placeholder,
-      toList([new DecodeError(name, $dynamic.classify(data), toList([]))]),
+      toList([new DecodeError(name, $dynamic.classify(data), $List$Empty$const)]),
     ];
   }
 }
@@ -347,7 +348,7 @@ export function list(inner) {
         inner.function,
         (p, k) => { return push_path(p, toList([k])); },
         0,
-        toList([]),
+        $List$Empty$const,
       );
     },
   );
@@ -392,7 +393,9 @@ function index(
         let default$ = $1[0];
         let _pipe = [
           default$,
-          toList([new DecodeError(kind, $dynamic.classify(data), toList([]))]),
+          toList([
+            new DecodeError(kind, $dynamic.classify(data), $List$Empty$const),
+          ]),
         ];
         return push_path(_pipe, $list.reverse(position));
       }
@@ -432,7 +435,7 @@ export function subfield(field_path, field_decoder, next) {
     (data) => {
       let $ = index(
         field_path,
-        toList([]),
+        $List$Empty$const,
         field_decoder.function,
         data,
         (data, position) => {
@@ -440,7 +443,7 @@ export function subfield(field_path, field_decoder, next) {
           let default$ = $1[0];
           let _pipe = [
             default$,
-            toList([new DecodeError("Field", "Nothing", toList([]))]),
+            toList([new DecodeError("Field", "Nothing", $List$Empty$const)]),
           ];
           return push_path(_pipe, $list.reverse(position));
         },
@@ -488,7 +491,7 @@ export function at(path, inner) {
     (data) => {
       return index(
         path,
-        toList([]),
+        $List$Empty$const,
         inner.function,
         data,
         (data, position) => {
@@ -496,7 +499,7 @@ export function at(path, inner) {
           let default$ = $[0];
           let _pipe = [
             default$,
-            toList([new DecodeError("Field", "Nothing", toList([]))]),
+            toList([new DecodeError("Field", "Nothing", $List$Empty$const)]),
           ];
           return push_path(_pipe, $list.reverse(position));
         },
@@ -527,7 +530,7 @@ export function at(path, inner) {
  * ```
  */
 export function success(data) {
-  return new Decoder((_) => { return [data, toList([])]; });
+  return new Decoder((_) => { return [data, $List$Empty$const]; });
 }
 
 /**
@@ -535,7 +538,7 @@ export function success(data) {
  */
 export function decode_error(expected, found) {
   return toList([
-    new DecodeError(expected, $dynamic.classify(found), toList([])),
+    new DecodeError(expected, $dynamic.classify(found), $List$Empty$const),
   ]);
 }
 
@@ -614,13 +617,15 @@ export function optional_field(key, default$, field_decoder, next) {
           let data$1 = $2[0];
           _block$1 = field_decoder.function(data$1);
         } else {
-          _block$1 = [default$, toList([])];
+          _block$1 = [default$, $List$Empty$const];
         }
       } else {
         let kind = $1[0];
         _block$1 = [
           default$,
-          toList([new DecodeError(kind, $dynamic.classify(data), toList([]))]),
+          toList([
+            new DecodeError(kind, $dynamic.classify(data), $List$Empty$const),
+          ]),
         ];
       }
       let _pipe = _block$1;
@@ -661,10 +666,10 @@ export function optionally_at(path, default$, inner) {
     (data) => {
       return index(
         path,
-        toList([]),
+        $List$Empty$const,
         inner.function,
         data,
-        (_, _1) => { return [default$, toList([])]; },
+        (_, _1) => { return [default$, $List$Empty$const]; },
       );
     },
   );
@@ -673,11 +678,11 @@ export function optionally_at(path, default$, inner) {
 function decode_bool(data) {
   let $ = isEqual(cast(true), data);
   if ($) {
-    return [true, toList([])];
+    return [true, $List$Empty$const];
   } else {
     let $1 = isEqual(cast(false), data);
     if ($1) {
-      return [false, toList([])];
+      return [false, $List$Empty$const];
     } else {
       return [false, decode_error("Bool", data)];
     }
@@ -731,7 +736,7 @@ export function dict(key, value) {
         let dict$1 = $[0];
         return $dict.fold(
           dict$1,
-          [$dict.new$(), toList([])],
+          [$dict.new$(), $List$Empty$const],
           (a, k, v) => {
             let $1 = a[1];
             if ($1 instanceof $Empty) {
@@ -773,7 +778,7 @@ export function optional(inner) {
     (data) => {
       let $ = is_null(data);
       if ($) {
-        return [new $option.None(), toList([])];
+        return [$option.Option$None$const, $List$Empty$const];
       } else {
         let $1 = inner.function(data);
         let data$1 = $1[0];
@@ -917,12 +922,14 @@ export function new_primitive_decoder(name, decoding_function) {
       let $ = decoding_function(d);
       if ($ instanceof Ok) {
         let t = $[0];
-        return [t, toList([])];
+        return [t, $List$Empty$const];
       } else {
         let placeholder = $[0];
         return [
           placeholder,
-          toList([new DecodeError(name, $dynamic.classify(d), toList([]))]),
+          toList([
+            new DecodeError(name, $dynamic.classify(d), $List$Empty$const),
+          ]),
         ];
       }
     },

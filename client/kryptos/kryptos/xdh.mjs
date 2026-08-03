@@ -42,14 +42,16 @@ export {
  * X25519 curve (Curve25519). 32-byte keys and shared secret.
  */
 export class X25519 extends $CustomType {}
-export const Curve$X25519 = () => new X25519();
+export const Curve$X25519$const = new X25519();
+export const Curve$X25519 = () => Curve$X25519$const;
 export const Curve$isX25519 = (value) => value instanceof X25519;
 
 /**
  * X448 curve (Curve448). 56-byte keys and shared secret.
  */
 export class X448 extends $CustomType {}
-export const Curve$X448 = () => new X448();
+export const Curve$X448$const = new X448();
+export const Curve$X448 = () => Curve$X448$const;
 export const Curve$isX448 = (value) => value instanceof X448;
 
 /**

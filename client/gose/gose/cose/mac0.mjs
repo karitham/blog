@@ -6,6 +6,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -56,7 +57,7 @@ export function new$(alg) {
   let alg_id = $cose.mac_alg_to_int(alg);
   return new UntaggedMac0(
     toList([new $cose.Alg(alg_id)]),
-    toList([]),
+    $List$Empty$const,
     false,
     toBitArray([]),
   );
@@ -112,12 +113,15 @@ export function tag(message, key, payload) {
         $key_helpers.validate_signing_key_type(alg, key),
         (_) => {
           return $result.try$(
-            $key_helpers.validate_key_use(key, new $key_helpers.ForSigning()),
+            $key_helpers.validate_key_use(
+              key,
+              $key_helpers.KeyPurpose$ForSigning$const,
+            ),
             (_) => {
               return $result.try$(
                 $key_helpers.validate_key_ops(
                   key,
-                  new $key_helpers.ForSigning(),
+                  $key_helpers.KeyPurpose$ForSigning$const,
                 ),
                 (_) => {
                   return $result.try$(
@@ -136,7 +140,7 @@ export function tag(message, key, payload) {
                         (computed_tag) => {
                           let _block;
                           if (detached) {
-                            _block = new $option.None();
+                            _block = $option.Option$None$const;
                           } else {
                             _block = new $option.Some(payload);
                           }
@@ -196,7 +200,7 @@ function to_cbor_value(message) {
     let p = payload$1[0];
     _block = new $cbor.Bytes(p);
   } else {
-    _block = new $cbor.Null();
+    _block = $cbor.Value$Null$const;
   }
   let payload_value = _block;
   return new $cbor.Array(

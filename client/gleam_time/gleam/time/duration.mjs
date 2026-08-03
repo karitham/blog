@@ -13,70 +13,80 @@ class Duration extends $CustomType {
 }
 
 export class Nanosecond extends $CustomType {}
-export const Unit$Nanosecond = () => new Nanosecond();
+export const Unit$Nanosecond$const = new Nanosecond();
+export const Unit$Nanosecond = () => Unit$Nanosecond$const;
 export const Unit$isNanosecond = (value) => value instanceof Nanosecond;
 
 /**
  * 1000 nanoseconds.
  */
 export class Microsecond extends $CustomType {}
-export const Unit$Microsecond = () => new Microsecond();
+export const Unit$Microsecond$const = new Microsecond();
+export const Unit$Microsecond = () => Unit$Microsecond$const;
 export const Unit$isMicrosecond = (value) => value instanceof Microsecond;
 
 /**
  * 1000 microseconds.
  */
 export class Millisecond extends $CustomType {}
-export const Unit$Millisecond = () => new Millisecond();
+export const Unit$Millisecond$const = new Millisecond();
+export const Unit$Millisecond = () => Unit$Millisecond$const;
 export const Unit$isMillisecond = (value) => value instanceof Millisecond;
 
 /**
  * 1000 milliseconds.
  */
 export class Second extends $CustomType {}
-export const Unit$Second = () => new Second();
+export const Unit$Second$const = new Second();
+export const Unit$Second = () => Unit$Second$const;
 export const Unit$isSecond = (value) => value instanceof Second;
 
 /**
  * 60 seconds.
  */
 export class Minute extends $CustomType {}
-export const Unit$Minute = () => new Minute();
+export const Unit$Minute$const = new Minute();
+export const Unit$Minute = () => Unit$Minute$const;
 export const Unit$isMinute = (value) => value instanceof Minute;
 
 /**
  * 60 minutes.
  */
 export class Hour extends $CustomType {}
-export const Unit$Hour = () => new Hour();
+export const Unit$Hour$const = new Hour();
+export const Unit$Hour = () => Unit$Hour$const;
 export const Unit$isHour = (value) => value instanceof Hour;
 
 /**
  * 24 hours.
  */
 export class Day extends $CustomType {}
-export const Unit$Day = () => new Day();
+export const Unit$Day$const = new Day();
+export const Unit$Day = () => Unit$Day$const;
 export const Unit$isDay = (value) => value instanceof Day;
 
 /**
  * 7 days.
  */
 export class Week extends $CustomType {}
-export const Unit$Week = () => new Week();
+export const Unit$Week$const = new Week();
+export const Unit$Week = () => Unit$Week$const;
 export const Unit$isWeek = (value) => value instanceof Week;
 
 /**
  * About 30.4375 days. Real calendar months vary in length.
  */
 export class Month extends $CustomType {}
-export const Unit$Month = () => new Month();
+export const Unit$Month$const = new Month();
+export const Unit$Month = () => Unit$Month$const;
 export const Unit$isMonth = (value) => value instanceof Month;
 
 /**
  * About 365.25 days. Real calendar years vary in length.
  */
 export class Year extends $CustomType {}
-export const Unit$Year = () => new Year();
+export const Unit$Year$const = new Year();
+export const Unit$Year = () => Unit$Year$const;
 export const Unit$isYear = (value) => value instanceof Year;
 
 export const empty = /* @__PURE__ */ new Duration(0, 0);
@@ -147,25 +157,25 @@ export function approximate(duration) {
     let unit = $1[1];
     return [- amount, unit];
   } else if (s >= year) {
-    return [divideInt(s, year), new Year()];
+    return [divideInt(s, year), Unit$Year$const];
   } else if (s >= month) {
-    return [divideInt(s, month), new Month()];
+    return [divideInt(s, month), Unit$Month$const];
   } else if (s >= week) {
-    return [divideInt(s, week), new Week()];
+    return [divideInt(s, week), Unit$Week$const];
   } else if (s >= day) {
-    return [divideInt(s, day), new Day()];
+    return [divideInt(s, day), Unit$Day$const];
   } else if (s >= hour) {
-    return [divideInt(s, hour), new Hour()];
+    return [divideInt(s, hour), Unit$Hour$const];
   } else if (s >= minute) {
-    return [divideInt(s, minute), new Minute()];
+    return [divideInt(s, minute), Unit$Minute$const];
   } else if (s > 0) {
-    return [s, new Second()];
+    return [s, Unit$Second$const];
   } else if (ns >= millisecond) {
-    return [divideInt(ns, millisecond), new Millisecond()];
+    return [divideInt(ns, millisecond), Unit$Millisecond$const];
   } else if (ns >= microsecond) {
-    return [divideInt(ns, microsecond), new Microsecond()];
+    return [divideInt(ns, microsecond), Unit$Microsecond$const];
   } else {
-    return [ns, new Nanosecond()];
+    return [ns, Unit$Nanosecond$const];
   }
 }
 

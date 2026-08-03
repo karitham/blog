@@ -13,11 +13,11 @@ import * as $ec from "../../../kryptos/kryptos/ec.mjs";
 import { toList } from "../../gleam.mjs";
 
 const es256 = /* @__PURE__ */ new $gose.DigitalSignature(
-  /* @__PURE__ */ new $gose.Ecdsa(/* @__PURE__ */ new $gose.EcdsaP256()),
+  /* @__PURE__ */ new $gose.Ecdsa($gose.EcdsaAlg$EcdsaP256$const),
 );
 
 export function generate_key() {
-  return $gose.generate_ec(new $ec.P256());
+  return $gose.generate_ec($ec.Curve$P256$const);
 }
 
 function err(r) {
@@ -50,7 +50,7 @@ export function bare_public_jwk(key) {
     (public$) => {
       return $result.map(
         (() => {
-          let _pipe = $gose.ec_raw_coordinates(public$, new $ec.P256());
+          let _pipe = $gose.ec_raw_coordinates(public$, $ec.Curve$P256$const);
           return $result.replace_error(_pipe, "bad EC coordinates");
         })(),
         (_use0) => {

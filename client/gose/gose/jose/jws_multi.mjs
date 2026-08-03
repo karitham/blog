@@ -10,6 +10,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   isEqual,
@@ -62,7 +63,12 @@ class Verifier extends $CustomType {
  * Create a new body pinned to the payload all signers will sign.
  */
 export function new$(payload) {
-  return new Body(payload, $utils.encode_base64_url(payload), false, toList([]));
+  return new Body(
+    payload,
+    $utils.encode_base64_url(payload),
+    false,
+    $List$Empty$const,
+  );
 }
 
 /**
@@ -93,10 +99,16 @@ export function sign(body, alg, key) {
     $key_helpers.validate_signing_key_type(alg, key),
     (_) => {
       return $result.try$(
-        $key_helpers.validate_key_use(key, new $key_helpers.ForSigning()),
+        $key_helpers.validate_key_use(
+          key,
+          $key_helpers.KeyPurpose$ForSigning$const,
+        ),
         (_) => {
           return $result.try$(
-            $key_helpers.validate_key_ops(key, new $key_helpers.ForSigning()),
+            $key_helpers.validate_key_ops(
+              key,
+              $key_helpers.KeyPurpose$ForSigning$const,
+            ),
             (_) => {
               return $result.try$(
                 $key_helpers.validate_key_algorithm_signing(key, alg),
@@ -246,7 +258,7 @@ export function parse_json(json_str) {
   );
   let decoder = $decode.optional_field(
     "payload",
-    new $option.None(),
+    $option.Option$None$const,
     $decode.optional($decode.string),
     (payload) => {
       return $decode.field(
@@ -319,7 +331,7 @@ function do_verify_keys(loop$alg, loop$keys, loop$message, loop$signature) {
     let message = loop$message;
     let signature = loop$signature;
     if (keys instanceof $Empty) {
-      return new Error(new $gose.VerificationFailed());
+      return new Error($gose.GoseError$VerificationFailed$const);
     } else {
       let key = keys.head;
       let rest = keys.tail;
@@ -349,7 +361,7 @@ function do_verify(verifier, message, payload_segment) {
     (sig) => { return isEqual(sig.alg, expected_alg); },
   );
   if (matching instanceof $Empty) {
-    return new Error(new $gose.VerificationFailed());
+    return new Error($gose.GoseError$VerificationFailed$const);
   } else {
     let sig = matching.head;
     let signing_input = (sig.protected_b64 + ".") + payload_segment;

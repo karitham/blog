@@ -4,7 +4,7 @@ import * as $element from "../lustre/lustre/element.mjs";
 import { text } from "../lustre/lustre/element.mjs";
 import * as $html from "../lustre/lustre/element/html.mjs";
 import { div, h2 } from "../lustre/lustre/element/html.mjs";
-import { toList, prepend as listPrepend } from "./gleam.mjs";
+import { toList, List$Empty$const as $List$Empty$const, prepend as listPrepend } from "./gleam.mjs";
 
 /**
  * Wrap a titled list of items in the section frame used by plays/repos.
@@ -26,5 +26,8 @@ export function section(title, id_str, stale, items) {
     _block = toList([id(id_str), class$("section")]);
   }
   let attrs = _block;
-  return div(attrs, listPrepend(h2(toList([]), toList([text(title)])), items));
+  return div(
+    attrs,
+    listPrepend(h2($List$Empty$const, toList([text(title)])), items),
+  );
 }

@@ -69,7 +69,7 @@ export function encrypt_with_key(key, alg, enc, encryption_key) {
     plaintext,
     encryption_key,
     kid,
-    new $option.None(),
+    $option.Option$None$const,
     new $option.Some("jwk+json"),
   );
   return $result.map(_pipe, $pair.first);

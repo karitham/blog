@@ -12,6 +12,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   makeError,
   toBitArray,
@@ -876,7 +877,7 @@ function latin1_to_utf8_loop(loop$bytes, loop$acc) {
  * @ignore
  */
 function latin1_to_utf8(bytes) {
-  let _pipe = latin1_to_utf8_loop(bytes, toList([]));
+  let _pipe = latin1_to_utf8_loop(bytes, $List$Empty$const);
   return $result.map(
     _pipe,
     (codepoints) => {
@@ -951,7 +952,7 @@ function ucs2_to_utf8_loop(loop$bytes, loop$acc) {
  * @ignore
  */
 function ucs2_to_utf8(bytes) {
-  let _pipe = ucs2_to_utf8_loop(bytes, toList([]));
+  let _pipe = ucs2_to_utf8_loop(bytes, $List$Empty$const);
   return $result.map(
     _pipe,
     (codepoints) => {
@@ -1032,7 +1033,7 @@ function ucs4_to_utf8_loop(loop$bytes, loop$acc) {
  * @ignore
  */
 function ucs4_to_utf8(bytes) {
-  let _pipe = ucs4_to_utf8_loop(bytes, toList([]));
+  let _pipe = ucs4_to_utf8_loop(bytes, $List$Empty$const);
   return $result.map(
     _pipe,
     (codepoints) => {
@@ -1408,7 +1409,7 @@ function encode_oid_component(value) {
   if ($) {
     return toList([value]);
   } else {
-    return encode_oid_component_base128(value, toList([]));
+    return encode_oid_component_base128(value, $List$Empty$const);
   }
 }
 
@@ -1546,7 +1547,7 @@ export function decode_oid_components(bytes) {
       let first = _block;
       let second = first_value - first * 40;
       return $result.try$(
-        decode_oid_rest(rest, 0, toList([])),
+        decode_oid_rest(rest, 0, $List$Empty$const),
         (rest_components) => {
           return new Ok(
             listPrepend(first, listPrepend(second, rest_components)),

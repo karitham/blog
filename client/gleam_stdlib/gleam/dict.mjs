@@ -12,7 +12,13 @@ import {
   destructiveTransientUpdateWith as transient_update_with,
   destructiveTransientDelete as transient_delete,
 } from "../dict.mjs";
-import { Ok, toList, Empty as $Empty, prepend as listPrepend } from "../gleam.mjs";
+import {
+  Ok,
+  toList,
+  Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
+  prepend as listPrepend,
+} from "../gleam.mjs";
 import * as $option from "../gleam/option.mjs";
 
 export { fold, get, has_key, insert, map_values, new$, size };
@@ -63,7 +69,7 @@ export function is_empty(dict) {
 export function to_list(dict) {
   return fold(
     dict,
-    toList([]),
+    $List$Empty$const,
     (acc, key, value) => { return listPrepend([key, value], acc); },
   );
 }
@@ -110,7 +116,7 @@ export function from_list(list) {
 export function keys(dict) {
   return fold(
     dict,
-    toList([]),
+    $List$Empty$const,
     (acc, key, _) => { return listPrepend(key, acc); },
   );
 }
@@ -131,7 +137,7 @@ export function keys(dict) {
 export function values(dict) {
   return fold(
     dict,
-    toList([]),
+    $List$Empty$const,
     (acc, _, value) => { return listPrepend(value, acc); },
   );
 }
@@ -385,7 +391,7 @@ export function upsert(dict, key, fun) {
     let value = $[0];
     return insert(dict, key, fun(new $option.Some(value)));
   } else {
-    return insert(dict, key, fun(new $option.None()));
+    return insert(dict, key, fun($option.Option$None$const));
   }
 }
 

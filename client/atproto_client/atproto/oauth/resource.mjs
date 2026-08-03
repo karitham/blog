@@ -4,7 +4,7 @@ import * as $request from "../../../gleam_http/gleam/http/request.mjs";
 import * as $response from "../../../gleam_http/gleam/http/response.mjs";
 import * as $bit_array from "../../../gleam_stdlib/gleam/bit_array.mjs";
 import * as $option from "../../../gleam_stdlib/gleam/option.mjs";
-import { None, Some } from "../../../gleam_stdlib/gleam/option.mjs";
+import { Some, Option$None$const } from "../../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $string from "../../../gleam_stdlib/gleam/string.mjs";
 import * as $uri from "../../../gleam_stdlib/gleam/uri.mjs";
@@ -80,8 +80,8 @@ function htu(req) {
       u.host,
       u.port,
       u.path,
-      new None(),
-      new None(),
+      Option$None$const,
+      Option$None$const,
     ),
   );
 }
@@ -93,7 +93,10 @@ function dpop_send(base, access_token, dpop_key, req) {
   let method = _block;
   let target = htu(req);
   let ath = b64(
-    $crypto.hash(new $crypto.Sha256(), $bit_array.from_string(access_token)),
+    $crypto.hash(
+      $crypto.HashAlgorithm$Sha256$const,
+      $bit_array.from_string(access_token),
+    ),
   );
   return $result.try$(
     send_once(
@@ -104,7 +107,7 @@ function dpop_send(base, access_token, dpop_key, req) {
       method,
       target,
       ath,
-      new None(),
+      Option$None$const,
     ),
     (first) => {
       let $ = $transport.dpop_nonce_challenge(as_text(first));

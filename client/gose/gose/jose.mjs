@@ -56,53 +56,75 @@ export function signing_alg_to_string(alg) {
  */
 export function signing_alg_from_string(alg) {
   if (alg === "HS256") {
-    return new Ok(new $gose.Mac(new $gose.Hmac(new $gose.HmacSha256())));
+    return new Ok(new $gose.Mac(new $gose.Hmac($gose.HmacAlg$HmacSha256$const)));
   } else if (alg === "HS384") {
-    return new Ok(new $gose.Mac(new $gose.Hmac(new $gose.HmacSha384())));
+    return new Ok(new $gose.Mac(new $gose.Hmac($gose.HmacAlg$HmacSha384$const)));
   } else if (alg === "HS512") {
-    return new Ok(new $gose.Mac(new $gose.Hmac(new $gose.HmacSha512())));
+    return new Ok(new $gose.Mac(new $gose.Hmac($gose.HmacAlg$HmacSha512$const)));
   } else if (alg === "RS256") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.RsaPkcs1(new $gose.RsaPkcs1Sha256())),
+      new $gose.DigitalSignature(
+        new $gose.RsaPkcs1($gose.RsaPkcs1Alg$RsaPkcs1Sha256$const),
+      ),
     );
   } else if (alg === "RS384") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.RsaPkcs1(new $gose.RsaPkcs1Sha384())),
+      new $gose.DigitalSignature(
+        new $gose.RsaPkcs1($gose.RsaPkcs1Alg$RsaPkcs1Sha384$const),
+      ),
     );
   } else if (alg === "RS512") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.RsaPkcs1(new $gose.RsaPkcs1Sha512())),
+      new $gose.DigitalSignature(
+        new $gose.RsaPkcs1($gose.RsaPkcs1Alg$RsaPkcs1Sha512$const),
+      ),
     );
   } else if (alg === "PS256") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.RsaPss(new $gose.RsaPssSha256())),
+      new $gose.DigitalSignature(
+        new $gose.RsaPss($gose.RsaPssAlg$RsaPssSha256$const),
+      ),
     );
   } else if (alg === "PS384") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.RsaPss(new $gose.RsaPssSha384())),
+      new $gose.DigitalSignature(
+        new $gose.RsaPss($gose.RsaPssAlg$RsaPssSha384$const),
+      ),
     );
   } else if (alg === "PS512") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.RsaPss(new $gose.RsaPssSha512())),
+      new $gose.DigitalSignature(
+        new $gose.RsaPss($gose.RsaPssAlg$RsaPssSha512$const),
+      ),
     );
   } else if (alg === "ES256") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.Ecdsa(new $gose.EcdsaP256())),
+      new $gose.DigitalSignature(
+        new $gose.Ecdsa($gose.EcdsaAlg$EcdsaP256$const),
+      ),
     );
   } else if (alg === "ES384") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.Ecdsa(new $gose.EcdsaP384())),
+      new $gose.DigitalSignature(
+        new $gose.Ecdsa($gose.EcdsaAlg$EcdsaP384$const),
+      ),
     );
   } else if (alg === "ES512") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.Ecdsa(new $gose.EcdsaP521())),
+      new $gose.DigitalSignature(
+        new $gose.Ecdsa($gose.EcdsaAlg$EcdsaP521$const),
+      ),
     );
   } else if (alg === "ES256K") {
     return new Ok(
-      new $gose.DigitalSignature(new $gose.Ecdsa(new $gose.EcdsaSecp256k1())),
+      new $gose.DigitalSignature(
+        new $gose.Ecdsa($gose.EcdsaAlg$EcdsaSecp256k1$const),
+      ),
     );
   } else if (alg === "EdDSA") {
-    return new Ok(new $gose.DigitalSignature(new $gose.Eddsa()));
+    return new Ok(
+      new $gose.DigitalSignature($gose.DigitalSignatureAlg$Eddsa$const),
+    );
   } else {
     return new Error(new $gose.ParseError("unknown JWS algorithm: " + alg));
   }
@@ -189,57 +211,97 @@ export function key_encryption_alg_to_string(alg) {
  */
 export function key_encryption_alg_from_string(alg) {
   if (alg === "dir") {
-    return new Ok(new $gose.Direct());
+    return new Ok($gose.KeyEncryptionAlg$Direct$const);
   } else if (alg === "A128KW") {
-    return new Ok(new $gose.AesKeyWrap(new $gose.AesKw(), new $gose.Aes128()));
+    return new Ok(
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesKw$const,
+        $gose.AesKeySize$Aes128$const,
+      ),
+    );
   } else if (alg === "A192KW") {
-    return new Ok(new $gose.AesKeyWrap(new $gose.AesKw(), new $gose.Aes192()));
+    return new Ok(
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesKw$const,
+        $gose.AesKeySize$Aes192$const,
+      ),
+    );
   } else if (alg === "A256KW") {
-    return new Ok(new $gose.AesKeyWrap(new $gose.AesKw(), new $gose.Aes256()));
+    return new Ok(
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesKw$const,
+        $gose.AesKeySize$Aes256$const,
+      ),
+    );
   } else if (alg === "A128GCMKW") {
     return new Ok(
-      new $gose.AesKeyWrap(new $gose.AesGcmKw(), new $gose.Aes128()),
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesGcmKw$const,
+        $gose.AesKeySize$Aes128$const,
+      ),
     );
   } else if (alg === "A192GCMKW") {
     return new Ok(
-      new $gose.AesKeyWrap(new $gose.AesGcmKw(), new $gose.Aes192()),
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesGcmKw$const,
+        $gose.AesKeySize$Aes192$const,
+      ),
     );
   } else if (alg === "A256GCMKW") {
     return new Ok(
-      new $gose.AesKeyWrap(new $gose.AesGcmKw(), new $gose.Aes256()),
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesGcmKw$const,
+        $gose.AesKeySize$Aes256$const,
+      ),
     );
   } else if (alg === "RSA1_5") {
-    return new Ok(new $gose.RsaEncryption(new $gose.RsaPkcs1v15()));
+    return new Ok(
+      new $gose.RsaEncryption($gose.RsaEncryptionAlg$RsaPkcs1v15$const),
+    );
   } else if (alg === "RSA-OAEP") {
-    return new Ok(new $gose.RsaEncryption(new $gose.RsaOaepSha1()));
+    return new Ok(
+      new $gose.RsaEncryption($gose.RsaEncryptionAlg$RsaOaepSha1$const),
+    );
   } else if (alg === "RSA-OAEP-256") {
-    return new Ok(new $gose.RsaEncryption(new $gose.RsaOaepSha256()));
+    return new Ok(
+      new $gose.RsaEncryption($gose.RsaEncryptionAlg$RsaOaepSha256$const),
+    );
   } else if (alg === "ECDH-ES") {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsDirect()));
+    return new Ok(new $gose.EcdhEs($gose.EcdhEsAlg$EcdhEsDirect$const));
   } else if (alg === "ECDH-ES+A128KW") {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsAesKw(new $gose.Aes128())));
+    return new Ok(
+      new $gose.EcdhEs(new $gose.EcdhEsAesKw($gose.AesKeySize$Aes128$const)),
+    );
   } else if (alg === "ECDH-ES+A192KW") {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsAesKw(new $gose.Aes192())));
+    return new Ok(
+      new $gose.EcdhEs(new $gose.EcdhEsAesKw($gose.AesKeySize$Aes192$const)),
+    );
   } else if (alg === "ECDH-ES+A256KW") {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsAesKw(new $gose.Aes256())));
+    return new Ok(
+      new $gose.EcdhEs(new $gose.EcdhEsAesKw($gose.AesKeySize$Aes256$const)),
+    );
   } else if (alg === "ECDH-ES+C20PKW") {
     return new Ok(
-      new $gose.EcdhEs(new $gose.EcdhEsChaCha20Kw(new $gose.C20PKw())),
+      new $gose.EcdhEs(
+        new $gose.EcdhEsChaCha20Kw($gose.ChaCha20Kw$C20PKw$const),
+      ),
     );
   } else if (alg === "ECDH-ES+XC20PKW") {
     return new Ok(
-      new $gose.EcdhEs(new $gose.EcdhEsChaCha20Kw(new $gose.XC20PKw())),
+      new $gose.EcdhEs(
+        new $gose.EcdhEsChaCha20Kw($gose.ChaCha20Kw$XC20PKw$const),
+      ),
     );
   } else if (alg === "C20PKW") {
-    return new Ok(new $gose.ChaCha20KeyWrap(new $gose.C20PKw()));
+    return new Ok(new $gose.ChaCha20KeyWrap($gose.ChaCha20Kw$C20PKw$const));
   } else if (alg === "XC20PKW") {
-    return new Ok(new $gose.ChaCha20KeyWrap(new $gose.XC20PKw()));
+    return new Ok(new $gose.ChaCha20KeyWrap($gose.ChaCha20Kw$XC20PKw$const));
   } else if (alg === "PBES2-HS256+A128KW") {
-    return new Ok(new $gose.Pbes2(new $gose.Pbes2Sha256Aes128Kw()));
+    return new Ok(new $gose.Pbes2($gose.Pbes2Alg$Pbes2Sha256Aes128Kw$const));
   } else if (alg === "PBES2-HS384+A192KW") {
-    return new Ok(new $gose.Pbes2(new $gose.Pbes2Sha384Aes192Kw()));
+    return new Ok(new $gose.Pbes2($gose.Pbes2Alg$Pbes2Sha384Aes192Kw$const));
   } else if (alg === "PBES2-HS512+A256KW") {
-    return new Ok(new $gose.Pbes2(new $gose.Pbes2Sha512Aes256Kw()));
+    return new Ok(new $gose.Pbes2($gose.Pbes2Alg$Pbes2Sha512Aes256Kw$const));
   } else {
     return new Error(new $gose.ParseError("unknown JWE algorithm: " + alg));
   }
@@ -279,21 +341,21 @@ export function content_alg_to_string(alg) {
  */
 export function content_alg_from_string(alg) {
   if (alg === "A128GCM") {
-    return new Ok(new $gose.AesGcm(new $gose.Aes128()));
+    return new Ok(new $gose.AesGcm($gose.AesKeySize$Aes128$const));
   } else if (alg === "A192GCM") {
-    return new Ok(new $gose.AesGcm(new $gose.Aes192()));
+    return new Ok(new $gose.AesGcm($gose.AesKeySize$Aes192$const));
   } else if (alg === "A256GCM") {
-    return new Ok(new $gose.AesGcm(new $gose.Aes256()));
+    return new Ok(new $gose.AesGcm($gose.AesKeySize$Aes256$const));
   } else if (alg === "A128CBC-HS256") {
-    return new Ok(new $gose.AesCbcHmac(new $gose.Aes128()));
+    return new Ok(new $gose.AesCbcHmac($gose.AesKeySize$Aes128$const));
   } else if (alg === "A192CBC-HS384") {
-    return new Ok(new $gose.AesCbcHmac(new $gose.Aes192()));
+    return new Ok(new $gose.AesCbcHmac($gose.AesKeySize$Aes192$const));
   } else if (alg === "A256CBC-HS512") {
-    return new Ok(new $gose.AesCbcHmac(new $gose.Aes256()));
+    return new Ok(new $gose.AesCbcHmac($gose.AesKeySize$Aes256$const));
   } else if (alg === "C20P") {
-    return new Ok(new $gose.ChaCha20Poly1305());
+    return new Ok($gose.ContentAlg$ChaCha20Poly1305$const);
   } else if (alg === "XC20P") {
-    return new Ok(new $gose.XChaCha20Poly1305());
+    return new Ok($gose.ContentAlg$XChaCha20Poly1305$const);
   } else {
     return new Error(
       new $gose.ParseError("unknown content encryption algorithm: " + alg),

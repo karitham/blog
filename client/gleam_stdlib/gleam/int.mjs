@@ -309,13 +309,13 @@ export function clamp(x, min_bound, max_bound) {
 export function compare(a, b) {
   let $ = a === b;
   if ($) {
-    return new $order.Eq();
+    return $order.Order$Eq$const;
   } else {
     let $1 = a < b;
     if ($1) {
-      return new $order.Lt();
+      return $order.Order$Lt$const;
     } else {
-      return new $order.Gt();
+      return $order.Order$Gt$const;
     }
   }
 }

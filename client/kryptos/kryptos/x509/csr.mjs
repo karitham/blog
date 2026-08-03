@@ -7,6 +7,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -47,11 +48,13 @@ class ParsedCsr extends $CustomType {
 }
 
 export class InvalidPem extends $CustomType {}
-export const CsrError$InvalidPem = () => new InvalidPem();
+export const CsrError$InvalidPem$const = new InvalidPem();
+export const CsrError$InvalidPem = () => CsrError$InvalidPem$const;
 export const CsrError$isInvalidPem = (value) => value instanceof InvalidPem;
 
 export class InvalidStructure extends $CustomType {}
-export const CsrError$InvalidStructure = () => new InvalidStructure();
+export const CsrError$InvalidStructure$const = new InvalidStructure();
+export const CsrError$InvalidStructure = () => CsrError$InvalidStructure$const;
 export const CsrError$isInvalidStructure = (value) =>
   value instanceof InvalidStructure;
 
@@ -79,8 +82,10 @@ export const CsrError$isUnsupportedKeyType = (value) =>
 export const CsrError$UnsupportedKeyType$0 = (value) => value[0];
 
 export class SignatureVerificationFailed extends $CustomType {}
-export const CsrError$SignatureVerificationFailed = () =>
+export const CsrError$SignatureVerificationFailed$const =
   new SignatureVerificationFailed();
+export const CsrError$SignatureVerificationFailed = () =>
+  CsrError$SignatureVerificationFailed$const;
 export const CsrError$isSignatureVerificationFailed = (value) =>
   value instanceof SignatureVerificationFailed;
 
@@ -122,7 +127,10 @@ const pem_new_begin = "-----BEGIN NEW CERTIFICATE REQUEST-----";
  * `sign_with_ecdsa` or `sign_with_rsa` to generate the signed CSR.
  */
 export function new$() {
-  return new Builder($x509.name(toList([])), new $x509.Extensions(toList([])));
+  return new Builder(
+    $x509.name($List$Empty$const),
+    new $x509.Extensions($List$Empty$const),
+  );
 }
 
 /**
@@ -324,7 +332,7 @@ export function sign_with_rsa(builder, key, hash) {
     (sig_alg) => {
       let public_key$1 = $rsa.public_key_from_private_key(key);
       return $result.try$(
-        $rsa.public_key_to_der(public_key$1, new $rsa.Spki()),
+        $rsa.public_key_to_der(public_key$1, $rsa.PublicKeyFormat$Spki$const),
         (spki) => {
           return $result.try$(
             encode_certification_request_info(builder, spki),
@@ -333,7 +341,7 @@ export function sign_with_rsa(builder, key, hash) {
                 key,
                 cert_request_info,
                 hash,
-                new $rsa.Pkcs1v15(),
+                $rsa.SignPadding$Pkcs1v15$const,
               );
               return $result.try$(
                 encode_csr(cert_request_info, sig_alg, signature),
@@ -424,14 +432,14 @@ function verify_signature(csr) {
   return $result.try$(
     (() => {
       let _pipe = $der.parse_sequence(der);
-      return $result.replace_error(_pipe, new InvalidStructure());
+      return $result.replace_error(_pipe, CsrError$InvalidStructure$const);
     })(),
     (_use0) => {
       let csr_content = _use0[0];
       return $result.try$(
         (() => {
           let _pipe = $x509_internal.parse_sequence_with_header(csr_content);
-          return $result.replace_error(_pipe, new InvalidStructure());
+          return $result.replace_error(_pipe, CsrError$InvalidStructure$const);
         })(),
         (_use0) => {
           let cert_req_info_bytes = _use0[0];
@@ -439,14 +447,20 @@ function verify_signature(csr) {
           return $result.try$(
             (() => {
               let _pipe = $der.parse_sequence(after_info);
-              return $result.replace_error(_pipe, new InvalidStructure());
+              return $result.replace_error(
+                _pipe,
+                CsrError$InvalidStructure$const,
+              );
             })(),
             (_use0) => {
               let after_sig_alg = _use0[1];
               return $result.try$(
                 (() => {
                   let _pipe = $der.parse_bit_string(after_sig_alg);
-                  return $result.replace_error(_pipe, new InvalidStructure());
+                  return $result.replace_error(
+                    _pipe,
+                    CsrError$InvalidStructure$const,
+                  );
                 })(),
                 (_use0) => {
                   let signature = _use0[0];
@@ -459,7 +473,7 @@ function verify_signature(csr) {
                   if (verified) {
                     return new Ok(undefined);
                   } else {
-                    return new Error(new SignatureVerificationFailed());
+                    return new Error(CsrError$SignatureVerificationFailed$const);
                   }
                 },
               );
@@ -587,13 +601,17 @@ function parse_extensions(bytes, sans, exts) {
 function parse_extension_request(bytes) {
   return $bool.guard(
     $bit_array.byte_size(bytes) === 0,
-    new Ok([toList([]), toList([])]),
+    new Ok([$List$Empty$const, $List$Empty$const]),
     () => {
       return $result.try$(
         $der.parse_sequence(bytes),
         (_use0) => {
           let exts_content = _use0[0];
-          return parse_extensions(exts_content, toList([]), toList([]));
+          return parse_extensions(
+            exts_content,
+            $List$Empty$const,
+            $List$Empty$const,
+          );
         },
       );
     },
@@ -813,15 +831,15 @@ function parse_attributes(bytes) {
       let attrs_content = $[0][0];
       return parse_attributes_content(
         attrs_content,
-        toList([]),
-        toList([]),
-        toList([]),
+        $List$Empty$const,
+        $List$Empty$const,
+        $List$Empty$const,
       );
     } else {
       return new Error(undefined);
     }
   } else {
-    return new Ok([toList([]), toList([]), toList([])]);
+    return new Ok([$List$Empty$const, $List$Empty$const, $List$Empty$const]);
   }
 }
 
@@ -834,7 +852,7 @@ function parse_version(bytes) {
       return new Error(new UnsupportedVersion(v));
     }
   } else {
-    return new Error(new InvalidStructure());
+    return new Error(CsrError$InvalidStructure$const);
   }
 }
 
@@ -849,19 +867,22 @@ export function from_der_unverified(der) {
   return $result.try$(
     (() => {
       let _pipe = $der.parse_sequence(der);
-      return $result.replace_error(_pipe, new InvalidStructure());
+      return $result.replace_error(_pipe, CsrError$InvalidStructure$const);
     })(),
     (_use0) => {
       let csr_content = _use0[0];
       let remaining = _use0[1];
       return $bool.guard(
         $bit_array.byte_size(remaining) !== 0,
-        new Error(new InvalidStructure()),
+        new Error(CsrError$InvalidStructure$const),
         () => {
           return $result.try$(
             (() => {
               let _pipe = $x509_internal.parse_sequence_with_header(csr_content);
-              return $result.replace_error(_pipe, new InvalidStructure());
+              return $result.replace_error(
+                _pipe,
+                CsrError$InvalidStructure$const,
+              );
             })(),
             (_use0) => {
               let cert_req_info_bytes = _use0[0];
@@ -869,7 +890,10 @@ export function from_der_unverified(der) {
               return $result.try$(
                 (() => {
                   let _pipe = $der.parse_sequence(cert_req_info_bytes);
-                  return $result.replace_error(_pipe, new InvalidStructure());
+                  return $result.replace_error(
+                    _pipe,
+                    CsrError$InvalidStructure$const,
+                  );
                 })(),
                 (_use0) => {
                   let cert_req_info_content = _use0[0];
@@ -878,7 +902,7 @@ export function from_der_unverified(der) {
                       let _pipe = $der.parse_integer(cert_req_info_content);
                       return $result.replace_error(
                         _pipe,
-                        new InvalidStructure(),
+                        CsrError$InvalidStructure$const,
                       );
                     })(),
                     (_use0) => {
@@ -892,7 +916,7 @@ export function from_der_unverified(der) {
                               let _pipe = $der.parse_sequence(after_version);
                               return $result.replace_error(
                                 _pipe,
-                                new InvalidStructure(),
+                                CsrError$InvalidStructure$const,
                               );
                             })(),
                             (_use0) => {
@@ -905,7 +929,7 @@ export function from_der_unverified(der) {
                                   );
                                   return $result.replace_error(
                                     _pipe,
-                                    new InvalidStructure(),
+                                    CsrError$InvalidStructure$const,
                                   );
                                 })(),
                                 (subject) => {
@@ -916,7 +940,7 @@ export function from_der_unverified(der) {
                                       );
                                       return $result.replace_error(
                                         _pipe,
-                                        new InvalidStructure(),
+                                        CsrError$InvalidStructure$const,
                                       );
                                     })(),
                                     (_use0) => {
@@ -932,7 +956,7 @@ export function from_der_unverified(der) {
                                             (oid) => {
                                               let $ = oid.components;
                                               if ($ instanceof $Empty) {
-                                                return new InvalidStructure();
+                                                return CsrError$InvalidStructure$const;
                                               } else {
                                                 return new UnsupportedKeyType(
                                                   oid,
@@ -949,7 +973,7 @@ export function from_der_unverified(der) {
                                               );
                                               return $result.replace_error(
                                                 _pipe,
-                                                new InvalidStructure(),
+                                                CsrError$InvalidStructure$const,
                                               );
                                             })(),
                                             (_use0) => {
@@ -963,7 +987,7 @@ export function from_der_unverified(der) {
                                                   );
                                                   return $result.replace_error(
                                                     _pipe,
-                                                    new InvalidStructure(),
+                                                    CsrError$InvalidStructure$const,
                                                   );
                                                 })(),
                                                 (_use0) => {
@@ -991,7 +1015,7 @@ export function from_der_unverified(der) {
                                                           );
                                                           return $result.replace_error(
                                                             _pipe,
-                                                            new InvalidStructure(),
+                                                            CsrError$InvalidStructure$const,
                                                           );
                                                         })(),
                                                         (_use0) => {
@@ -1072,7 +1096,7 @@ export function from_pem(pem) {
   return $result.try$(
     (() => {
       let _pipe = decode_csr_pem(pem);
-      return $result.replace_error(_pipe, new InvalidPem());
+      return $result.replace_error(_pipe, CsrError$InvalidPem$const);
     })(),
     (der) => { return from_der(der); },
   );
@@ -1088,7 +1112,7 @@ export function from_pem_unverified(pem) {
   return $result.try$(
     (() => {
       let _pipe = decode_csr_pem(pem);
-      return $result.replace_error(_pipe, new InvalidPem());
+      return $result.replace_error(_pipe, CsrError$InvalidPem$const);
     })(),
     (der) => { return from_der_unverified(der); },
   );

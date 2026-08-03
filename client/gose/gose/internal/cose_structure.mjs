@@ -6,7 +6,14 @@ import * as $option from "../../../gleam_stdlib/gleam/option.mjs";
 import * as $pair from "../../../gleam_stdlib/gleam/pair.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $set from "../../../gleam_stdlib/gleam/set.mjs";
-import { Ok, Error, toList, Empty as $Empty, toBitArray } from "../../gleam.mjs";
+import {
+  Ok,
+  Error,
+  toList,
+  Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
+  toBitArray,
+} from "../../gleam.mjs";
 import * as $gose from "../../gose.mjs";
 import * as $cbor from "../../gose/cbor.mjs";
 import * as $cose from "../../gose/cose.mjs";
@@ -25,7 +32,7 @@ export function serialize_protected(headers) {
 export function decode_protected(data) {
   let $ = $bit_array.byte_size(data);
   if ($ === 0) {
-    return new Ok(toList([]));
+    return new Ok($List$Empty$const);
   } else {
     return $result.try$(
       $cbor.decode(data),
@@ -270,7 +277,7 @@ export function decode_payload(value) {
     let b = value[0];
     return new Ok(new $option.Some(b));
   } else if (value instanceof $cbor.Null) {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   } else {
     return new Error(
       new $gose.ParseError("invalid COSE payload: expected bstr or null"),
@@ -290,7 +297,7 @@ export function try_verify_keys(
     let message = loop$message;
     let signature = loop$signature;
     if (keys instanceof $Empty) {
-      return new Error(new $gose.VerificationFailed());
+      return new Error($gose.GoseError$VerificationFailed$const);
     } else {
       let key = keys.head;
       let rest = keys.tail;

@@ -2,7 +2,7 @@ import * as $decode from "../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $int from "../../gleam_stdlib/gleam/int.mjs";
 import * as $list from "../../gleam_stdlib/gleam/list.mjs";
 import * as $option from "../../gleam_stdlib/gleam/option.mjs";
-import { None, Some } from "../../gleam_stdlib/gleam/option.mjs";
+import { Some, Option$None$const } from "../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../gleam_stdlib/gleam/result.mjs";
 import * as $uri from "../../gleam_stdlib/gleam/uri.mjs";
 import * as $xrpc from "../atproto/xrpc.mjs";
@@ -80,7 +80,7 @@ function page_decoder() {
         (records) => {
           return $decode.optional_field(
             "cursor",
-            new None(),
+            Option$None$const,
             $decode.optional($decode.string),
             (cursor) => {
               return $decode.success(new BacklinksPage(total, records, cursor));
@@ -115,7 +115,7 @@ export function get_backlinks(client, host, subject, source, limit, cursor) {
     params$1,
   );
   return $result.try$(
-    $xrpc.get(client, url, new None()),
+    $xrpc.get(client, url, Option$None$const),
     (resp) => { return $xrpc.parse(resp.body, page_decoder()); },
   );
 }

@@ -276,8 +276,10 @@ export const Message$MonitorReportedDown$monitor = (value) => value.monitor;
 export const Message$MonitorReportedDown$0 = (value) => value.monitor;
 
 export class SystemRequestedShutdown extends $CustomType {}
-export const Message$SystemRequestedShutdown = () =>
+export const Message$SystemRequestedShutdown$const =
   new SystemRequestedShutdown();
+export const Message$SystemRequestedShutdown = () =>
+  Message$SystemRequestedShutdown$const;
 export const Message$isSystemRequestedShutdown = (value) =>
   value instanceof SystemRequestedShutdown;
 

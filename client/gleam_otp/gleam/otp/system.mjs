@@ -7,18 +7,21 @@ import { CustomType as $CustomType } from "../../gleam.mjs";
  * Currently handling message as normal.
  */
 export class Running extends $CustomType {}
-export const Mode$Running = () => new Running();
+export const Mode$Running$const = new Running();
+export const Mode$Running = () => Mode$Running$const;
 export const Mode$isRunning = (value) => value instanceof Running;
 
 /**
  * Termporarily not handling messages, other than system messages.
  */
 export class Suspended extends $CustomType {}
-export const Mode$Suspended = () => new Suspended();
+export const Mode$Suspended$const = new Suspended();
+export const Mode$Suspended = () => Mode$Suspended$const;
 export const Mode$isSuspended = (value) => value instanceof Suspended;
 
 export class NoDebug extends $CustomType {}
-export const DebugOption$NoDebug = () => new NoDebug();
+export const DebugOption$NoDebug$const = new NoDebug();
+export const DebugOption$NoDebug = () => DebugOption$NoDebug$const;
 export const DebugOption$isNoDebug = (value) => value instanceof NoDebug;
 
 export class StatusInfo extends $CustomType {

@@ -5,7 +5,13 @@ import { identity as erase } from "../../../gleam_stdlib/gleam/function.mjs";
 import * as $list from "../../../gleam_stdlib/gleam/list.mjs";
 import * as $pair from "../../../gleam_stdlib/gleam/pair.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
-import { Ok, toList, prepend as listPrepend, CustomType as $CustomType } from "../../gleam.mjs";
+import {
+  Ok,
+  toList,
+  List$Empty$const as $List$Empty$const,
+  prepend as listPrepend,
+  CustomType as $CustomType,
+} from "../../gleam.mjs";
 import * as $query from "../../lustre/dev/query.mjs";
 import * as $effect from "../../lustre/effect.mjs";
 import * as $element from "../../lustre/element.mjs";
@@ -116,7 +122,7 @@ export function start(app, args) {
   let $ = app.init(args);
   let model$1 = $[0];
   let html = app.view(model$1);
-  return new Simulation(app.update, app.view, toList([]), model$1, html);
+  return new Simulation(app.update, app.view, $List$Empty$const, model$1, html);
 }
 
 /**
@@ -275,7 +281,7 @@ export function event(simulation, query, event, payload) {
  * handlers that do not decode the event payload.
  */
 export function click(simulation, query) {
-  return event(simulation, query, "click", toList([]));
+  return event(simulation, query, "click", $List$Empty$const);
 }
 
 /**

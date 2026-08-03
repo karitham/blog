@@ -6,6 +6,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   isEqual,
@@ -64,12 +65,12 @@ class Verifier extends $CustomType {
  */
 export function new$(payload) {
   return new Body(
-    toList([]),
-    toList([]),
+    $List$Empty$const,
+    $List$Empty$const,
     false,
     toBitArray([]),
     payload,
-    toList([]),
+    $List$Empty$const,
   );
 }
 
@@ -173,10 +174,16 @@ export function sign(body, alg, key) {
     $key_helpers.validate_signing_key_type(signing_alg, key),
     (_) => {
       return $result.try$(
-        $key_helpers.validate_key_use(key, new $key_helpers.ForSigning()),
+        $key_helpers.validate_key_use(
+          key,
+          $key_helpers.KeyPurpose$ForSigning$const,
+        ),
         (_) => {
           return $result.try$(
-            $key_helpers.validate_key_ops(key, new $key_helpers.ForSigning()),
+            $key_helpers.validate_key_ops(
+              key,
+              $key_helpers.KeyPurpose$ForSigning$const,
+            ),
             (_) => {
               return $result.try$(
                 $key_helpers.validate_key_algorithm_signing(key, signing_alg),
@@ -201,7 +208,7 @@ export function sign(body, alg, key) {
                       let signature = new Signature(
                         sign_protected,
                         sign_protected_serialized,
-                        toList([]),
+                        $List$Empty$const,
                         sig_bytes,
                       );
                       return new Ok(
@@ -234,7 +241,7 @@ export function assemble(body) {
   let _block;
   let $ = body.detached;
   if ($) {
-    _block = new $option.None();
+    _block = $option.Option$None$const;
   } else {
     _block = new $option.Some(body.payload);
   }
@@ -319,7 +326,7 @@ function to_cbor_value(message) {
     let p = payload$1[0];
     _block = new $cbor.Bytes(p);
   } else {
-    _block = new $cbor.Null();
+    _block = $cbor.Value$Null$const;
   }
   let payload_value = _block;
   return new $cbor.Array(
@@ -693,7 +700,7 @@ function try_verify_signers(verifier, signatures, body_protected, aad, payload) 
     body_protected,
     aad,
     payload,
-    new Error(new $gose.VerificationFailed()),
+    new Error($gose.GoseError$VerificationFailed$const),
   );
 }
 

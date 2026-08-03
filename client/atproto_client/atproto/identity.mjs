@@ -1,6 +1,6 @@
 import * as $decode from "../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $option from "../../gleam_stdlib/gleam/option.mjs";
-import { None } from "../../gleam_stdlib/gleam/option.mjs";
+import { Option$None$const } from "../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../gleam_stdlib/gleam/result.mjs";
 import * as $uri from "../../gleam_stdlib/gleam/uri.mjs";
 import * as $xrpc from "../atproto/xrpc.mjs";
@@ -26,7 +26,7 @@ export function resolve_mini_doc(client, resolver, identifier) {
   let query = $uri.query_to_string(toList([["identifier", identifier]]));
   let url = (resolver + "/xrpc/com.bad-example.identity.resolveMiniDoc?") + query;
   return $result.try$(
-    $xrpc.get(client, url, new None()),
+    $xrpc.get(client, url, Option$None$const),
     (resp) => {
       let decoder = $decode.field(
         "did",

@@ -61,43 +61,52 @@ function extract_ec_private_key(material, expected_curve, alg_name) {
 
 function resolve_ecdsa_params(alg) {
   if (alg instanceof $gose.EcdsaP256) {
-    return [new $hash.Sha256(), new $ec.P256()];
+    return [$hash.HashAlgorithm$Sha256$const, $ec.Curve$P256$const];
   } else if (alg instanceof $gose.EcdsaP384) {
-    return [new $hash.Sha384(), new $ec.P384()];
+    return [$hash.HashAlgorithm$Sha384$const, $ec.Curve$P384$const];
   } else if (alg instanceof $gose.EcdsaP521) {
-    return [new $hash.Sha512(), new $ec.P521()];
+    return [$hash.HashAlgorithm$Sha512$const, $ec.Curve$P521$const];
   } else {
-    return [new $hash.Sha256(), new $ec.Secp256k1()];
+    return [$hash.HashAlgorithm$Sha256$const, $ec.Curve$Secp256k1$const];
   }
 }
 
 function resolve_rsa_pss_params(alg) {
   if (alg instanceof $gose.RsaPssSha256) {
-    return [new $hash.Sha256(), new $rsa.Pss(new $rsa.SaltLengthHashLen())];
+    return [
+      $hash.HashAlgorithm$Sha256$const,
+      new $rsa.Pss($rsa.PssSaltLength$SaltLengthHashLen$const),
+    ];
   } else if (alg instanceof $gose.RsaPssSha384) {
-    return [new $hash.Sha384(), new $rsa.Pss(new $rsa.SaltLengthHashLen())];
+    return [
+      $hash.HashAlgorithm$Sha384$const,
+      new $rsa.Pss($rsa.PssSaltLength$SaltLengthHashLen$const),
+    ];
   } else {
-    return [new $hash.Sha512(), new $rsa.Pss(new $rsa.SaltLengthHashLen())];
+    return [
+      $hash.HashAlgorithm$Sha512$const,
+      new $rsa.Pss($rsa.PssSaltLength$SaltLengthHashLen$const),
+    ];
   }
 }
 
 function resolve_rsa_pkcs1_params(alg) {
   if (alg instanceof $gose.RsaPkcs1Sha256) {
-    return [new $hash.Sha256(), new $rsa.Pkcs1v15()];
+    return [$hash.HashAlgorithm$Sha256$const, $rsa.SignPadding$Pkcs1v15$const];
   } else if (alg instanceof $gose.RsaPkcs1Sha384) {
-    return [new $hash.Sha384(), new $rsa.Pkcs1v15()];
+    return [$hash.HashAlgorithm$Sha384$const, $rsa.SignPadding$Pkcs1v15$const];
   } else {
-    return [new $hash.Sha512(), new $rsa.Pkcs1v15()];
+    return [$hash.HashAlgorithm$Sha512$const, $rsa.SignPadding$Pkcs1v15$const];
   }
 }
 
 function resolve_hmac_params(alg) {
   if (alg instanceof $gose.HmacSha256) {
-    return [new $hash.Sha256(), 32, "HS256"];
+    return [$hash.HashAlgorithm$Sha256$const, 32, "HS256"];
   } else if (alg instanceof $gose.HmacSha384) {
-    return [new $hash.Sha384(), 48, "HS384"];
+    return [$hash.HashAlgorithm$Sha384$const, 48, "HS384"];
   } else {
-    return [new $hash.Sha512(), 64, "HS512"];
+    return [$hash.HashAlgorithm$Sha512$const, 64, "HS512"];
   }
 }
 
@@ -198,7 +207,7 @@ export function compute_signature(alg, key, message) {
 function require_valid(valid) {
   return $bool.guard(
     !valid,
-    new Error(new $gose.VerificationFailed()),
+    new Error($gose.GoseError$VerificationFailed$const),
     () => { return new Ok(undefined); },
   );
 }
@@ -265,7 +274,7 @@ function hmac_verify(algorithm, key, message, expected) {
     if ($1) {
       return new Ok(undefined);
     } else {
-      return new Error(new $gose.VerificationFailed());
+      return new Error($gose.GoseError$VerificationFailed$const);
     }
   } else {
     return new Error(new $gose.CryptoError("HMAC verification failed"));

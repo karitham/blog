@@ -3,7 +3,14 @@ import * as $decode from "../../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $int from "../../../gleam_stdlib/gleam/int.mjs";
 import * as $list from "../../../gleam_stdlib/gleam/list.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
-import { Ok, Error, toList, prepend as listPrepend, CustomType as $CustomType } from "../../gleam.mjs";
+import {
+  Ok,
+  Error,
+  toList,
+  List$Empty$const as $List$Empty$const,
+  prepend as listPrepend,
+  CustomType as $CustomType,
+} from "../../gleam.mjs";
 import * as $gose from "../../gose.mjs";
 import * as $jwk from "../../gose/jose/jwk.mjs";
 
@@ -25,7 +32,7 @@ export function from_list(keys) {
  * Create an empty JWK Set.
  */
 export function new$() {
-  return new JwkSet(toList([]));
+  return new JwkSet($List$Empty$const);
 }
 
 /**
@@ -91,7 +98,7 @@ export function from_json_bits(json_bits) {
 function parse_keys_strict(keys_dyn) {
   let _pipe = $list.index_fold(
     keys_dyn,
-    new Ok(toList([])),
+    new Ok($List$Empty$const),
     (acc, key_dyn, index) => {
       return $result.try$(
         acc,

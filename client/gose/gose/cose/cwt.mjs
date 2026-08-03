@@ -4,7 +4,14 @@ import * as $list from "../../../gleam_stdlib/gleam/list.mjs";
 import * as $option from "../../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $timestamp from "../../../gleam_time/gleam/time/timestamp.mjs";
-import { Ok, Error, toList, Empty as $Empty, CustomType as $CustomType } from "../../gleam.mjs";
+import {
+  Ok,
+  Error,
+  toList,
+  Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
+  CustomType as $CustomType,
+} from "../../gleam.mjs";
 import * as $gose from "../../gose.mjs";
 import * as $cbor from "../../gose/cbor.mjs";
 import * as $sign1 from "../../gose/cose/sign1.mjs";
@@ -27,7 +34,8 @@ export const CwtError$CoseError$0 = (value) => value[0];
  * The COSE_Sign1 signature did not verify against any of the provided keys.
  */
 export class InvalidSignature extends $CustomType {}
-export const CwtError$InvalidSignature = () => new InvalidSignature();
+export const CwtError$InvalidSignature$const = new InvalidSignature();
+export const CwtError$InvalidSignature = () => CwtError$InvalidSignature$const;
 export const CwtError$isInvalidSignature = (value) =>
   value instanceof InvalidSignature;
 
@@ -119,7 +127,9 @@ export const CwtError$AudienceMismatch$1 = (value) => value.actual;
  * The `exp` claim is required by the verifier but absent.
  */
 export class MissingExpiration extends $CustomType {}
-export const CwtError$MissingExpiration = () => new MissingExpiration();
+export const CwtError$MissingExpiration$const = new MissingExpiration();
+export const CwtError$MissingExpiration = () =>
+  CwtError$MissingExpiration$const;
 export const CwtError$isMissingExpiration = (value) =>
   value instanceof MissingExpiration;
 
@@ -191,14 +201,14 @@ class Verifier extends $CustomType {
  */
 export function new$() {
   return new CwtClaims(
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    toList([]),
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $List$Empty$const,
   );
 }
 
@@ -542,8 +552,8 @@ function build_verifier(alg, keys) {
             new Verifier(
               alg,
               keys,
-              new $option.None(),
-              new $option.None(),
+              $option.Option$None$const,
+              $option.Option$None$const,
               60,
               true,
             ),
@@ -636,7 +646,9 @@ function validate_audience_claim(claims, verifier) {
       }
     } else {
       let expected = $[0];
-      return new Error(new AudienceMismatch(expected, new $option.None()));
+      return new Error(
+        new AudienceMismatch(expected, $option.Option$None$const),
+      );
     }
   } else {
     return new Ok(undefined);
@@ -694,7 +706,7 @@ function validate_exp(claims, now_seconds, verifier) {
       () => { return new Ok(undefined); },
     );
   } else if ($1) {
-    return new Error(new MissingExpiration());
+    return new Error(CwtError$MissingExpiration$const);
   } else {
     return new Ok(undefined);
   }
@@ -763,7 +775,7 @@ function decode_optional_bytes(pairs, label, name) {
       );
     }
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -778,7 +790,7 @@ function decode_optional_int(pairs, label, name) {
       return new Error(new MalformedToken(name + " claim must be an integer"));
     }
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -817,7 +829,7 @@ function decode_optional_audience(pairs) {
       );
     }
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -834,7 +846,7 @@ function decode_optional_text(pairs, label, name) {
       );
     }
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -923,9 +935,9 @@ function verify_signature(alg, keys, parsed) {
       } else {
         let $1 = $[0];
         if ($1 instanceof $gose.CryptoError) {
-          return new Error(new InvalidSignature());
+          return new Error(CwtError$InvalidSignature$const);
         } else if ($1 instanceof $gose.VerificationFailed) {
-          return new Error(new InvalidSignature());
+          return new Error(CwtError$InvalidSignature$const);
         } else {
           let err = $1;
           return new Error(new CoseError(err));

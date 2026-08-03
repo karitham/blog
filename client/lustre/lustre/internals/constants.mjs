@@ -1,6 +1,6 @@
-import { Error, toList, prepend as listPrepend } from "../../gleam.mjs";
+import { Error, List$Empty$const as $List$Empty$const, prepend as listPrepend } from "../../gleam.mjs";
 
-export const empty_list = /* @__PURE__ */ toList([]);
+export const empty_list = $List$Empty$const;
 
 export const error_nil = /* @__PURE__ */ new Error(undefined);
 

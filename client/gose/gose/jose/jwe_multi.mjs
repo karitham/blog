@@ -12,6 +12,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -109,7 +110,7 @@ class Decryptor extends $CustomType {
  * Create a new multi-recipient JWE with the given content encryption algorithm.
  */
 export function new$(enc) {
-  return new UnencryptedMultiJwe(enc, toList([]));
+  return new UnencryptedMultiJwe(enc, $List$Empty$const);
 }
 
 function reject_pbes2_algorithms(alg, continue$) {
@@ -232,9 +233,17 @@ function wrap_rsa(alg, key, cek) {
   if (alg instanceof $gose.RsaPkcs1v15) {
     return $key_encryption.wrap_rsa_pkcs1v15(key, cek);
   } else if (alg instanceof $gose.RsaOaepSha1) {
-    return $key_encryption.wrap_rsa_oaep(key, cek, new $hash.Sha1());
+    return $key_encryption.wrap_rsa_oaep(
+      key,
+      cek,
+      $hash.HashAlgorithm$Sha1$const,
+    );
   } else {
-    return $key_encryption.wrap_rsa_oaep(key, cek, new $hash.Sha256());
+    return $key_encryption.wrap_rsa_oaep(
+      key,
+      cek,
+      $hash.HashAlgorithm$Sha256$const,
+    );
   }
 }
 
@@ -337,8 +346,8 @@ function wrap_ecdh_es_chacha20_kw(alg_str, key, cek, variant) {
       cek,
       variant,
       alg_str,
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
     (_use0) => {
       let encrypted_cek = _use0[0];
@@ -350,8 +359,8 @@ function wrap_ecdh_es_chacha20_kw(alg_str, key, cek, variant) {
           alg_str,
           encrypted_cek,
           epk,
-          new $option.None(),
-          new $option.None(),
+          $option.Option$None$const,
+          $option.Option$None$const,
           kw_iv,
           kw_tag,
         ),
@@ -367,8 +376,8 @@ function wrap_ecdh_es_aes_kw(alg_str, key, cek, size) {
       cek,
       size,
       alg_str,
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
     (_use0) => {
       let wrapped = _use0[0];
@@ -378,8 +387,8 @@ function wrap_ecdh_es_aes_kw(alg_str, key, cek, size) {
           alg_str,
           wrapped,
           epk,
-          new $option.None(),
-          new $option.None(),
+          $option.Option$None$const,
+          $option.Option$None$const,
         ),
       );
     },
@@ -474,7 +483,7 @@ export function encrypt(message, plaintext) {
           let iv = $content_encryption.generate_iv(enc);
           let aead_aad = $content_encryption.build_jwe_aad(
             protected_b64,
-            new $option.None(),
+            $option.Option$None$const,
           );
           return $result.try$(
             $content_encryption.encrypt_content(
@@ -575,7 +584,7 @@ function recipient_to_json(recipient) {
   if (recipient instanceof SimpleRecipient) {
     let alg_str = recipient.alg_str;
     let encrypted_key = recipient.encrypted_key;
-    _block = [alg_str, encrypted_key, toList([])];
+    _block = [alg_str, encrypted_key, $List$Empty$const];
   } else if (recipient instanceof EcdhEsRecipient) {
     let alg_str = recipient.alg_str;
     let encrypted_key = recipient.encrypted_key;
@@ -749,7 +758,7 @@ function decode_optional_b64(raw, label) {
     let _pipe = $utils.decode_base64_url(b64, label);
     return $result.map(_pipe, (var0) => { return new $option.Some(var0); });
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -813,7 +822,7 @@ function parse_optional_epk(raw) {
       },
     );
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -841,7 +850,7 @@ function epk_decoder() {
             (x) => {
               return $decode.optional_field(
                 "y",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.string),
                 (y) => { return $decode.success([kty, crv, x, y]); },
               );
@@ -862,27 +871,27 @@ function parse_raw_recipient(raw) {
     (alg) => {
       return $decode.optional_field(
         "epk",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional(epk_decoder()),
         (epk) => {
           return $decode.optional_field(
             "apu",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (apu) => {
               return $decode.optional_field(
                 "apv",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.string),
                 (apv) => {
                   return $decode.optional_field(
                     "iv",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.string),
                     (iv) => {
                       return $decode.optional_field(
                         "tag",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.string),
                         (tag) => {
                           return $decode.success([alg, epk, apu, apv, iv, tag]);
@@ -989,7 +998,7 @@ export function parse_json(json_str) {
     (header) => {
       return $decode.optional_field(
         "encrypted_key",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.string),
         (encrypted_key) => { return $decode.success([header, encrypted_key]); },
       );
@@ -1312,13 +1321,13 @@ function unwrap_cek(alg, key, recipient, enc) {
       return $key_encryption.unwrap_rsa_oaep(
         key,
         recipient.encrypted_key,
-        new $hash.Sha1(),
+        $hash.HashAlgorithm$Sha1$const,
       );
     } else {
       return $key_encryption.unwrap_rsa_oaep(
         key,
         recipient.encrypted_key,
-        new $hash.Sha256(),
+        $hash.HashAlgorithm$Sha256$const,
       );
     }
   } else if (alg instanceof $gose.EcdhEs) {
@@ -1568,7 +1577,7 @@ export function decrypt(decryptor, message) {
       );
       let aead_aad = $content_encryption.build_jwe_aad(
         protected_b64,
-        new $option.None(),
+        $option.Option$None$const,
       );
       return try_decrypt_recipients(
         matching,

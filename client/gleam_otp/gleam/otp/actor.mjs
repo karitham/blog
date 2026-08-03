@@ -4,7 +4,7 @@ import * as $process from "../../../gleam_erlang/gleam/erlang/process.mjs";
 import { Abnormal, Killed } from "../../../gleam_erlang/gleam/erlang/process.mjs";
 import * as $dynamic from "../../../gleam_stdlib/gleam/dynamic.mjs";
 import * as $option from "../../../gleam_stdlib/gleam/option.mjs";
-import { None, Some } from "../../../gleam_stdlib/gleam/option.mjs";
+import { Some, Option$None$const } from "../../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $string from "../../../gleam_stdlib/gleam/string.mjs";
 import { Ok, CustomType as $CustomType } from "../../gleam.mjs";
@@ -122,7 +122,8 @@ class Builder extends $CustomType {
 }
 
 export class InitTimeout extends $CustomType {}
-export const StartError$InitTimeout = () => new InitTimeout();
+export const StartError$InitTimeout$const = new InitTimeout();
+export const StartError$InitTimeout = () => StartError$InitTimeout$const;
 export const StartError$isInitTimeout = (value) => value instanceof InitTimeout;
 
 export class InitFailed extends $CustomType {
@@ -163,7 +164,7 @@ class Mon extends $CustomType {
  * Indicate the actor should continue, processing any waiting or future messages.
  */
 export function continue$(state) {
-  return new Continue(state, new None());
+  return new Continue(state, Option$None$const);
 }
 
 /**
@@ -172,7 +173,7 @@ export function continue$(state) {
  * The reason for exiting is `Normal`.
  */
 export function stop() {
-  return new Stop(new $process.Normal());
+  return new Stop($process.ExitReason$Normal$const);
 }
 
 /**
@@ -204,7 +205,7 @@ export function with_selector(value, selector) {
  * to the `on_message` callback each time a message is received.
  */
 export function initialised(state) {
-  return new Initialised(state, new None(), undefined);
+  return new Initialised(state, Option$None$const, undefined);
 }
 
 /**
@@ -250,7 +251,7 @@ export function new$(state) {
     initialise,
     1000,
     (state, _) => { return continue$(state); },
-    new $option.None(),
+    $option.Option$None$const,
   );
 }
 
@@ -277,7 +278,7 @@ export function new_with_initialiser(timeout, initialise) {
     initialise,
     timeout,
     (state, _) => { return continue$(state); },
-    new $option.None(),
+    $option.Option$None$const,
   );
 }
 

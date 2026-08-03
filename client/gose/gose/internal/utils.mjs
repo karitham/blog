@@ -25,13 +25,13 @@ export function decode_base64_url(b64, name) {
  */
 export function ec_curve_from_string(s) {
   if (s === "P-256") {
-    return new Ok(new $ec.P256());
+    return new Ok($ec.Curve$P256$const);
   } else if (s === "P-384") {
-    return new Ok(new $ec.P384());
+    return new Ok($ec.Curve$P384$const);
   } else if (s === "P-521") {
-    return new Ok(new $ec.P521());
+    return new Ok($ec.Curve$P521$const);
   } else if (s === "secp256k1") {
-    return new Ok(new $ec.Secp256k1());
+    return new Ok($ec.Curve$Secp256k1$const);
   } else {
     return new Error(new $gose.ParseError("unsupported EC curve: " + s));
   }
@@ -57,9 +57,9 @@ export function ec_curve_to_string(curve) {
  */
 export function eddsa_curve_from_string(s) {
   if (s === "Ed25519") {
-    return new Ok(new $eddsa.Ed25519());
+    return new Ok($eddsa.Curve$Ed25519$const);
   } else if (s === "Ed448") {
-    return new Ok(new $eddsa.Ed448());
+    return new Ok($eddsa.Curve$Ed448$const);
   } else {
     return new Error(new $gose.ParseError("unsupported EdDSA curve: " + s));
   }
@@ -154,9 +154,9 @@ export function validate_crit_headers(
  */
 export function xdh_curve_from_string(s) {
   if (s === "X25519") {
-    return new Ok(new $xdh.X25519());
+    return new Ok($xdh.Curve$X25519$const);
   } else if (s === "X448") {
-    return new Ok(new $xdh.X448());
+    return new Ok($xdh.Curve$X448$const);
   } else {
     return new Error(new $gose.ParseError("unsupported XDH curve: " + s));
   }

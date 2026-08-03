@@ -70,28 +70,33 @@ export {
  * PKCS#8 format (PrivateKeyInfo) - works with all key types.
  */
 export class Pkcs8 extends $CustomType {}
-export const PrivateKeyFormat$Pkcs8 = () => new Pkcs8();
+export const PrivateKeyFormat$Pkcs8$const = new Pkcs8();
+export const PrivateKeyFormat$Pkcs8 = () => PrivateKeyFormat$Pkcs8$const;
 export const PrivateKeyFormat$isPkcs8 = (value) => value instanceof Pkcs8;
 
 /**
  * PKCS#1 format (RSAPrivateKey) - RSA-specific.
  */
 export class Pkcs1 extends $CustomType {}
-export const PrivateKeyFormat$Pkcs1 = () => new Pkcs1();
+export const PrivateKeyFormat$Pkcs1$const = new Pkcs1();
+export const PrivateKeyFormat$Pkcs1 = () => PrivateKeyFormat$Pkcs1$const;
 export const PrivateKeyFormat$isPkcs1 = (value) => value instanceof Pkcs1;
 
 /**
  * SPKI format (SubjectPublicKeyInfo) - works with all key types.
  */
 export class Spki extends $CustomType {}
-export const PublicKeyFormat$Spki = () => new Spki();
+export const PublicKeyFormat$Spki$const = new Spki();
+export const PublicKeyFormat$Spki = () => PublicKeyFormat$Spki$const;
 export const PublicKeyFormat$isSpki = (value) => value instanceof Spki;
 
 /**
  * PKCS#1 format (RSAPublicKey) - RSA-specific.
  */
 export class RsaPublicKey extends $CustomType {}
-export const PublicKeyFormat$RsaPublicKey = () => new RsaPublicKey();
+export const PublicKeyFormat$RsaPublicKey$const = new RsaPublicKey();
+export const PublicKeyFormat$RsaPublicKey = () =>
+  PublicKeyFormat$RsaPublicKey$const;
 export const PublicKeyFormat$isRsaPublicKey = (value) =>
   value instanceof RsaPublicKey;
 
@@ -99,7 +104,9 @@ export const PublicKeyFormat$isRsaPublicKey = (value) =>
  * Salt length equals hash output length (recommended).
  */
 export class SaltLengthHashLen extends $CustomType {}
-export const PssSaltLength$SaltLengthHashLen = () => new SaltLengthHashLen();
+export const PssSaltLength$SaltLengthHashLen$const = new SaltLengthHashLen();
+export const PssSaltLength$SaltLengthHashLen = () =>
+  PssSaltLength$SaltLengthHashLen$const;
 export const PssSaltLength$isSaltLengthHashLen = (value) =>
   value instanceof SaltLengthHashLen;
 
@@ -107,7 +114,9 @@ export const PssSaltLength$isSaltLengthHashLen = (value) =>
  * Maximum salt length for the key and hash combination.
  */
 export class SaltLengthMax extends $CustomType {}
-export const PssSaltLength$SaltLengthMax = () => new SaltLengthMax();
+export const PssSaltLength$SaltLengthMax$const = new SaltLengthMax();
+export const PssSaltLength$SaltLengthMax = () =>
+  PssSaltLength$SaltLengthMax$const;
 export const PssSaltLength$isSaltLengthMax = (value) =>
   value instanceof SaltLengthMax;
 
@@ -130,7 +139,8 @@ export const PssSaltLength$SaltLengthExplicit$0 = (value) => value[0];
  * PKCS#1 v1.5 signature padding.
  */
 export class Pkcs1v15 extends $CustomType {}
-export const SignPadding$Pkcs1v15 = () => new Pkcs1v15();
+export const SignPadding$Pkcs1v15$const = new Pkcs1v15();
+export const SignPadding$Pkcs1v15 = () => SignPadding$Pkcs1v15$const;
 export const SignPadding$isPkcs1v15 = (value) => value instanceof Pkcs1v15;
 
 /**
@@ -156,7 +166,9 @@ export const SignPadding$Pss$0 = (value) => value[0];
  * Node.js 22+ or OAEP padding instead.
  */
 export class EncryptPkcs1v15 extends $CustomType {}
-export const EncryptPadding$EncryptPkcs1v15 = () => new EncryptPkcs1v15();
+export const EncryptPadding$EncryptPkcs1v15$const = new EncryptPkcs1v15();
+export const EncryptPadding$EncryptPkcs1v15 = () =>
+  EncryptPadding$EncryptPkcs1v15$const;
 export const EncryptPadding$isEncryptPkcs1v15 = (value) =>
   value instanceof EncryptPkcs1v15;
 

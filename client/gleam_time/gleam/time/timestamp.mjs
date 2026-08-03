@@ -8,8 +8,8 @@ import * as $string from "../../../gleam_stdlib/gleam/string.mjs";
 import {
   Ok,
   Error,
-  toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   remainderInt,
@@ -286,7 +286,7 @@ function do_get_zero_padded_digits(loop$number, loop$digits, loop$count) {
  * @ignore
  */
 function get_zero_padded_digits(number) {
-  return do_get_zero_padded_digits(number, toList([]), 0);
+  return do_get_zero_padded_digits(number, $List$Empty$const, 0);
 }
 
 /**
@@ -483,29 +483,29 @@ export function to_calendar(timestamp, offset) {
   let seconds = $[5];
   let _block;
   if (month === 1) {
-    _block = new $calendar.January();
+    _block = $calendar.Month$January$const;
   } else if (month === 2) {
-    _block = new $calendar.February();
+    _block = $calendar.Month$February$const;
   } else if (month === 3) {
-    _block = new $calendar.March();
+    _block = $calendar.Month$March$const;
   } else if (month === 4) {
-    _block = new $calendar.April();
+    _block = $calendar.Month$April$const;
   } else if (month === 5) {
-    _block = new $calendar.May();
+    _block = $calendar.Month$May$const;
   } else if (month === 6) {
-    _block = new $calendar.June();
+    _block = $calendar.Month$June$const;
   } else if (month === 7) {
-    _block = new $calendar.July();
+    _block = $calendar.Month$July$const;
   } else if (month === 8) {
-    _block = new $calendar.August();
+    _block = $calendar.Month$August$const;
   } else if (month === 9) {
-    _block = new $calendar.September();
+    _block = $calendar.Month$September$const;
   } else if (month === 10) {
-    _block = new $calendar.October();
+    _block = $calendar.Month$October$const;
   } else if (month === 11) {
-    _block = new $calendar.November();
+    _block = $calendar.Month$November$const;
   } else {
-    _block = new $calendar.December();
+    _block = $calendar.Month$December$const;
   }
   let month$1 = _block;
   let nanoseconds = timestamp.nanoseconds;
@@ -775,9 +775,9 @@ function parse_numeric_offset(bytes) {
                 parse_minutes(bytes),
                 (_use0) => {
                   let minutes = _use0[0];
-                  let bytes$1 = _use0[1];
+                  let bytes$3 = _use0[1];
                   let offset_seconds = offset_to_seconds(sign, hours, minutes);
-                  return new Ok([offset_seconds, bytes$1]);
+                  return new Ok([offset_seconds, bytes$3]);
                 },
               );
             },
@@ -1048,53 +1048,53 @@ export function parse_rfc3339(input) {
             parse_month(bytes),
             (_use0) => {
               let month = _use0[0];
-              let bytes$1 = _use0[1];
+              let bytes$2 = _use0[1];
               return $result.try$(
-                accept_byte(bytes$1, byte_minus),
+                accept_byte(bytes$2, byte_minus),
                 (bytes) => {
                   return $result.try$(
                     parse_day(bytes, year, month),
                     (_use0) => {
                       let day = _use0[0];
-                      let bytes$1 = _use0[1];
+                      let bytes$3 = _use0[1];
                       return $result.try$(
-                        accept_date_time_separator(bytes$1),
+                        accept_date_time_separator(bytes$3),
                         (bytes) => {
                           return $result.try$(
                             parse_hours(bytes),
                             (_use0) => {
                               let hours = _use0[0];
-                              let bytes$1 = _use0[1];
+                              let bytes$4 = _use0[1];
                               return $result.try$(
-                                accept_byte(bytes$1, byte_colon),
+                                accept_byte(bytes$4, byte_colon),
                                 (bytes) => {
                                   return $result.try$(
                                     parse_minutes(bytes),
                                     (_use0) => {
                                       let minutes = _use0[0];
-                                      let bytes$1 = _use0[1];
+                                      let bytes$5 = _use0[1];
                                       return $result.try$(
-                                        accept_byte(bytes$1, byte_colon),
+                                        accept_byte(bytes$5, byte_colon),
                                         (bytes) => {
                                           return $result.try$(
                                             parse_seconds(bytes),
                                             (_use0) => {
                                               let seconds = _use0[0];
-                                              let bytes$1 = _use0[1];
+                                              let bytes$6 = _use0[1];
                                               return $result.try$(
                                                 parse_second_fraction_as_nanoseconds(
-                                                  bytes$1,
+                                                  bytes$6,
                                                 ),
                                                 (_use0) => {
                                                   let second_fraction_as_nanoseconds = _use0[0];
-                                                  let bytes$2 = _use0[1];
+                                                  let bytes$7 = _use0[1];
                                                   return $result.try$(
-                                                    parse_offset(bytes$2),
+                                                    parse_offset(bytes$7),
                                                     (_use0) => {
                                                       let offset_seconds = _use0[0];
-                                                      let bytes$3 = _use0[1];
+                                                      let bytes$8 = _use0[1];
                                                       return $result.try$(
-                                                        accept_empty(bytes$3),
+                                                        accept_empty(bytes$8),
                                                         (_use0) => {
                                                           
                                                           return new Ok(

@@ -1,10 +1,14 @@
 import * as $json from "../../gleam_json/gleam/json.mjs";
 import * as $decode from "../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $option from "../../gleam_stdlib/gleam/option.mjs";
-import { None, Some } from "../../gleam_stdlib/gleam/option.mjs";
+import { Some, Option$None$const } from "../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../gleam_stdlib/gleam/result.mjs";
 import * as $xrpc from "../atproto/xrpc.mjs";
-import { toList, CustomType as $CustomType } from "../gleam.mjs";
+import {
+  toList,
+  List$Empty$const as $List$Empty$const,
+  CustomType as $CustomType,
+} from "../gleam.mjs";
 
 export class SessionTokens extends $CustomType {
   constructor(did, handle, access_jwt, refresh_jwt) {
@@ -71,7 +75,7 @@ export function create_session(client, pds, identifier, password) {
     $xrpc.post_json(
       client,
       pds + "/xrpc/com.atproto.server.createSession",
-      new None(),
+      Option$None$const,
       body,
     ),
     (resp) => { return $xrpc.parse(resp.body, tokens_decoder()); },
@@ -88,7 +92,7 @@ export function refresh_session(client, pds, refresh_jwt) {
       client,
       pds + "/xrpc/com.atproto.server.refreshSession",
       new Some(refresh_jwt),
-      $json.object(toList([])),
+      $json.object($List$Empty$const),
     ),
     (resp) => { return $xrpc.parse(resp.body, tokens_decoder()); },
   );

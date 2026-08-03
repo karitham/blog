@@ -24,8 +24,8 @@ function mark_plays_fresh() {
 
 function commit_plays(plays_data) {
   $browser.set_inner_html(
-    "plays",
-    $dynamic.render($plays_view.plays_section(plays_data)),
+    "plays-rows",
+    $dynamic.render($plays_view.plays_rows(plays_data)),
   );
   $browser.localize_dates();
   return mark_plays_fresh();

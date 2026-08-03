@@ -14,17 +14,21 @@ import * as $vattr from "../lustre/vdom/vattr.mjs";
 import { Event } from "../lustre/vdom/vattr.mjs";
 
 export class WebSocket extends $CustomType {}
-export const TransportMethod$WebSocket = () => new WebSocket();
+export const TransportMethod$WebSocket$const = new WebSocket();
+export const TransportMethod$WebSocket = () => TransportMethod$WebSocket$const;
 export const TransportMethod$isWebSocket = (value) =>
   value instanceof WebSocket;
 
 export class ServerSentEvents extends $CustomType {}
-export const TransportMethod$ServerSentEvents = () => new ServerSentEvents();
+export const TransportMethod$ServerSentEvents$const = new ServerSentEvents();
+export const TransportMethod$ServerSentEvents = () =>
+  TransportMethod$ServerSentEvents$const;
 export const TransportMethod$isServerSentEvents = (value) =>
   value instanceof ServerSentEvents;
 
 export class Polling extends $CustomType {}
-export const TransportMethod$Polling = () => new Polling();
+export const TransportMethod$Polling$const = new Polling();
+export const TransportMethod$Polling = () => TransportMethod$Polling$const;
 export const TransportMethod$isPolling = (value) => value instanceof Polling;
 
 /**

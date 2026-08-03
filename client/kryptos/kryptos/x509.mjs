@@ -251,14 +251,18 @@ export const PublicKey$XdhPublicKey$0 = (value) => value[0];
  * RSA with SHA-1, suitable for legacy systems.
  */
 export class RsaSha1 extends $CustomType {}
-export const SignatureAlgorithm$RsaSha1 = () => new RsaSha1();
+export const SignatureAlgorithm$RsaSha1$const = new RsaSha1();
+export const SignatureAlgorithm$RsaSha1 = () =>
+  SignatureAlgorithm$RsaSha1$const;
 export const SignatureAlgorithm$isRsaSha1 = (value) => value instanceof RsaSha1;
 
 /**
  * RSA with SHA-256
  */
 export class RsaSha256 extends $CustomType {}
-export const SignatureAlgorithm$RsaSha256 = () => new RsaSha256();
+export const SignatureAlgorithm$RsaSha256$const = new RsaSha256();
+export const SignatureAlgorithm$RsaSha256 = () =>
+  SignatureAlgorithm$RsaSha256$const;
 export const SignatureAlgorithm$isRsaSha256 = (value) =>
   value instanceof RsaSha256;
 
@@ -266,7 +270,9 @@ export const SignatureAlgorithm$isRsaSha256 = (value) =>
  * RSA with SHA-384
  */
 export class RsaSha384 extends $CustomType {}
-export const SignatureAlgorithm$RsaSha384 = () => new RsaSha384();
+export const SignatureAlgorithm$RsaSha384$const = new RsaSha384();
+export const SignatureAlgorithm$RsaSha384 = () =>
+  SignatureAlgorithm$RsaSha384$const;
 export const SignatureAlgorithm$isRsaSha384 = (value) =>
   value instanceof RsaSha384;
 
@@ -274,7 +280,9 @@ export const SignatureAlgorithm$isRsaSha384 = (value) =>
  * RSA with SHA-512
  */
 export class RsaSha512 extends $CustomType {}
-export const SignatureAlgorithm$RsaSha512 = () => new RsaSha512();
+export const SignatureAlgorithm$RsaSha512$const = new RsaSha512();
+export const SignatureAlgorithm$RsaSha512 = () =>
+  SignatureAlgorithm$RsaSha512$const;
 export const SignatureAlgorithm$isRsaSha512 = (value) =>
   value instanceof RsaSha512;
 
@@ -282,7 +290,9 @@ export const SignatureAlgorithm$isRsaSha512 = (value) =>
  * ECDSA with SHA-1, for legacy elliptic curve systems.
  */
 export class EcdsaSha1 extends $CustomType {}
-export const SignatureAlgorithm$EcdsaSha1 = () => new EcdsaSha1();
+export const SignatureAlgorithm$EcdsaSha1$const = new EcdsaSha1();
+export const SignatureAlgorithm$EcdsaSha1 = () =>
+  SignatureAlgorithm$EcdsaSha1$const;
 export const SignatureAlgorithm$isEcdsaSha1 = (value) =>
   value instanceof EcdsaSha1;
 
@@ -290,7 +300,9 @@ export const SignatureAlgorithm$isEcdsaSha1 = (value) =>
  * ECDSA with SHA-256
  */
 export class EcdsaSha256 extends $CustomType {}
-export const SignatureAlgorithm$EcdsaSha256 = () => new EcdsaSha256();
+export const SignatureAlgorithm$EcdsaSha256$const = new EcdsaSha256();
+export const SignatureAlgorithm$EcdsaSha256 = () =>
+  SignatureAlgorithm$EcdsaSha256$const;
 export const SignatureAlgorithm$isEcdsaSha256 = (value) =>
   value instanceof EcdsaSha256;
 
@@ -298,7 +310,9 @@ export const SignatureAlgorithm$isEcdsaSha256 = (value) =>
  * ECDSA with SHA-384
  */
 export class EcdsaSha384 extends $CustomType {}
-export const SignatureAlgorithm$EcdsaSha384 = () => new EcdsaSha384();
+export const SignatureAlgorithm$EcdsaSha384$const = new EcdsaSha384();
+export const SignatureAlgorithm$EcdsaSha384 = () =>
+  SignatureAlgorithm$EcdsaSha384$const;
 export const SignatureAlgorithm$isEcdsaSha384 = (value) =>
   value instanceof EcdsaSha384;
 
@@ -306,7 +320,9 @@ export const SignatureAlgorithm$isEcdsaSha384 = (value) =>
  * ECDSA with SHA-512
  */
 export class EcdsaSha512 extends $CustomType {}
-export const SignatureAlgorithm$EcdsaSha512 = () => new EcdsaSha512();
+export const SignatureAlgorithm$EcdsaSha512$const = new EcdsaSha512();
+export const SignatureAlgorithm$EcdsaSha512 = () =>
+  SignatureAlgorithm$EcdsaSha512$const;
 export const SignatureAlgorithm$isEcdsaSha512 = (value) =>
   value instanceof EcdsaSha512;
 
@@ -314,14 +330,17 @@ export const SignatureAlgorithm$isEcdsaSha512 = (value) =>
  * Edwards-Curve Digital Signature Algorithm using Ed25519
  */
 export class Ed25519 extends $CustomType {}
-export const SignatureAlgorithm$Ed25519 = () => new Ed25519();
+export const SignatureAlgorithm$Ed25519$const = new Ed25519();
+export const SignatureAlgorithm$Ed25519 = () =>
+  SignatureAlgorithm$Ed25519$const;
 export const SignatureAlgorithm$isEd25519 = (value) => value instanceof Ed25519;
 
 /**
  * Edwards-Curve Digital Signature Algorithm using Ed448
  */
 export class Ed448 extends $CustomType {}
-export const SignatureAlgorithm$Ed448 = () => new Ed448();
+export const SignatureAlgorithm$Ed448$const = new Ed448();
+export const SignatureAlgorithm$Ed448 = () => SignatureAlgorithm$Ed448$const;
 export const SignatureAlgorithm$isEd448 = (value) => value instanceof Ed448;
 
 export class BasicConstraints extends $CustomType {
@@ -346,7 +365,8 @@ export const BasicConstraints$BasicConstraints$1 = (value) =>
  * Verify digital signatures (other than certificates and CRLs).
  */
 export class DigitalSignature extends $CustomType {}
-export const KeyUsage$DigitalSignature = () => new DigitalSignature();
+export const KeyUsage$DigitalSignature$const = new DigitalSignature();
+export const KeyUsage$DigitalSignature = () => KeyUsage$DigitalSignature$const;
 export const KeyUsage$isDigitalSignature = (value) =>
   value instanceof DigitalSignature;
 
@@ -354,7 +374,8 @@ export const KeyUsage$isDigitalSignature = (value) =>
  * Verify signatures for non-repudiation services (also called contentCommitment).
  */
 export class NonRepudiation extends $CustomType {}
-export const KeyUsage$NonRepudiation = () => new NonRepudiation();
+export const KeyUsage$NonRepudiation$const = new NonRepudiation();
+export const KeyUsage$NonRepudiation = () => KeyUsage$NonRepudiation$const;
 export const KeyUsage$isNonRepudiation = (value) =>
   value instanceof NonRepudiation;
 
@@ -362,7 +383,8 @@ export const KeyUsage$isNonRepudiation = (value) =>
  * Encipher private or secret keys (e.g., RSA key transport).
  */
 export class KeyEncipherment extends $CustomType {}
-export const KeyUsage$KeyEncipherment = () => new KeyEncipherment();
+export const KeyUsage$KeyEncipherment$const = new KeyEncipherment();
+export const KeyUsage$KeyEncipherment = () => KeyUsage$KeyEncipherment$const;
 export const KeyUsage$isKeyEncipherment = (value) =>
   value instanceof KeyEncipherment;
 
@@ -370,7 +392,8 @@ export const KeyUsage$isKeyEncipherment = (value) =>
  * Directly encrypt raw user data (without key agreement).
  */
 export class DataEncipherment extends $CustomType {}
-export const KeyUsage$DataEncipherment = () => new DataEncipherment();
+export const KeyUsage$DataEncipherment$const = new DataEncipherment();
+export const KeyUsage$DataEncipherment = () => KeyUsage$DataEncipherment$const;
 export const KeyUsage$isDataEncipherment = (value) =>
   value instanceof DataEncipherment;
 
@@ -378,42 +401,49 @@ export const KeyUsage$isDataEncipherment = (value) =>
  * Key agreement protocols (e.g., Diffie-Hellman).
  */
 export class KeyAgreement extends $CustomType {}
-export const KeyUsage$KeyAgreement = () => new KeyAgreement();
+export const KeyUsage$KeyAgreement$const = new KeyAgreement();
+export const KeyUsage$KeyAgreement = () => KeyUsage$KeyAgreement$const;
 export const KeyUsage$isKeyAgreement = (value) => value instanceof KeyAgreement;
 
 /**
  * Verify signatures on public key certificates (CA certificates).
  */
 export class KeyCertSign extends $CustomType {}
-export const KeyUsage$KeyCertSign = () => new KeyCertSign();
+export const KeyUsage$KeyCertSign$const = new KeyCertSign();
+export const KeyUsage$KeyCertSign = () => KeyUsage$KeyCertSign$const;
 export const KeyUsage$isKeyCertSign = (value) => value instanceof KeyCertSign;
 
 /**
  * Verify signatures on certificate revocation lists.
  */
 export class CrlSign extends $CustomType {}
-export const KeyUsage$CrlSign = () => new CrlSign();
+export const KeyUsage$CrlSign$const = new CrlSign();
+export const KeyUsage$CrlSign = () => KeyUsage$CrlSign$const;
 export const KeyUsage$isCrlSign = (value) => value instanceof CrlSign;
 
 /**
  * With KeyAgreement, may only encipher data during key agreement.
  */
 export class EncipherOnly extends $CustomType {}
-export const KeyUsage$EncipherOnly = () => new EncipherOnly();
+export const KeyUsage$EncipherOnly$const = new EncipherOnly();
+export const KeyUsage$EncipherOnly = () => KeyUsage$EncipherOnly$const;
 export const KeyUsage$isEncipherOnly = (value) => value instanceof EncipherOnly;
 
 /**
  * With KeyAgreement, may only decipher data during key agreement.
  */
 export class DecipherOnly extends $CustomType {}
-export const KeyUsage$DecipherOnly = () => new DecipherOnly();
+export const KeyUsage$DecipherOnly$const = new DecipherOnly();
+export const KeyUsage$DecipherOnly = () => KeyUsage$DecipherOnly$const;
 export const KeyUsage$isDecipherOnly = (value) => value instanceof DecipherOnly;
 
 /**
  * TLS server authentication.
  */
 export class ServerAuth extends $CustomType {}
-export const ExtendedKeyUsage$ServerAuth = () => new ServerAuth();
+export const ExtendedKeyUsage$ServerAuth$const = new ServerAuth();
+export const ExtendedKeyUsage$ServerAuth = () =>
+  ExtendedKeyUsage$ServerAuth$const;
 export const ExtendedKeyUsage$isServerAuth = (value) =>
   value instanceof ServerAuth;
 
@@ -421,7 +451,9 @@ export const ExtendedKeyUsage$isServerAuth = (value) =>
  * TLS client authentication.
  */
 export class ClientAuth extends $CustomType {}
-export const ExtendedKeyUsage$ClientAuth = () => new ClientAuth();
+export const ExtendedKeyUsage$ClientAuth$const = new ClientAuth();
+export const ExtendedKeyUsage$ClientAuth = () =>
+  ExtendedKeyUsage$ClientAuth$const;
 export const ExtendedKeyUsage$isClientAuth = (value) =>
   value instanceof ClientAuth;
 
@@ -429,7 +461,9 @@ export const ExtendedKeyUsage$isClientAuth = (value) =>
  * Signing downloadable executable code.
  */
 export class CodeSigning extends $CustomType {}
-export const ExtendedKeyUsage$CodeSigning = () => new CodeSigning();
+export const ExtendedKeyUsage$CodeSigning$const = new CodeSigning();
+export const ExtendedKeyUsage$CodeSigning = () =>
+  ExtendedKeyUsage$CodeSigning$const;
 export const ExtendedKeyUsage$isCodeSigning = (value) =>
   value instanceof CodeSigning;
 
@@ -437,7 +471,9 @@ export const ExtendedKeyUsage$isCodeSigning = (value) =>
  * Email protection (S/MIME signing and encryption).
  */
 export class EmailProtection extends $CustomType {}
-export const ExtendedKeyUsage$EmailProtection = () => new EmailProtection();
+export const ExtendedKeyUsage$EmailProtection$const = new EmailProtection();
+export const ExtendedKeyUsage$EmailProtection = () =>
+  ExtendedKeyUsage$EmailProtection$const;
 export const ExtendedKeyUsage$isEmailProtection = (value) =>
   value instanceof EmailProtection;
 
@@ -445,7 +481,9 @@ export const ExtendedKeyUsage$isEmailProtection = (value) =>
  * Signing OCSP responses.
  */
 export class OcspSigning extends $CustomType {}
-export const ExtendedKeyUsage$OcspSigning = () => new OcspSigning();
+export const ExtendedKeyUsage$OcspSigning$const = new OcspSigning();
+export const ExtendedKeyUsage$OcspSigning = () =>
+  ExtendedKeyUsage$OcspSigning$const;
 export const ExtendedKeyUsage$isOcspSigning = (value) =>
   value instanceof OcspSigning;
 
@@ -503,9 +541,7 @@ const oid_organizational_unit = /* @__PURE__ */ new Oid(
   /* @__PURE__ */ toList([2, 5, 4, 11]),
 );
 
-const oid_country = /* @__PURE__ */ new Oid(
-  /* @__PURE__ */ toList([2, 5, 4, 6]),
-);
+const oid_country = /* @__PURE__ */ new Oid(/* @__PURE__ */ toList([2, 5, 4, 6]));
 
 const oid_state = /* @__PURE__ */ new Oid(/* @__PURE__ */ toList([2, 5, 4, 8]));
 

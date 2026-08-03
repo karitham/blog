@@ -32,11 +32,13 @@ export const GleamPanic$GleamPanic$kind = (value) => value.kind;
 export const GleamPanic$GleamPanic$5 = (value) => value.kind;
 
 export class Todo extends $CustomType {}
-export const PanicKind$Todo = () => new Todo();
+export const PanicKind$Todo$const = new Todo();
+export const PanicKind$Todo = () => PanicKind$Todo$const;
 export const PanicKind$isTodo = (value) => value instanceof Todo;
 
 export class Panic extends $CustomType {}
-export const PanicKind$Panic = () => new Panic();
+export const PanicKind$Panic$const = new Panic();
+export const PanicKind$Panic = () => PanicKind$Panic$const;
 export const PanicKind$isPanic = (value) => value instanceof Panic;
 
 export class LetAssert extends $CustomType {
@@ -175,6 +177,8 @@ export const ExpressionKind$Expression$value = (value) => value.value;
 export const ExpressionKind$Expression$0 = (value) => value.value;
 
 export class Unevaluated extends $CustomType {}
-export const ExpressionKind$Unevaluated = () => new Unevaluated();
+export const ExpressionKind$Unevaluated$const = new Unevaluated();
+export const ExpressionKind$Unevaluated = () =>
+  ExpressionKind$Unevaluated$const;
 export const ExpressionKind$isUnevaluated = (value) =>
   value instanceof Unevaluated;

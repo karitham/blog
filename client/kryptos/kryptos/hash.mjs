@@ -7,56 +7,64 @@ export { final, update };
  * BLAKE2b (512-bit output)
  */
 export class Blake2b extends $CustomType {}
-export const HashAlgorithm$Blake2b = () => new Blake2b();
+export const HashAlgorithm$Blake2b$const = new Blake2b();
+export const HashAlgorithm$Blake2b = () => HashAlgorithm$Blake2b$const;
 export const HashAlgorithm$isBlake2b = (value) => value instanceof Blake2b;
 
 /**
  * BLAKE2s (256-bit output)
  */
 export class Blake2s extends $CustomType {}
-export const HashAlgorithm$Blake2s = () => new Blake2s();
+export const HashAlgorithm$Blake2s$const = new Blake2s();
+export const HashAlgorithm$Blake2s = () => HashAlgorithm$Blake2s$const;
 export const HashAlgorithm$isBlake2s = (value) => value instanceof Blake2s;
 
 /**
  * MD5 (128-bit output), cryptographically broken - use only for legacy compatibility.
  */
 export class Md5 extends $CustomType {}
-export const HashAlgorithm$Md5 = () => new Md5();
+export const HashAlgorithm$Md5$const = new Md5();
+export const HashAlgorithm$Md5 = () => HashAlgorithm$Md5$const;
 export const HashAlgorithm$isMd5 = (value) => value instanceof Md5;
 
 /**
  * SHA-1 (160-bit output)
  */
 export class Sha1 extends $CustomType {}
-export const HashAlgorithm$Sha1 = () => new Sha1();
+export const HashAlgorithm$Sha1$const = new Sha1();
+export const HashAlgorithm$Sha1 = () => HashAlgorithm$Sha1$const;
 export const HashAlgorithm$isSha1 = (value) => value instanceof Sha1;
 
 /**
  * SHA-256 (256-bit output)
  */
 export class Sha256 extends $CustomType {}
-export const HashAlgorithm$Sha256 = () => new Sha256();
+export const HashAlgorithm$Sha256$const = new Sha256();
+export const HashAlgorithm$Sha256 = () => HashAlgorithm$Sha256$const;
 export const HashAlgorithm$isSha256 = (value) => value instanceof Sha256;
 
 /**
  * SHA-384 (384-bit output)
  */
 export class Sha384 extends $CustomType {}
-export const HashAlgorithm$Sha384 = () => new Sha384();
+export const HashAlgorithm$Sha384$const = new Sha384();
+export const HashAlgorithm$Sha384 = () => HashAlgorithm$Sha384$const;
 export const HashAlgorithm$isSha384 = (value) => value instanceof Sha384;
 
 /**
  * SHA-512 (512-bit output)
  */
 export class Sha512 extends $CustomType {}
-export const HashAlgorithm$Sha512 = () => new Sha512();
+export const HashAlgorithm$Sha512$const = new Sha512();
+export const HashAlgorithm$Sha512 = () => HashAlgorithm$Sha512$const;
 export const HashAlgorithm$isSha512 = (value) => value instanceof Sha512;
 
 /**
  * SHA-512/224 (224-bit output), truncated SHA-512.
  */
 export class Sha512x224 extends $CustomType {}
-export const HashAlgorithm$Sha512x224 = () => new Sha512x224();
+export const HashAlgorithm$Sha512x224$const = new Sha512x224();
+export const HashAlgorithm$Sha512x224 = () => HashAlgorithm$Sha512x224$const;
 export const HashAlgorithm$isSha512x224 = (value) =>
   value instanceof Sha512x224;
 
@@ -64,7 +72,8 @@ export const HashAlgorithm$isSha512x224 = (value) =>
  * SHA-512/256 (256-bit output), truncated SHA-512.
  */
 export class Sha512x256 extends $CustomType {}
-export const HashAlgorithm$Sha512x256 = () => new Sha512x256();
+export const HashAlgorithm$Sha512x256$const = new Sha512x256();
+export const HashAlgorithm$Sha512x256 = () => HashAlgorithm$Sha512x256$const;
 export const HashAlgorithm$isSha512x256 = (value) =>
   value instanceof Sha512x256;
 
@@ -72,28 +81,32 @@ export const HashAlgorithm$isSha512x256 = (value) =>
  * SHA3-224 (224-bit output)
  */
 export class Sha3x224 extends $CustomType {}
-export const HashAlgorithm$Sha3x224 = () => new Sha3x224();
+export const HashAlgorithm$Sha3x224$const = new Sha3x224();
+export const HashAlgorithm$Sha3x224 = () => HashAlgorithm$Sha3x224$const;
 export const HashAlgorithm$isSha3x224 = (value) => value instanceof Sha3x224;
 
 /**
  * SHA3-256 (256-bit output)
  */
 export class Sha3x256 extends $CustomType {}
-export const HashAlgorithm$Sha3x256 = () => new Sha3x256();
+export const HashAlgorithm$Sha3x256$const = new Sha3x256();
+export const HashAlgorithm$Sha3x256 = () => HashAlgorithm$Sha3x256$const;
 export const HashAlgorithm$isSha3x256 = (value) => value instanceof Sha3x256;
 
 /**
  * SHA3-384 (384-bit output)
  */
 export class Sha3x384 extends $CustomType {}
-export const HashAlgorithm$Sha3x384 = () => new Sha3x384();
+export const HashAlgorithm$Sha3x384$const = new Sha3x384();
+export const HashAlgorithm$Sha3x384 = () => HashAlgorithm$Sha3x384$const;
 export const HashAlgorithm$isSha3x384 = (value) => value instanceof Sha3x384;
 
 /**
  * SHA3-512 (512-bit output)
  */
 export class Sha3x512 extends $CustomType {}
-export const HashAlgorithm$Sha3x512 = () => new Sha3x512();
+export const HashAlgorithm$Sha3x512$const = new Sha3x512();
+export const HashAlgorithm$Sha3x512 = () => HashAlgorithm$Sha3x512$const;
 export const HashAlgorithm$isSha3x512 = (value) => value instanceof Sha3x512;
 
 /**

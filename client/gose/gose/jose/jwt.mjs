@@ -17,7 +17,8 @@ import * as $jws from "../../gose/jose/jws.mjs";
  * The JWS signature did not verify against any of the provided keys.
  */
 export class InvalidSignature extends $CustomType {}
-export const JwtError$InvalidSignature = () => new InvalidSignature();
+export const JwtError$InvalidSignature$const = new InvalidSignature();
+export const JwtError$InvalidSignature = () => JwtError$InvalidSignature$const;
 export const JwtError$isInvalidSignature = (value) =>
   value instanceof InvalidSignature;
 
@@ -72,7 +73,9 @@ export const JwtError$TokenNotYetValid$0 = (value) => value.valid_from;
  * The `exp` claim is required by the verifier but absent.
  */
 export class MissingExpiration extends $CustomType {}
-export const JwtError$MissingExpiration = () => new MissingExpiration();
+export const JwtError$MissingExpiration$const = new MissingExpiration();
+export const JwtError$MissingExpiration = () =>
+  JwtError$MissingExpiration$const;
 export const JwtError$isMissingExpiration = (value) =>
   value instanceof MissingExpiration;
 
@@ -80,7 +83,8 @@ export const JwtError$isMissingExpiration = (value) =>
  * The `iat` claim is required by the verifier but absent.
  */
 export class MissingIssuedAt extends $CustomType {}
-export const JwtError$MissingIssuedAt = () => new MissingIssuedAt();
+export const JwtError$MissingIssuedAt$const = new MissingIssuedAt();
+export const JwtError$MissingIssuedAt = () => JwtError$MissingIssuedAt$const;
 export const JwtError$isMissingIssuedAt = (value) =>
   value instanceof MissingIssuedAt;
 
@@ -222,7 +226,8 @@ export const JwtError$JweAlgorithmMismatch$3 = (value) => value.actual_enc;
  * A `kid` header is required for key lookup but absent from the token.
  */
 export class MissingKid extends $CustomType {}
-export const JwtError$MissingKid = () => new MissingKid();
+export const JwtError$MissingKid$const = new MissingKid();
+export const JwtError$MissingKid = () => JwtError$MissingKid$const;
 export const JwtError$isMissingKid = (value) => value instanceof MissingKid;
 
 /**
@@ -347,7 +352,9 @@ class Jwt extends $CustomType {
  * No kid requirement - prioritize matching keys but try all (default)
  */
 export class NoKidRequirement extends $CustomType {}
-export const KidPolicy$NoKidRequirement = () => new NoKidRequirement();
+export const KidPolicy$NoKidRequirement$const = new NoKidRequirement();
+export const KidPolicy$NoKidRequirement = () =>
+  KidPolicy$NoKidRequirement$const;
 export const KidPolicy$isNoKidRequirement = (value) =>
   value instanceof NoKidRequirement;
 
@@ -355,14 +362,16 @@ export const KidPolicy$isNoKidRequirement = (value) =>
  * Token must have a kid header, but it doesn't need to match a configured key
  */
 export class RequireKid extends $CustomType {}
-export const KidPolicy$RequireKid = () => new RequireKid();
+export const KidPolicy$RequireKid$const = new RequireKid();
+export const KidPolicy$RequireKid = () => KidPolicy$RequireKid$const;
 export const KidPolicy$isRequireKid = (value) => value instanceof RequireKid;
 
 /**
  * Token must have a kid header AND it must match a configured key's kid
  */
 export class RequireKidMatch extends $CustomType {}
-export const KidPolicy$RequireKidMatch = () => new RequireKidMatch();
+export const KidPolicy$RequireKidMatch$const = new RequireKidMatch();
+export const KidPolicy$RequireKidMatch = () => KidPolicy$RequireKidMatch$const;
 export const KidPolicy$isRequireKidMatch = (value) =>
   value instanceof RequireKidMatch;
 
@@ -463,13 +472,13 @@ export function gose_error_to_malformed_token_error(err) {
  */
 export function default_validation() {
   return new JwtValidationOptions(
-    new $option.None(),
-    new $option.None(),
+    $option.Option$None$const,
+    $option.Option$None$const,
     60,
     true,
-    new $option.None(),
-    new $option.None(),
-    new NoKidRequirement(),
+    $option.Option$None$const,
+    $option.Option$None$const,
+    KidPolicy$NoKidRequirement$const,
   );
 }
 
@@ -588,13 +597,13 @@ export function verifier(alg, keys, options) {
  */
 export function claims() {
   return new Claims(
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
     $dict.new$(),
   );
 }
@@ -930,7 +939,7 @@ function validate_iat(claims, now_seconds, options) {
       (_) => { return validate_token_age(iat, now_seconds, options); },
     );
   } else if ($1 instanceof $option.Some) {
-    return new Error(new MissingIssuedAt());
+    return new Error(JwtError$MissingIssuedAt$const);
   } else {
     return new Ok(undefined);
   }
@@ -953,7 +962,9 @@ function validate_audience(claims, options) {
       }
     } else {
       let expected = $[0];
-      return new Error(new AudienceMismatch(expected, new $option.None()));
+      return new Error(
+        new AudienceMismatch(expected, $option.Option$None$const),
+      );
     }
   } else {
     return new Ok(undefined);
@@ -1011,7 +1022,7 @@ function validate_exp(claims, now_seconds, options) {
       () => { return new Ok(undefined); },
     );
   } else if ($1) {
-    return new Error(new MissingExpiration());
+    return new Error(JwtError$MissingExpiration$const);
   } else {
     return new Ok(undefined);
   }
@@ -1093,7 +1104,7 @@ function extract_optional_string(fields, key) {
       new MalformedToken(key + " claim must be a string"),
     );
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -1115,7 +1126,7 @@ function extract_optional_numeric_date(fields, key) {
       new MalformedToken(key + " claim must be a numeric value"),
     );
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -1144,7 +1155,7 @@ function extract_optional_audience(fields) {
       );
     }
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -1244,12 +1255,12 @@ function try_verify_with_keys(signed_jws, expected_alg, keys) {
           let reason = $1[0];
           return new Error(new MalformedToken(reason));
         } else if ($1 instanceof $gose.CryptoError) {
-          return new Error(new InvalidSignature());
+          return new Error(JwtError$InvalidSignature$const);
         } else if ($1 instanceof $gose.InvalidState) {
           let err = $1;
           return new Error(new JoseError(err));
         } else {
-          return new Error(new InvalidSignature());
+          return new Error(JwtError$InvalidSignature$const);
         }
       }
     },
@@ -1285,9 +1296,9 @@ export function select_keys_by_policy(keys, token_kid, kid_policy) {
   } else if (kid_policy instanceof NoKidRequirement) {
     return new Ok(keys);
   } else if (kid_policy instanceof RequireKid) {
-    return new Error(new MissingKid());
+    return new Error(JwtError$MissingKid$const);
   } else {
-    return new Error(new MissingKid());
+    return new Error(JwtError$MissingKid$const);
   }
 }
 
@@ -1307,7 +1318,7 @@ function has_unprotected_alg(signed_jws) {
     () => {
       let alg_decoder = $decode.optional_field(
         "alg",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.dynamic),
         (alg) => { return $decode.success(alg); },
       );

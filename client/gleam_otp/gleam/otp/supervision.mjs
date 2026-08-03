@@ -5,7 +5,8 @@ import * as $actor from "../../gleam/otp/actor.mjs";
  * A permanent child process is always restarted.
  */
 export class Permanent extends $CustomType {}
-export const Restart$Permanent = () => new Permanent();
+export const Restart$Permanent$const = new Permanent();
+export const Restart$Permanent = () => Restart$Permanent$const;
 export const Restart$isPermanent = (value) => value instanceof Permanent;
 
 /**
@@ -14,7 +15,8 @@ export const Restart$isPermanent = (value) => value instanceof Permanent;
  * `{shutdown,Term}`.
  */
 export class Transient extends $CustomType {}
-export const Restart$Transient = () => new Transient();
+export const Restart$Transient$const = new Transient();
+export const Restart$Transient = () => Restart$Transient$const;
 export const Restart$isTransient = (value) => value instanceof Transient;
 
 /**
@@ -23,7 +25,8 @@ export const Restart$isTransient = (value) => value instanceof Transient;
  * causes the temporary process to be terminated).
  */
 export class Temporary extends $CustomType {}
-export const Restart$Temporary = () => new Temporary();
+export const Restart$Temporary$const = new Temporary();
+export const Restart$Temporary = () => Restart$Temporary$const;
 export const Restart$isTemporary = (value) => value instanceof Temporary;
 
 /**
@@ -41,7 +44,8 @@ export const ChildType$Worker$shutdown_ms = (value) => value.shutdown_ms;
 export const ChildType$Worker$0 = (value) => value.shutdown_ms;
 
 export class Supervisor extends $CustomType {}
-export const ChildType$Supervisor = () => new Supervisor();
+export const ChildType$Supervisor$const = new Supervisor();
+export const ChildType$Supervisor = () => ChildType$Supervisor$const;
 export const ChildType$isSupervisor = (value) => value instanceof Supervisor;
 
 export class ChildSpecification extends $CustomType {
@@ -81,7 +85,12 @@ export const ChildSpecification$ChildSpecification$3 = (value) =>
  * `timeout` function.
  */
 export function worker(start) {
-  return new ChildSpecification(start, new Permanent(), false, new Worker(5000));
+  return new ChildSpecification(
+    start,
+    Restart$Permanent$const,
+    false,
+    new Worker(5000),
+  );
 }
 
 /**
@@ -90,7 +99,12 @@ export function worker(start) {
  * Supervisor children have an unlimited shutdown time, there is no timeout.
  */
 export function supervisor(start) {
-  return new ChildSpecification(start, new Permanent(), false, new Supervisor());
+  return new ChildSpecification(
+    start,
+    Restart$Permanent$const,
+    false,
+    ChildType$Supervisor$const,
+  );
 }
 
 /**

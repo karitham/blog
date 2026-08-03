@@ -7,15 +7,18 @@ import { Ok, Error, toList, prepend as listPrepend, CustomType as $CustomType } 
 import * as $http from "../../gleam/http.mjs";
 
 export class Lax extends $CustomType {}
-export const SameSitePolicy$Lax = () => new Lax();
+export const SameSitePolicy$Lax$const = new Lax();
+export const SameSitePolicy$Lax = () => SameSitePolicy$Lax$const;
 export const SameSitePolicy$isLax = (value) => value instanceof Lax;
 
 export class Strict extends $CustomType {}
-export const SameSitePolicy$Strict = () => new Strict();
+export const SameSitePolicy$Strict$const = new Strict();
+export const SameSitePolicy$Strict = () => SameSitePolicy$Strict$const;
 export const SameSitePolicy$isStrict = (value) => value instanceof Strict;
 
 export class None extends $CustomType {}
-export const SameSitePolicy$None = () => new None();
+export const SameSitePolicy$None$const = new None();
+export const SameSitePolicy$None = () => SameSitePolicy$None$const;
 export const SameSitePolicy$isNone = (value) => value instanceof None;
 
 export class Attributes extends $CustomType {
@@ -64,12 +67,12 @@ function same_site_to_string(policy) {
  */
 export function defaults(scheme) {
   return new Attributes(
-    new $option.None(),
-    new $option.None(),
+    $option.Option$None$const,
+    $option.Option$None$const,
     new $option.Some("/"),
     scheme instanceof $http.Https,
     true,
-    new $option.Some(new Lax()),
+    new $option.Some(SameSitePolicy$Lax$const),
   );
 }
 
@@ -87,10 +90,10 @@ function cookie_attributes_to_list(attributes) {
         if ($ === 0) {
           return new $option.Some(epoch);
         } else {
-          return new $option.None();
+          return $option.Option$None$const;
         }
       } else {
-        return new $option.None();
+        return $option.Option$None$const;
       }
     })(),
     $option.map(
@@ -103,14 +106,14 @@ function cookie_attributes_to_list(attributes) {
       if (secure) {
         return new $option.Some("Secure");
       } else {
-        return new $option.None();
+        return $option.Option$None$const;
       }
     })(),
     (() => {
       if (http_only) {
         return new $option.Some("HttpOnly");
       } else {
-        return new $option.None();
+        return $option.Option$None$const;
       }
     })(),
     $option.map(

@@ -3,6 +3,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   isEqual,
@@ -10,7 +11,7 @@ import {
 import * as $int from "../gleam/int.mjs";
 import * as $list from "../gleam/list.mjs";
 import * as $option from "../gleam/option.mjs";
-import { None, Some } from "../gleam/option.mjs";
+import { None, Some, Option$None$const } from "../gleam/option.mjs";
 import * as $string from "../gleam/string.mjs";
 import * as $string_tree from "../gleam/string_tree.mjs";
 import {
@@ -72,13 +73,13 @@ export const Uri$Uri$6 = (value) => value.fragment;
  * ```
  */
 export const empty = /* @__PURE__ */ new Uri(
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
+  Option$None$const,
+  Option$None$const,
+  Option$None$const,
+  Option$None$const,
   "",
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
+  Option$None$const,
+  Option$None$const,
 );
 
 function parse_fragment(rest, pieces) {
@@ -899,7 +900,7 @@ function remove_dot_segments_loop(loop$input, loop$accumulator) {
 }
 
 function remove_dot_segments(input) {
-  return remove_dot_segments_loop(input, toList([]));
+  return remove_dot_segments_loop(input, $List$Empty$const);
 }
 
 /**
@@ -937,7 +938,7 @@ export function to_string(uri) {
     let fragment = $[0];
     _block = toList(["#", fragment]);
   } else {
-    _block = toList([]);
+    _block = $List$Empty$const;
   }
   let parts = _block;
   let _block$1;
@@ -1092,7 +1093,7 @@ export function merge(base, relative) {
         let path = _block;
         let resolved = new Uri(
           $option.or(relative.scheme, base.scheme),
-          new None(),
+          Option$None$const,
           relative.host,
           $option.or(relative.port, base.port),
           path,
@@ -1129,7 +1130,7 @@ export function merge(base, relative) {
         let new_query = $3[1];
         let resolved = new Uri(
           base.scheme,
-          new None(),
+          Option$None$const,
           base.host,
           base.port,
           new_path,

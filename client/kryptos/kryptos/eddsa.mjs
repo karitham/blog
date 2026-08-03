@@ -45,14 +45,16 @@ export {
  * Ed25519 curve. 32-byte keys, 64-byte signatures.
  */
 export class Ed25519 extends $CustomType {}
-export const Curve$Ed25519 = () => new Ed25519();
+export const Curve$Ed25519$const = new Ed25519();
+export const Curve$Ed25519 = () => Curve$Ed25519$const;
 export const Curve$isEd25519 = (value) => value instanceof Ed25519;
 
 /**
  * Ed448 curve. 57-byte keys, 114-byte signatures.
  */
 export class Ed448 extends $CustomType {}
-export const Curve$Ed448 = () => new Ed448();
+export const Curve$Ed448$const = new Ed448();
+export const Curve$Ed448 = () => Curve$Ed448$const;
 export const Curve$isEd448 = (value) => value instanceof Ed448;
 
 /**

@@ -68,7 +68,9 @@ export const GoseError$InvalidState$0 = (value) => value[0];
  * to avoid leaking information that could enable oracle attacks.
  */
 export class VerificationFailed extends $CustomType {}
-export const GoseError$VerificationFailed = () => new VerificationFailed();
+export const GoseError$VerificationFailed$const = new VerificationFailed();
+export const GoseError$VerificationFailed = () =>
+  GoseError$VerificationFailed$const;
 export const GoseError$isVerificationFailed = (value) =>
   value instanceof VerificationFailed;
 
@@ -76,147 +78,169 @@ export const GoseError$isVerificationFailed = (value) =>
  * Key is used for signature operations
  */
 export class Signing extends $CustomType {}
-export const KeyUse$Signing = () => new Signing();
+export const KeyUse$Signing$const = new Signing();
+export const KeyUse$Signing = () => KeyUse$Signing$const;
 export const KeyUse$isSigning = (value) => value instanceof Signing;
 
 /**
  * Key is used for encryption operations
  */
 export class Encrypting extends $CustomType {}
-export const KeyUse$Encrypting = () => new Encrypting();
+export const KeyUse$Encrypting$const = new Encrypting();
+export const KeyUse$Encrypting = () => KeyUse$Encrypting$const;
 export const KeyUse$isEncrypting = (value) => value instanceof Encrypting;
 
 /**
  * Compute digital signature or MAC
  */
 export class Sign extends $CustomType {}
-export const KeyOp$Sign = () => new Sign();
+export const KeyOp$Sign$const = new Sign();
+export const KeyOp$Sign = () => KeyOp$Sign$const;
 export const KeyOp$isSign = (value) => value instanceof Sign;
 
 /**
  * Verify digital signature or MAC
  */
 export class Verify extends $CustomType {}
-export const KeyOp$Verify = () => new Verify();
+export const KeyOp$Verify$const = new Verify();
+export const KeyOp$Verify = () => KeyOp$Verify$const;
 export const KeyOp$isVerify = (value) => value instanceof Verify;
 
 /**
  * Encrypt content
  */
 export class Encrypt extends $CustomType {}
-export const KeyOp$Encrypt = () => new Encrypt();
+export const KeyOp$Encrypt$const = new Encrypt();
+export const KeyOp$Encrypt = () => KeyOp$Encrypt$const;
 export const KeyOp$isEncrypt = (value) => value instanceof Encrypt;
 
 /**
  * Decrypt content and validate decryption
  */
 export class Decrypt extends $CustomType {}
-export const KeyOp$Decrypt = () => new Decrypt();
+export const KeyOp$Decrypt$const = new Decrypt();
+export const KeyOp$Decrypt = () => KeyOp$Decrypt$const;
 export const KeyOp$isDecrypt = (value) => value instanceof Decrypt;
 
 /**
  * Encrypt key
  */
 export class WrapKey extends $CustomType {}
-export const KeyOp$WrapKey = () => new WrapKey();
+export const KeyOp$WrapKey$const = new WrapKey();
+export const KeyOp$WrapKey = () => KeyOp$WrapKey$const;
 export const KeyOp$isWrapKey = (value) => value instanceof WrapKey;
 
 /**
  * Decrypt key and validate decryption
  */
 export class UnwrapKey extends $CustomType {}
-export const KeyOp$UnwrapKey = () => new UnwrapKey();
+export const KeyOp$UnwrapKey$const = new UnwrapKey();
+export const KeyOp$UnwrapKey = () => KeyOp$UnwrapKey$const;
 export const KeyOp$isUnwrapKey = (value) => value instanceof UnwrapKey;
 
 /**
  * Derive key
  */
 export class DeriveKey extends $CustomType {}
-export const KeyOp$DeriveKey = () => new DeriveKey();
+export const KeyOp$DeriveKey$const = new DeriveKey();
+export const KeyOp$DeriveKey = () => KeyOp$DeriveKey$const;
 export const KeyOp$isDeriveKey = (value) => value instanceof DeriveKey;
 
 /**
  * Derive bits not to be used as a key
  */
 export class DeriveBits extends $CustomType {}
-export const KeyOp$DeriveBits = () => new DeriveBits();
+export const KeyOp$DeriveBits$const = new DeriveBits();
+export const KeyOp$DeriveBits = () => KeyOp$DeriveBits$const;
 export const KeyOp$isDeriveBits = (value) => value instanceof DeriveBits;
 
 /**
  * 128-bit AES key
  */
 export class Aes128 extends $CustomType {}
-export const AesKeySize$Aes128 = () => new Aes128();
+export const AesKeySize$Aes128$const = new Aes128();
+export const AesKeySize$Aes128 = () => AesKeySize$Aes128$const;
 export const AesKeySize$isAes128 = (value) => value instanceof Aes128;
 
 /**
  * 192-bit AES key
  */
 export class Aes192 extends $CustomType {}
-export const AesKeySize$Aes192 = () => new Aes192();
+export const AesKeySize$Aes192$const = new Aes192();
+export const AesKeySize$Aes192 = () => AesKeySize$Aes192$const;
 export const AesKeySize$isAes192 = (value) => value instanceof Aes192;
 
 /**
  * 256-bit AES key
  */
 export class Aes256 extends $CustomType {}
-export const AesKeySize$Aes256 = () => new Aes256();
+export const AesKeySize$Aes256$const = new Aes256();
+export const AesKeySize$Aes256 = () => AesKeySize$Aes256$const;
 export const AesKeySize$isAes256 = (value) => value instanceof Aes256;
 
 /**
  * AES Key Wrap (RFC 3394)
  */
 export class AesKw extends $CustomType {}
-export const AesKwMode$AesKw = () => new AesKw();
+export const AesKwMode$AesKw$const = new AesKw();
+export const AesKwMode$AesKw = () => AesKwMode$AesKw$const;
 export const AesKwMode$isAesKw = (value) => value instanceof AesKw;
 
 /**
  * AES-GCM Key Wrap
  */
 export class AesGcmKw extends $CustomType {}
-export const AesKwMode$AesGcmKw = () => new AesGcmKw();
+export const AesKwMode$AesGcmKw$const = new AesGcmKw();
+export const AesKwMode$AesGcmKw = () => AesKwMode$AesGcmKw$const;
 export const AesKwMode$isAesGcmKw = (value) => value instanceof AesGcmKw;
 
 /**
  * ChaCha20-Poly1305 Key Wrap (12-byte nonce)
  */
 export class C20PKw extends $CustomType {}
-export const ChaCha20Kw$C20PKw = () => new C20PKw();
+export const ChaCha20Kw$C20PKw$const = new C20PKw();
+export const ChaCha20Kw$C20PKw = () => ChaCha20Kw$C20PKw$const;
 export const ChaCha20Kw$isC20PKw = (value) => value instanceof C20PKw;
 
 /**
  * XChaCha20-Poly1305 Key Wrap (24-byte nonce)
  */
 export class XC20PKw extends $CustomType {}
-export const ChaCha20Kw$XC20PKw = () => new XC20PKw();
+export const ChaCha20Kw$XC20PKw$const = new XC20PKw();
+export const ChaCha20Kw$XC20PKw = () => ChaCha20Kw$XC20PKw$const;
 export const ChaCha20Kw$isXC20PKw = (value) => value instanceof XC20PKw;
 
 /**
  * HMAC using SHA-256
  */
 export class HmacSha256 extends $CustomType {}
-export const HmacAlg$HmacSha256 = () => new HmacSha256();
+export const HmacAlg$HmacSha256$const = new HmacSha256();
+export const HmacAlg$HmacSha256 = () => HmacAlg$HmacSha256$const;
 export const HmacAlg$isHmacSha256 = (value) => value instanceof HmacSha256;
 
 /**
  * HMAC using SHA-384
  */
 export class HmacSha384 extends $CustomType {}
-export const HmacAlg$HmacSha384 = () => new HmacSha384();
+export const HmacAlg$HmacSha384$const = new HmacSha384();
+export const HmacAlg$HmacSha384 = () => HmacAlg$HmacSha384$const;
 export const HmacAlg$isHmacSha384 = (value) => value instanceof HmacSha384;
 
 /**
  * HMAC using SHA-512
  */
 export class HmacSha512 extends $CustomType {}
-export const HmacAlg$HmacSha512 = () => new HmacSha512();
+export const HmacAlg$HmacSha512$const = new HmacSha512();
+export const HmacAlg$HmacSha512 = () => HmacAlg$HmacSha512$const;
 export const HmacAlg$isHmacSha512 = (value) => value instanceof HmacSha512;
 
 /**
  * RSA PKCSv1.5 using SHA-256
  */
 export class RsaPkcs1Sha256 extends $CustomType {}
-export const RsaPkcs1Alg$RsaPkcs1Sha256 = () => new RsaPkcs1Sha256();
+export const RsaPkcs1Alg$RsaPkcs1Sha256$const = new RsaPkcs1Sha256();
+export const RsaPkcs1Alg$RsaPkcs1Sha256 = () =>
+  RsaPkcs1Alg$RsaPkcs1Sha256$const;
 export const RsaPkcs1Alg$isRsaPkcs1Sha256 = (value) =>
   value instanceof RsaPkcs1Sha256;
 
@@ -224,7 +248,9 @@ export const RsaPkcs1Alg$isRsaPkcs1Sha256 = (value) =>
  * RSA PKCSv1.5 using SHA-384
  */
 export class RsaPkcs1Sha384 extends $CustomType {}
-export const RsaPkcs1Alg$RsaPkcs1Sha384 = () => new RsaPkcs1Sha384();
+export const RsaPkcs1Alg$RsaPkcs1Sha384$const = new RsaPkcs1Sha384();
+export const RsaPkcs1Alg$RsaPkcs1Sha384 = () =>
+  RsaPkcs1Alg$RsaPkcs1Sha384$const;
 export const RsaPkcs1Alg$isRsaPkcs1Sha384 = (value) =>
   value instanceof RsaPkcs1Sha384;
 
@@ -232,7 +258,9 @@ export const RsaPkcs1Alg$isRsaPkcs1Sha384 = (value) =>
  * RSA PKCSv1.5 using SHA-512
  */
 export class RsaPkcs1Sha512 extends $CustomType {}
-export const RsaPkcs1Alg$RsaPkcs1Sha512 = () => new RsaPkcs1Sha512();
+export const RsaPkcs1Alg$RsaPkcs1Sha512$const = new RsaPkcs1Sha512();
+export const RsaPkcs1Alg$RsaPkcs1Sha512 = () =>
+  RsaPkcs1Alg$RsaPkcs1Sha512$const;
 export const RsaPkcs1Alg$isRsaPkcs1Sha512 = (value) =>
   value instanceof RsaPkcs1Sha512;
 
@@ -240,7 +268,8 @@ export const RsaPkcs1Alg$isRsaPkcs1Sha512 = (value) =>
  * RSA-PSS using SHA-256 (RSASSA-PSS)
  */
 export class RsaPssSha256 extends $CustomType {}
-export const RsaPssAlg$RsaPssSha256 = () => new RsaPssSha256();
+export const RsaPssAlg$RsaPssSha256$const = new RsaPssSha256();
+export const RsaPssAlg$RsaPssSha256 = () => RsaPssAlg$RsaPssSha256$const;
 export const RsaPssAlg$isRsaPssSha256 = (value) =>
   value instanceof RsaPssSha256;
 
@@ -248,7 +277,8 @@ export const RsaPssAlg$isRsaPssSha256 = (value) =>
  * RSA-PSS using SHA-384 (RSASSA-PSS)
  */
 export class RsaPssSha384 extends $CustomType {}
-export const RsaPssAlg$RsaPssSha384 = () => new RsaPssSha384();
+export const RsaPssAlg$RsaPssSha384$const = new RsaPssSha384();
+export const RsaPssAlg$RsaPssSha384 = () => RsaPssAlg$RsaPssSha384$const;
 export const RsaPssAlg$isRsaPssSha384 = (value) =>
   value instanceof RsaPssSha384;
 
@@ -256,7 +286,8 @@ export const RsaPssAlg$isRsaPssSha384 = (value) =>
  * RSA-PSS using SHA-512 (RSASSA-PSS)
  */
 export class RsaPssSha512 extends $CustomType {}
-export const RsaPssAlg$RsaPssSha512 = () => new RsaPssSha512();
+export const RsaPssAlg$RsaPssSha512$const = new RsaPssSha512();
+export const RsaPssAlg$RsaPssSha512 = () => RsaPssAlg$RsaPssSha512$const;
 export const RsaPssAlg$isRsaPssSha512 = (value) =>
   value instanceof RsaPssSha512;
 
@@ -264,28 +295,32 @@ export const RsaPssAlg$isRsaPssSha512 = (value) =>
  * ECDSA using P-256 and SHA-256
  */
 export class EcdsaP256 extends $CustomType {}
-export const EcdsaAlg$EcdsaP256 = () => new EcdsaP256();
+export const EcdsaAlg$EcdsaP256$const = new EcdsaP256();
+export const EcdsaAlg$EcdsaP256 = () => EcdsaAlg$EcdsaP256$const;
 export const EcdsaAlg$isEcdsaP256 = (value) => value instanceof EcdsaP256;
 
 /**
  * ECDSA using P-384 and SHA-384
  */
 export class EcdsaP384 extends $CustomType {}
-export const EcdsaAlg$EcdsaP384 = () => new EcdsaP384();
+export const EcdsaAlg$EcdsaP384$const = new EcdsaP384();
+export const EcdsaAlg$EcdsaP384 = () => EcdsaAlg$EcdsaP384$const;
 export const EcdsaAlg$isEcdsaP384 = (value) => value instanceof EcdsaP384;
 
 /**
  * ECDSA using P-521 and SHA-512
  */
 export class EcdsaP521 extends $CustomType {}
-export const EcdsaAlg$EcdsaP521 = () => new EcdsaP521();
+export const EcdsaAlg$EcdsaP521$const = new EcdsaP521();
+export const EcdsaAlg$EcdsaP521 = () => EcdsaAlg$EcdsaP521$const;
 export const EcdsaAlg$isEcdsaP521 = (value) => value instanceof EcdsaP521;
 
 /**
  * ECDSA using secp256k1 and SHA-256 (RFC 8812)
  */
 export class EcdsaSecp256k1 extends $CustomType {}
-export const EcdsaAlg$EcdsaSecp256k1 = () => new EcdsaSecp256k1();
+export const EcdsaAlg$EcdsaSecp256k1$const = new EcdsaSecp256k1();
+export const EcdsaAlg$EcdsaSecp256k1 = () => EcdsaAlg$EcdsaSecp256k1$const;
 export const EcdsaAlg$isEcdsaSecp256k1 = (value) =>
   value instanceof EcdsaSecp256k1;
 
@@ -333,7 +368,8 @@ export const DigitalSignatureAlg$Ecdsa$0 = (value) => value[0];
  * EdDSA (Ed25519 or Ed448, curve determined by key)
  */
 export class Eddsa extends $CustomType {}
-export const DigitalSignatureAlg$Eddsa = () => new Eddsa();
+export const DigitalSignatureAlg$Eddsa$const = new Eddsa();
+export const DigitalSignatureAlg$Eddsa = () => DigitalSignatureAlg$Eddsa$const;
 export const DigitalSignatureAlg$isEddsa = (value) => value instanceof Eddsa;
 
 /**
@@ -386,7 +422,9 @@ export const SigningAlg$Mac$0 = (value) => value[0];
  * **Note:** Decryption may fail on Node.js 20.x (CVE-2023-46809).
  */
 export class RsaPkcs1v15 extends $CustomType {}
-export const RsaEncryptionAlg$RsaPkcs1v15 = () => new RsaPkcs1v15();
+export const RsaEncryptionAlg$RsaPkcs1v15$const = new RsaPkcs1v15();
+export const RsaEncryptionAlg$RsaPkcs1v15 = () =>
+  RsaEncryptionAlg$RsaPkcs1v15$const;
 export const RsaEncryptionAlg$isRsaPkcs1v15 = (value) =>
   value instanceof RsaPkcs1v15;
 
@@ -394,7 +432,9 @@ export const RsaEncryptionAlg$isRsaPkcs1v15 = (value) =>
  * RSAES OAEP using default parameters
  */
 export class RsaOaepSha1 extends $CustomType {}
-export const RsaEncryptionAlg$RsaOaepSha1 = () => new RsaOaepSha1();
+export const RsaEncryptionAlg$RsaOaepSha1$const = new RsaOaepSha1();
+export const RsaEncryptionAlg$RsaOaepSha1 = () =>
+  RsaEncryptionAlg$RsaOaepSha1$const;
 export const RsaEncryptionAlg$isRsaOaepSha1 = (value) =>
   value instanceof RsaOaepSha1;
 
@@ -402,7 +442,9 @@ export const RsaEncryptionAlg$isRsaOaepSha1 = (value) =>
  * RSAES OAEP using SHA-256 and MGF1 with SHA-256
  */
 export class RsaOaepSha256 extends $CustomType {}
-export const RsaEncryptionAlg$RsaOaepSha256 = () => new RsaOaepSha256();
+export const RsaEncryptionAlg$RsaOaepSha256$const = new RsaOaepSha256();
+export const RsaEncryptionAlg$RsaOaepSha256 = () =>
+  RsaEncryptionAlg$RsaOaepSha256$const;
 export const RsaEncryptionAlg$isRsaOaepSha256 = (value) =>
   value instanceof RsaOaepSha256;
 
@@ -410,7 +452,8 @@ export const RsaEncryptionAlg$isRsaOaepSha256 = (value) =>
  * ECDH-ES direct key agreement
  */
 export class EcdhEsDirect extends $CustomType {}
-export const EcdhEsAlg$EcdhEsDirect = () => new EcdhEsDirect();
+export const EcdhEsAlg$EcdhEsDirect$const = new EcdhEsDirect();
+export const EcdhEsAlg$EcdhEsDirect = () => EcdhEsAlg$EcdhEsDirect$const;
 export const EcdhEsAlg$isEcdhEsDirect = (value) =>
   value instanceof EcdhEsDirect;
 
@@ -445,7 +488,9 @@ export const EcdhEsAlg$EcdhEsChaCha20Kw$0 = (value) => value[0];
  * PBES2 with HMAC-SHA-256 and A128KW wrapping
  */
 export class Pbes2Sha256Aes128Kw extends $CustomType {}
-export const Pbes2Alg$Pbes2Sha256Aes128Kw = () => new Pbes2Sha256Aes128Kw();
+export const Pbes2Alg$Pbes2Sha256Aes128Kw$const = new Pbes2Sha256Aes128Kw();
+export const Pbes2Alg$Pbes2Sha256Aes128Kw = () =>
+  Pbes2Alg$Pbes2Sha256Aes128Kw$const;
 export const Pbes2Alg$isPbes2Sha256Aes128Kw = (value) =>
   value instanceof Pbes2Sha256Aes128Kw;
 
@@ -453,7 +498,9 @@ export const Pbes2Alg$isPbes2Sha256Aes128Kw = (value) =>
  * PBES2 with HMAC-SHA-384 and A192KW wrapping
  */
 export class Pbes2Sha384Aes192Kw extends $CustomType {}
-export const Pbes2Alg$Pbes2Sha384Aes192Kw = () => new Pbes2Sha384Aes192Kw();
+export const Pbes2Alg$Pbes2Sha384Aes192Kw$const = new Pbes2Sha384Aes192Kw();
+export const Pbes2Alg$Pbes2Sha384Aes192Kw = () =>
+  Pbes2Alg$Pbes2Sha384Aes192Kw$const;
 export const Pbes2Alg$isPbes2Sha384Aes192Kw = (value) =>
   value instanceof Pbes2Sha384Aes192Kw;
 
@@ -461,7 +508,9 @@ export const Pbes2Alg$isPbes2Sha384Aes192Kw = (value) =>
  * PBES2 with HMAC-SHA-512 and A256KW wrapping
  */
 export class Pbes2Sha512Aes256Kw extends $CustomType {}
-export const Pbes2Alg$Pbes2Sha512Aes256Kw = () => new Pbes2Sha512Aes256Kw();
+export const Pbes2Alg$Pbes2Sha512Aes256Kw$const = new Pbes2Sha512Aes256Kw();
+export const Pbes2Alg$Pbes2Sha512Aes256Kw = () =>
+  Pbes2Alg$Pbes2Sha512Aes256Kw$const;
 export const Pbes2Alg$isPbes2Sha512Aes256Kw = (value) =>
   value instanceof Pbes2Sha512Aes256Kw;
 
@@ -469,7 +518,8 @@ export const Pbes2Alg$isPbes2Sha512Aes256Kw = (value) =>
  * Direct use of a shared symmetric key
  */
 export class Direct extends $CustomType {}
-export const KeyEncryptionAlg$Direct = () => new Direct();
+export const KeyEncryptionAlg$Direct$const = new Direct();
+export const KeyEncryptionAlg$Direct = () => KeyEncryptionAlg$Direct$const;
 export const KeyEncryptionAlg$isDirect = (value) => value instanceof Direct;
 
 /**
@@ -572,7 +622,9 @@ export const ContentAlg$AesCbcHmac$0 = (value) => value[0];
  * ChaCha20-Poly1305
  */
 export class ChaCha20Poly1305 extends $CustomType {}
-export const ContentAlg$ChaCha20Poly1305 = () => new ChaCha20Poly1305();
+export const ContentAlg$ChaCha20Poly1305$const = new ChaCha20Poly1305();
+export const ContentAlg$ChaCha20Poly1305 = () =>
+  ContentAlg$ChaCha20Poly1305$const;
 export const ContentAlg$isChaCha20Poly1305 = (value) =>
   value instanceof ChaCha20Poly1305;
 
@@ -580,7 +632,9 @@ export const ContentAlg$isChaCha20Poly1305 = (value) =>
  * XChaCha20-Poly1305
  */
 export class XChaCha20Poly1305 extends $CustomType {}
-export const ContentAlg$XChaCha20Poly1305 = () => new XChaCha20Poly1305();
+export const ContentAlg$XChaCha20Poly1305$const = new XChaCha20Poly1305();
+export const ContentAlg$XChaCha20Poly1305 = () =>
+  ContentAlg$XChaCha20Poly1305$const;
 export const ContentAlg$isXChaCha20Poly1305 = (value) =>
   value instanceof XChaCha20Poly1305;
 
@@ -807,28 +861,32 @@ export const KeyMaterial$Xdh$0 = (value) => value[0];
  * Symmetric key (oct)
  */
 export class OctKeyType extends $CustomType {}
-export const KeyType$OctKeyType = () => new OctKeyType();
+export const KeyType$OctKeyType$const = new OctKeyType();
+export const KeyType$OctKeyType = () => KeyType$OctKeyType$const;
 export const KeyType$isOctKeyType = (value) => value instanceof OctKeyType;
 
 /**
  * RSA key
  */
 export class RsaKeyType extends $CustomType {}
-export const KeyType$RsaKeyType = () => new RsaKeyType();
+export const KeyType$RsaKeyType$const = new RsaKeyType();
+export const KeyType$RsaKeyType = () => KeyType$RsaKeyType$const;
 export const KeyType$isRsaKeyType = (value) => value instanceof RsaKeyType;
 
 /**
  * Elliptic Curve key
  */
 export class EcKeyType extends $CustomType {}
-export const KeyType$EcKeyType = () => new EcKeyType();
+export const KeyType$EcKeyType$const = new EcKeyType();
+export const KeyType$EcKeyType = () => KeyType$EcKeyType$const;
 export const KeyType$isEcKeyType = (value) => value instanceof EcKeyType;
 
 /**
  * Octet Key Pair (EdDSA, XDH)
  */
 export class OkpKeyType extends $CustomType {}
-export const KeyType$OkpKeyType = () => new OkpKeyType();
+export const KeyType$OkpKeyType$const = new OkpKeyType();
+export const KeyType$OkpKeyType = () => KeyType$OkpKeyType$const;
 export const KeyType$isOkpKeyType = (value) => value instanceof OkpKeyType;
 
 class Key extends $CustomType {
@@ -863,10 +921,10 @@ export function error_message(error) {
 export function new_key(material) {
   return new Key(
     material,
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
   );
 }
 
@@ -1067,26 +1125,32 @@ function rsa_private_key_internal(pair) {
 }
 
 function parse_rsa_der(der) {
-  let _pipe = $rsa.from_der(der, new $rsa.Pkcs8());
+  let _pipe = $rsa.from_der(der, $rsa.PrivateKeyFormat$Pkcs8$const);
   let _pipe$1 = $result.map(_pipe, rsa_private_key_internal);
   let _pipe$2 = $result.lazy_or(
     _pipe$1,
     () => {
-      let _pipe$2 = $rsa.from_der(der, new $rsa.Pkcs1());
+      let _pipe$2 = $rsa.from_der(der, $rsa.PrivateKeyFormat$Pkcs1$const);
       return $result.map(_pipe$2, rsa_private_key_internal);
     },
   );
   let _pipe$3 = $result.lazy_or(
     _pipe$2,
     () => {
-      let _pipe$3 = $rsa.public_key_from_der(der, new $rsa.Spki());
+      let _pipe$3 = $rsa.public_key_from_der(
+        der,
+        $rsa.PublicKeyFormat$Spki$const,
+      );
       return $result.map(_pipe$3, rsa_public_key_internal);
     },
   );
   return $result.lazy_or(
     _pipe$3,
     () => {
-      let _pipe$4 = $rsa.public_key_from_der(der, new $rsa.RsaPublicKey());
+      let _pipe$4 = $rsa.public_key_from_der(
+        der,
+        $rsa.PublicKeyFormat$RsaPublicKey$const,
+      );
       return $result.map(_pipe$4, rsa_public_key_internal);
     },
   );
@@ -1213,26 +1277,32 @@ function parse_eddsa_pem(pem) {
 }
 
 function parse_rsa_pem(pem) {
-  let _pipe = $rsa.from_pem(pem, new $rsa.Pkcs8());
+  let _pipe = $rsa.from_pem(pem, $rsa.PrivateKeyFormat$Pkcs8$const);
   let _pipe$1 = $result.map(_pipe, rsa_private_key_internal);
   let _pipe$2 = $result.lazy_or(
     _pipe$1,
     () => {
-      let _pipe$2 = $rsa.from_pem(pem, new $rsa.Pkcs1());
+      let _pipe$2 = $rsa.from_pem(pem, $rsa.PrivateKeyFormat$Pkcs1$const);
       return $result.map(_pipe$2, rsa_private_key_internal);
     },
   );
   let _pipe$3 = $result.lazy_or(
     _pipe$2,
     () => {
-      let _pipe$3 = $rsa.public_key_from_pem(pem, new $rsa.Spki());
+      let _pipe$3 = $rsa.public_key_from_pem(
+        pem,
+        $rsa.PublicKeyFormat$Spki$const,
+      );
       return $result.map(_pipe$3, rsa_public_key_internal);
     },
   );
   return $result.lazy_or(
     _pipe$3,
     () => {
-      let _pipe$4 = $rsa.public_key_from_pem(pem, new $rsa.RsaPublicKey());
+      let _pipe$4 = $rsa.public_key_from_pem(
+        pem,
+        $rsa.PublicKeyFormat$RsaPublicKey$const,
+      );
       return $result.map(_pipe$4, rsa_public_key_internal);
     },
   );
@@ -1835,15 +1905,15 @@ export function key_ops(key) {
 export function key_type(key) {
   let $ = key.material;
   if ($ instanceof OctetKey) {
-    return new OctKeyType();
+    return KeyType$OctKeyType$const;
   } else if ($ instanceof Rsa) {
-    return new RsaKeyType();
+    return KeyType$RsaKeyType$const;
   } else if ($ instanceof Elliptic) {
-    return new EcKeyType();
+    return KeyType$EcKeyType$const;
   } else if ($ instanceof Edwards) {
-    return new OkpKeyType();
+    return KeyType$OkpKeyType$const;
   } else {
-    return new OkpKeyType();
+    return KeyType$OkpKeyType$const;
   }
 }
 
@@ -1951,7 +2021,7 @@ export function xdh_public_key(key) {
 
 function map_public_key_op(op) {
   if (op instanceof Sign) {
-    return new Ok(new Verify());
+    return new Ok(KeyOp$Verify$const);
   } else if (op instanceof Verify) {
     return new Ok(op);
   } else if (op instanceof Encrypt) {
@@ -2099,14 +2169,17 @@ export function to_der(key) {
     let $1 = $[0];
     if ($1 instanceof RsaPrivate) {
       let private$ = $1.key;
-      let _pipe = $rsa.to_der(private$, new $rsa.Pkcs8());
+      let _pipe = $rsa.to_der(private$, $rsa.PrivateKeyFormat$Pkcs8$const);
       return $result.replace_error(
         _pipe,
         new InvalidState("failed to serialize RSA private key"),
       );
     } else {
       let public$ = $1.key;
-      let _pipe = $rsa.public_key_to_der(public$, new $rsa.Spki());
+      let _pipe = $rsa.public_key_to_der(
+        public$,
+        $rsa.PublicKeyFormat$Spki$const,
+      );
       return $result.replace_error(
         _pipe,
         new InvalidState("failed to serialize RSA public key"),
@@ -2222,14 +2295,17 @@ export function to_pem(key) {
     let $1 = $[0];
     if ($1 instanceof RsaPrivate) {
       let private$ = $1.key;
-      let _pipe = $rsa.to_pem(private$, new $rsa.Pkcs8());
+      let _pipe = $rsa.to_pem(private$, $rsa.PrivateKeyFormat$Pkcs8$const);
       return $result.replace_error(
         _pipe,
         new InvalidState("failed to serialize RSA private key"),
       );
     } else {
       let public$ = $1.key;
-      let _pipe = $rsa.public_key_to_pem(public$, new $rsa.Spki());
+      let _pipe = $rsa.public_key_to_pem(
+        public$,
+        $rsa.PublicKeyFormat$Spki$const,
+      );
       return $result.replace_error(
         _pipe,
         new InvalidState("failed to serialize RSA public key"),

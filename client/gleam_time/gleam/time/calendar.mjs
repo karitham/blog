@@ -43,51 +43,63 @@ export const TimeOfDay$TimeOfDay$nanoseconds = (value) => value.nanoseconds;
 export const TimeOfDay$TimeOfDay$3 = (value) => value.nanoseconds;
 
 export class January extends $CustomType {}
-export const Month$January = () => new January();
+export const Month$January$const = new January();
+export const Month$January = () => Month$January$const;
 export const Month$isJanuary = (value) => value instanceof January;
 
 export class February extends $CustomType {}
-export const Month$February = () => new February();
+export const Month$February$const = new February();
+export const Month$February = () => Month$February$const;
 export const Month$isFebruary = (value) => value instanceof February;
 
 export class March extends $CustomType {}
-export const Month$March = () => new March();
+export const Month$March$const = new March();
+export const Month$March = () => Month$March$const;
 export const Month$isMarch = (value) => value instanceof March;
 
 export class April extends $CustomType {}
-export const Month$April = () => new April();
+export const Month$April$const = new April();
+export const Month$April = () => Month$April$const;
 export const Month$isApril = (value) => value instanceof April;
 
 export class May extends $CustomType {}
-export const Month$May = () => new May();
+export const Month$May$const = new May();
+export const Month$May = () => Month$May$const;
 export const Month$isMay = (value) => value instanceof May;
 
 export class June extends $CustomType {}
-export const Month$June = () => new June();
+export const Month$June$const = new June();
+export const Month$June = () => Month$June$const;
 export const Month$isJune = (value) => value instanceof June;
 
 export class July extends $CustomType {}
-export const Month$July = () => new July();
+export const Month$July$const = new July();
+export const Month$July = () => Month$July$const;
 export const Month$isJuly = (value) => value instanceof July;
 
 export class August extends $CustomType {}
-export const Month$August = () => new August();
+export const Month$August$const = new August();
+export const Month$August = () => Month$August$const;
 export const Month$isAugust = (value) => value instanceof August;
 
 export class September extends $CustomType {}
-export const Month$September = () => new September();
+export const Month$September$const = new September();
+export const Month$September = () => Month$September$const;
 export const Month$isSeptember = (value) => value instanceof September;
 
 export class October extends $CustomType {}
-export const Month$October = () => new October();
+export const Month$October$const = new October();
+export const Month$October = () => Month$October$const;
 export const Month$isOctober = (value) => value instanceof October;
 
 export class November extends $CustomType {}
-export const Month$November = () => new November();
+export const Month$November$const = new November();
+export const Month$November = () => Month$November$const;
 export const Month$isNovember = (value) => value instanceof November;
 
 export class December extends $CustomType {}
-export const Month$December = () => new December();
+export const Month$December$const = new December();
+export const Month$December = () => Month$December$const;
 export const Month$isDecember = (value) => value instanceof December;
 
 /**
@@ -205,29 +217,29 @@ export function month_to_int(month) {
  */
 export function month_from_int(month) {
   if (month === 1) {
-    return new Ok(new January());
+    return new Ok(Month$January$const);
   } else if (month === 2) {
-    return new Ok(new February());
+    return new Ok(Month$February$const);
   } else if (month === 3) {
-    return new Ok(new March());
+    return new Ok(Month$March$const);
   } else if (month === 4) {
-    return new Ok(new April());
+    return new Ok(Month$April$const);
   } else if (month === 5) {
-    return new Ok(new May());
+    return new Ok(Month$May$const);
   } else if (month === 6) {
-    return new Ok(new June());
+    return new Ok(Month$June$const);
   } else if (month === 7) {
-    return new Ok(new July());
+    return new Ok(Month$July$const);
   } else if (month === 8) {
-    return new Ok(new August());
+    return new Ok(Month$August$const);
   } else if (month === 9) {
-    return new Ok(new September());
+    return new Ok(Month$September$const);
   } else if (month === 10) {
-    return new Ok(new October());
+    return new Ok(Month$October$const);
   } else if (month === 11) {
-    return new Ok(new November());
+    return new Ok(Month$November$const);
   } else if (month === 12) {
-    return new Ok(new December());
+    return new Ok(Month$December$const);
   } else {
     return new Error(undefined);
   }

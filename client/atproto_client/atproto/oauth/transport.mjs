@@ -2,7 +2,7 @@ import * as $http from "../../../gleam_http/gleam/http.mjs";
 import * as $request from "../../../gleam_http/gleam/http/request.mjs";
 import * as $response from "../../../gleam_http/gleam/http/response.mjs";
 import * as $option from "../../../gleam_stdlib/gleam/option.mjs";
-import { None, Some } from "../../../gleam_stdlib/gleam/option.mjs";
+import { Some, Option$None$const } from "../../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $string from "../../../gleam_stdlib/gleam/string.mjs";
 import * as $uri from "../../../gleam_stdlib/gleam/uri.mjs";
@@ -13,7 +13,7 @@ import { Ok } from "../../gleam.mjs";
 
 function attempt(client, url, form, dpop_key, nonce) {
   return $result.try$(
-    $dpop.proof(dpop_key, "POST", url, nonce, new None()),
+    $dpop.proof(dpop_key, "POST", url, nonce, Option$None$const),
     (proof) => {
       return $result.try$(
         (() => {
@@ -22,7 +22,7 @@ function attempt(client, url, form, dpop_key, nonce) {
         })(),
         (base) => {
           let _pipe = base;
-          let _pipe$1 = $request.set_method(_pipe, new $http.Post());
+          let _pipe$1 = $request.set_method(_pipe, $http.Method$Post$const);
           let _pipe$2 = $request.set_header(
             _pipe$1,
             "content-type",
@@ -59,13 +59,13 @@ export function dpop_nonce_challenge(resp) {
   if ($) {
     return $option.from_result($response.get_header(resp, "dpop-nonce"));
   } else {
-    return new None();
+    return Option$None$const;
   }
 }
 
 export function post_form_with_dpop(client, url, form, dpop_key) {
   return $result.try$(
-    attempt(client, url, form, dpop_key, new None()),
+    attempt(client, url, form, dpop_key, Option$None$const),
     (first) => {
       let $ = dpop_nonce_challenge(first);
       if ($ instanceof Some) {

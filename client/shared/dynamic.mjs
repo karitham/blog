@@ -8,16 +8,17 @@ import { toList } from "./gleam.mjs";
 import * as $plays from "./plays.mjs";
 import * as $profile from "./profile.mjs";
 import * as $repos from "./repos.mjs";
+import * as $stats from "./stats.mjs";
 
 /**
  * Renders all three dynamic sections (profile, plays, repos)
  * into a single fragment. Used by both server (SSG) and client (hydration).
  */
-export function dynamic_sections(p, pl, r) {
+export function dynamic_sections(p, pl, stats_data, r) {
   return fragment(
     toList([
       $profile.profile(p),
-      $plays.plays_section(pl),
+      $plays.plays_section(pl, stats_data),
       $repos.repos_section(r),
     ]),
   );

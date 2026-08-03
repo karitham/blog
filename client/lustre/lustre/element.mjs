@@ -1,5 +1,10 @@
 import * as $string_tree from "../../gleam_stdlib/gleam/string_tree.mjs";
-import { toList, Empty as $Empty, CustomType as $CustomType } from "../gleam.mjs";
+import {
+  toList,
+  Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
+  CustomType as $CustomType,
+} from "../gleam.mjs";
 import * as $attribute from "../lustre/attribute.mjs";
 import * as $mutable_map from "../lustre/internals/mutable_map.mjs";
 import * as $ref from "../lustre/internals/ref.mjs";
@@ -7,14 +12,19 @@ import * as $vnode from "../lustre/vdom/vnode.mjs";
 import { Element, Fragment, Map, Memo, UnsafeInnerHtml } from "../lustre/vdom/vnode.mjs";
 
 class Html extends $CustomType {}
+const DocumentType$Html$const = new Html();
 
 class HeadOnly extends $CustomType {}
+const DocumentType$HeadOnly$const = new HeadOnly();
 
 class BodyOnly extends $CustomType {}
+const DocumentType$BodyOnly$const = new BodyOnly();
 
 class HeadAndBody extends $CustomType {}
+const DocumentType$HeadAndBody$const = new HeadAndBody();
 
 class Other extends $CustomType {}
+const DocumentType$Other$const = new Other();
 
 /**
  * A general function for constructing any kind of element. In most cases you
@@ -221,7 +231,7 @@ function get_document_type(loop$el) {
     if (el instanceof Fragment) {
       let $ = el.children;
       if ($ instanceof $Empty) {
-        return new Other();
+        return DocumentType$Other$const;
       } else {
         let $1 = $.tail;
         if ($1 instanceof $Empty) {
@@ -235,36 +245,36 @@ function get_document_type(loop$el) {
             let $3 = get_document_type(head);
             let $4 = get_document_type(body);
             if ($3 instanceof HeadOnly && $4 instanceof BodyOnly) {
-              return new HeadAndBody();
+              return DocumentType$HeadAndBody$const;
             } else {
-              return new Other();
+              return DocumentType$Other$const;
             }
           } else {
-            return new Other();
+            return DocumentType$Other$const;
           }
         }
       }
     } else if (el instanceof Element) {
       let $ = el.tag;
       if ($ === "html") {
-        return new Html();
+        return DocumentType$Html$const;
       } else if ($ === "head") {
-        return new HeadOnly();
+        return DocumentType$HeadOnly$const;
       } else if ($ === "body") {
-        return new BodyOnly();
+        return DocumentType$BodyOnly$const;
       } else {
-        return new Other();
+        return DocumentType$Other$const;
       }
     } else if (el instanceof UnsafeInnerHtml) {
       let $ = el.tag;
       if ($ === "html") {
-        return new Html();
+        return DocumentType$Html$const;
       } else if ($ === "head") {
-        return new HeadOnly();
+        return DocumentType$HeadOnly$const;
       } else if ($ === "body") {
-        return new BodyOnly();
+        return DocumentType$BodyOnly$const;
       } else {
-        return new Other();
+        return DocumentType$Other$const;
       }
     } else if (el instanceof Map) {
       let child = el.child;
@@ -273,7 +283,7 @@ function get_document_type(loop$el) {
       let view = el.view;
       loop$el = view();
     } else {
-      return new Other();
+      return DocumentType$Other$const;
     }
   }
 }
@@ -283,16 +293,16 @@ function wrap_document(el) {
   if ($ instanceof Html) {
     return el;
   } else if ($ instanceof HeadOnly) {
-    return element("html", toList([]), toList([el]));
+    return element("html", $List$Empty$const, toList([el]));
   } else if ($ instanceof BodyOnly) {
-    return element("html", toList([]), toList([el]));
+    return element("html", $List$Empty$const, toList([el]));
   } else if ($ instanceof HeadAndBody) {
-    return element("html", toList([]), toList([el]));
+    return element("html", $List$Empty$const, toList([el]));
   } else {
     return element(
       "html",
-      toList([]),
-      toList([element("body", toList([]), toList([el]))]),
+      $List$Empty$const,
+      toList([element("body", $List$Empty$const, toList([el]))]),
     );
   }
 }

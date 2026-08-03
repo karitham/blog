@@ -5,7 +5,7 @@ import * as $json from "../../gleam_json/gleam/json.mjs";
 import * as $bit_array from "../../gleam_stdlib/gleam/bit_array.mjs";
 import * as $decode from "../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $option from "../../gleam_stdlib/gleam/option.mjs";
-import { None, Some } from "../../gleam_stdlib/gleam/option.mjs";
+import { Some, Option$None$const } from "../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../gleam_stdlib/gleam/result.mjs";
 import * as $string from "../../gleam_stdlib/gleam/string.mjs";
 import { Ok, Error, CustomType as $CustomType } from "../gleam.mjs";
@@ -115,19 +115,19 @@ export function send_text(client, req) {
 function parse_error(body) {
   let decoder = $decode.optional_field(
     "error",
-    new None(),
+    Option$None$const,
     $decode.optional($decode.string),
     (error) => {
       return $decode.optional_field(
         "message",
-        new None(),
+        Option$None$const,
         $decode.optional($decode.string),
         (message) => { return $decode.success([error, message]); },
       );
     },
   );
   let _pipe = $json.parse(body, decoder);
-  return $result.unwrap(_pipe, [new None(), new None()]);
+  return $result.unwrap(_pipe, [Option$None$const, Option$None$const]);
 }
 
 function check_ok(resp) {
@@ -221,7 +221,7 @@ export function post_json(client, url, token, body) {
     })(),
     (base) => {
       let _pipe = base;
-      let _pipe$1 = $request.set_method(_pipe, new $http.Post());
+      let _pipe$1 = $request.set_method(_pipe, $http.Method$Post$const);
       let _pipe$2 = $request.set_header(
         _pipe$1,
         "content-type",
@@ -253,7 +253,7 @@ export function post_bits(client, url, token, body, content_type) {
     (base) => {
       let _block;
       let _pipe = base;
-      let _pipe$1 = $request.set_method(_pipe, new $http.Post());
+      let _pipe$1 = $request.set_method(_pipe, $http.Method$Post$const);
       let _pipe$2 = $request.set_header(_pipe$1, "content-type", content_type);
       let _pipe$3 = with_auth(_pipe$2, token);
       let _pipe$4 = $request.map(_pipe$3, $bit_array.from_string);

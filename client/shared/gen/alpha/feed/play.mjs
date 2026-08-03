@@ -75,7 +75,7 @@ export function encode_artist_view(value) {
 export function artist_view_decoder() {
   return $decode.optional_field(
     "artistMbId",
-    new $option.None(),
+    $option.Option$None$const,
     $decode.optional($decode.string),
     (artist_mb_id) => {
       return $decode.field(
@@ -125,12 +125,12 @@ export function alpha_feed_play_decoder() {
     (artists) => {
       return $decode.optional_field(
         "duration",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.int),
         (duration) => {
           return $decode.optional_field(
             "originUrl",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (origin_url) => {
               return $decode.field(
@@ -139,7 +139,7 @@ export function alpha_feed_play_decoder() {
                 (played_time) => {
                   return $decode.optional_field(
                     "releaseName",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.string),
                     (release_name) => {
                       return $decode.field(

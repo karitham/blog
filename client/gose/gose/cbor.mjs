@@ -9,7 +9,7 @@ import * as $string from "../../gleam_stdlib/gleam/string.mjs";
 import {
   Ok,
   Error,
-  toList,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -135,7 +135,8 @@ export const Value$Float$0 = (value) => value[0];
  * Null.
  */
 export class Null extends $CustomType {}
-export const Value$Null = () => new Null();
+export const Value$Null$const = new Null();
+export const Value$Null = () => Value$Null$const;
 export const Value$isNull = (value) => value instanceof Null;
 
 function encode_major_with_argument(major, value) {
@@ -170,12 +171,12 @@ function compare_bit_arrays(loop$a, loop$b) {
     let b = loop$b;
     if (a.bitSize === 0) {
       if (b.bitSize === 0) {
-        return new $order.Eq();
+        return $order.Order$Eq$const;
       } else {
-        return new $order.Lt();
+        return $order.Order$Lt$const;
       }
     } else if (b.bitSize === 0) {
-      return new $order.Gt();
+      return $order.Order$Gt$const;
     } else if (a.bitSize >= 8 && b.bitSize >= 8) {
       let byte_a = a.byteAt(0);
       let rest_a = bitArraySlice(a, 8);
@@ -316,7 +317,7 @@ function decode_f64(rest) {
       }
     } else if (
       rest.bitSize >= 64 &&
-      Number.isFinite(bitArraySliceToFloat(rest, 0, 64, true))
+      globalThis.Number.isFinite(bitArraySliceToFloat(rest, 0, 64, true))
     ) {
       let f = bitArraySliceToFloat(rest, 0, 64, true);
       let remainder = bitArraySlice(rest, 64);
@@ -341,7 +342,7 @@ function decode_f32(rest) {
       }
     } else if (
       rest.bitSize >= 32 &&
-      Number.isFinite(bitArraySliceToFloat(rest, 0, 32, true))
+      globalThis.Number.isFinite(bitArraySliceToFloat(rest, 0, 32, true))
     ) {
       let f = bitArraySliceToFloat(rest, 0, 32, true);
       let remainder = bitArraySlice(rest, 32);
@@ -418,7 +419,7 @@ function decode_simple(info, rest) {
   } else if (info === 21) {
     return new Ok([new Bool(true), rest]);
   } else if (info === 22) {
-    return new Ok([new Null(), rest]);
+    return new Ok([Value$Null$const, rest]);
   } else if (info === 25) {
     return decode_f16(rest);
   } else if (info === 26) {
@@ -672,7 +673,7 @@ function decode_n_pairs_loop(remaining, data, acc) {
 }
 
 function decode_n_pairs(count, data) {
-  return decode_n_pairs_loop(count, data, toList([]));
+  return decode_n_pairs_loop(count, data, $List$Empty$const);
 }
 
 function decode_map(info, rest) {
@@ -717,7 +718,7 @@ function decode_n_items_loop(remaining, data, acc) {
 }
 
 function decode_n_items(count, data) {
-  return decode_n_items_loop(count, data, toList([]));
+  return decode_n_items_loop(count, data, $List$Empty$const);
 }
 
 function decode_array(info, rest) {

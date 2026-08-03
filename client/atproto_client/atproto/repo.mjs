@@ -2,12 +2,18 @@ import * as $json from "../../gleam_json/gleam/json.mjs";
 import * as $decode from "../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $list from "../../gleam_stdlib/gleam/list.mjs";
 import * as $option from "../../gleam_stdlib/gleam/option.mjs";
-import { None, Some } from "../../gleam_stdlib/gleam/option.mjs";
+import { Some, Option$None$const } from "../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../gleam_stdlib/gleam/result.mjs";
 import * as $uri from "../../gleam_stdlib/gleam/uri.mjs";
 import * as $blob from "../atproto/blob.mjs";
 import * as $xrpc from "../atproto/xrpc.mjs";
-import { Ok, toList, prepend as listPrepend, CustomType as $CustomType } from "../gleam.mjs";
+import {
+  Ok,
+  toList,
+  List$Empty$const as $List$Empty$const,
+  prepend as listPrepend,
+  CustomType as $CustomType,
+} from "../gleam.mjs";
 
 export class CreatedRecord extends $CustomType {
   constructor(uri, cid) {
@@ -60,7 +66,7 @@ function list_page(
         (rows) => {
           return $decode.optional_field(
             "cursor",
-            new None(),
+            Option$None$const,
             $decode.optional($decode.string),
             (next) => { return $decode.success([rows, next]); },
           );
@@ -110,8 +116,8 @@ export function list_records(client, pds, token, did, collection, row_decoder) {
     did,
     collection,
     row_decoder,
-    new None(),
-    toList([]),
+    Option$None$const,
+    $List$Empty$const,
   );
 }
 

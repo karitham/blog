@@ -9,7 +9,7 @@ import { none } from "../lustre/lustre/element.mjs";
 import * as $card from "./card.mjs";
 import * as $date from "./date.mjs";
 import * as $repo from "./gen/repo.mjs";
-import { Ok, toList, Empty as $Empty } from "./gleam.mjs";
+import { Ok, toList, Empty as $Empty, List$Empty$const as $List$Empty$const } from "./gleam.mjs";
 import * as $section from "./section.mjs";
 
 const max_repos = 5;
@@ -23,10 +23,10 @@ function compare_repos_newest_first(a, b) {
       let tb = $1[0];
       return $timestamp.compare(tb, ta);
     } else {
-      return new $order.Gt();
+      return $order.Order$Gt$const;
     }
   } else if ($1 instanceof Ok) {
-    return new $order.Lt();
+    return $order.Order$Lt$const;
   } else {
     return $string.compare(b.created_at, a.created_at);
   }
@@ -35,7 +35,7 @@ function compare_repos_newest_first(a, b) {
 function dedup_by_did(repos) {
   return $list.fold(
     repos,
-    toList([]),
+    $List$Empty$const,
     (acc, repo) => {
       let $ = $list.any(acc, (r) => { return r.repo_did === repo.repo_did; });
       if ($) {
@@ -74,7 +74,7 @@ function render_repo_card(repo) {
       }
     })(),
     unwrap(repo.description, ""),
-    unwrap(repo.topics, toList([])),
+    unwrap(repo.topics, $List$Empty$const),
   );
 }
 

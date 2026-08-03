@@ -18,7 +18,12 @@ import * as $repo from "./gen/repo.mjs";
 import { Repo, repo_decoder } from "./gen/repo.mjs";
 import * as $list_records from "./gen/repo/list_records.mjs";
 import { record_decoder } from "./gen/repo/list_records.mjs";
-import { Ok, toList, CustomType as $CustomType } from "./gleam.mjs";
+import {
+  Ok,
+  toList,
+  List$Empty$const as $List$Empty$const,
+  CustomType as $CustomType,
+} from "./gleam.mjs";
 
 export class DecodedRecord extends $CustomType {
   constructor(uri, cid, value) {
@@ -232,7 +237,7 @@ export function pinned_dids_from_profiles(records) {
     _pipe,
     (record) => {
       let _pipe$1 = record.value.pinned_repositories;
-      let _pipe$2 = $option.unwrap(_pipe$1, toList([]));
+      let _pipe$2 = $option.unwrap(_pipe$1, $List$Empty$const);
       return $list.filter(_pipe$2, (did) => { return did !== ""; });
     },
   );

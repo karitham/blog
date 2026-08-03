@@ -117,13 +117,13 @@ export const default_config = /* @__PURE__ */ new Config(
   $constants.empty_list,
   $constants.empty_list,
   false,
-  /* @__PURE__ */ new $option.None(),
-  /* @__PURE__ */ new $option.None(),
-  /* @__PURE__ */ new $option.None(),
-  /* @__PURE__ */ new $option.None(),
-  /* @__PURE__ */ new $option.None(),
-  /* @__PURE__ */ new $option.None(),
-  /* @__PURE__ */ new $option.None(),
+  $option.Option$None$const,
+  $option.Option$None$const,
+  $option.Option$None$const,
+  $option.Option$None$const,
+  $option.Option$None$const,
+  $option.Option$None$const,
+  $option.Option$None$const,
 );
 
 export function configure(options) {

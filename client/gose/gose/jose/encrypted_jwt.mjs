@@ -5,7 +5,13 @@ import * as $list from "../../../gleam_stdlib/gleam/list.mjs";
 import * as $option from "../../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $timestamp from "../../../gleam_time/gleam/time/timestamp.mjs";
-import { Ok, Error, toList, CustomType as $CustomType, isEqual } from "../../gleam.mjs";
+import {
+  Ok,
+  Error,
+  List$Empty$const as $List$Empty$const,
+  CustomType as $CustomType,
+  isEqual,
+} from "../../gleam.mjs";
 import * as $gose from "../../gose.mjs";
 import * as $key_helpers from "../../gose/internal/key_helpers.mjs";
 import * as $jwe from "../../gose/jose/jwe.mjs";
@@ -122,7 +128,7 @@ function do_encrypt_with_key(claims, alg, enc, key, kid) {
         key,
         kid,
         new $option.Some("JWT"),
-        new $option.None(),
+        $option.Option$None$const,
       );
       return $result.map(
         _pipe,
@@ -262,7 +268,7 @@ function select_decryption_keys(decryptor, token_kid, kid_policy) {
     let keys = decryptor.keys;
     return $jwt.select_keys_by_policy(keys, token_kid, kid_policy);
   } else {
-    return new Ok(toList([]));
+    return new Ok($List$Empty$const);
   }
 }
 

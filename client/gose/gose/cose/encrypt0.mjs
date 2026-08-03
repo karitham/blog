@@ -6,6 +6,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -57,7 +58,7 @@ export function new$(alg) {
       return new Ok(
         new UnencryptedEncrypt0(
           toList([new $cose.Alg(alg_id)]),
-          toList([]),
+          $List$Empty$const,
           toBitArray([]),
         ),
       );

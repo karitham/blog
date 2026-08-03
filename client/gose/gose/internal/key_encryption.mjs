@@ -306,7 +306,12 @@ export function derive_ecdh_key(secret, alg_id, apu, apv, length) {
   let info = $bit_array.concat(
     toList([algorithm_id, party_u_info, party_v_info, supp_pub_info]),
   );
-  let _pipe = $crypto.concat_kdf(new $hash.Sha256(), secret, info, length);
+  let _pipe = $crypto.concat_kdf(
+    $hash.HashAlgorithm$Sha256$const,
+    secret,
+    info,
+    length,
+  );
   return $result.replace_error(
     _pipe,
     new $gose.CryptoError("ECDH key derivation failed"),
@@ -599,7 +604,11 @@ export function wrap_rsa_pkcs1v15(key, cek) {
       );
     })(),
     (public$) => {
-      let _pipe = $rsa.encrypt(public$, cek, new $rsa.EncryptPkcs1v15());
+      let _pipe = $rsa.encrypt(
+        public$,
+        cek,
+        $rsa.EncryptPadding$EncryptPkcs1v15$const,
+      );
       return $result.replace_error(
         _pipe,
         new $gose.CryptoError("RSA PKCS1v15 encryption failed"),
@@ -633,7 +642,7 @@ export function unwrap_rsa_pkcs1v15_safe(key, encrypted_key, enc) {
       let _pipe = $rsa.decrypt(
         private$,
         encrypted_key,
-        new $rsa.EncryptPkcs1v15(),
+        $rsa.EncryptPadding$EncryptPkcs1v15$const,
       );
       let _pipe$1 = $result.try$(
         _pipe,

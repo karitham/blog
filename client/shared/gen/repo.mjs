@@ -66,12 +66,12 @@ export function repo_decoder() {
     (created_at) => {
       return $decode.optional_field(
         "description",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.string),
         (description) => {
           return $decode.optional_field(
             "name",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (name) => {
               return $decode.field(
@@ -80,12 +80,12 @@ export function repo_decoder() {
                 (repo_did) => {
                   return $decode.optional_field(
                     "topics",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.list($decode.string)),
                     (topics) => {
                       return $decode.optional_field(
                         "website",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.string),
                         (website) => {
                           return $decode.success(

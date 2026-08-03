@@ -3,7 +3,11 @@ import * as $dict from "../../../gleam_stdlib/gleam/dict.mjs";
 import * as $dynamic from "../../../gleam_stdlib/gleam/dynamic.mjs";
 import * as $decode from "../../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $function from "../../../gleam_stdlib/gleam/function.mjs";
-import { toList, CustomType as $CustomType } from "../../gleam.mjs";
+import {
+  toList,
+  List$Empty$const as $List$Empty$const,
+  CustomType as $CustomType,
+} from "../../gleam.mjs";
 import * as $patch from "../../lustre/vdom/patch.mjs";
 import * as $vnode from "../../lustre/vdom/vnode.mjs";
 
@@ -510,7 +514,7 @@ export function server_message_decoder() {
       } else if (kind === 3) {
         return batch_decoder();
       } else {
-        return $decode.failure(batch(toList([])), "");
+        return $decode.failure(batch($List$Empty$const), "");
       }
     },
   );

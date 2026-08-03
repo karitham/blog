@@ -5,7 +5,7 @@ import * as $dynamic from "../../gleam_stdlib/gleam/dynamic.mjs";
 import * as $decode from "../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $option from "../../gleam_stdlib/gleam/option.mjs";
 import { None, Some } from "../../gleam_stdlib/gleam/option.mjs";
-import { Ok, toList, toBitArray } from "../gleam.mjs";
+import { Ok, toList, List$Empty$const as $List$Empty$const, toBitArray } from "../gleam.mjs";
 
 /**
  * One JSON field, or nothing when the value is absent. Keeps optional
@@ -16,7 +16,7 @@ export function opt(name, value, to_json) {
     let v = value[0];
     return toList([[name, to_json(v)]]);
   } else {
-    return toList([]);
+    return $List$Empty$const;
   }
 }
 

@@ -15,6 +15,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -27,58 +28,71 @@ import * as $utils from "../gose/internal/utils.mjs";
 const FILEPATH = "src/gose/cose.gleam";
 
 export class TextPlain extends $CustomType {}
-export const ContentType$TextPlain = () => new TextPlain();
+export const ContentType$TextPlain$const = new TextPlain();
+export const ContentType$TextPlain = () => ContentType$TextPlain$const;
 export const ContentType$isTextPlain = (value) => value instanceof TextPlain;
 
 export class OctetStream extends $CustomType {}
-export const ContentType$OctetStream = () => new OctetStream();
+export const ContentType$OctetStream$const = new OctetStream();
+export const ContentType$OctetStream = () => ContentType$OctetStream$const;
 export const ContentType$isOctetStream = (value) =>
   value instanceof OctetStream;
 
 export class Json extends $CustomType {}
-export const ContentType$Json = () => new Json();
+export const ContentType$Json$const = new Json();
+export const ContentType$Json = () => ContentType$Json$const;
 export const ContentType$isJson = (value) => value instanceof Json;
 
 export class Cbor extends $CustomType {}
-export const ContentType$Cbor = () => new Cbor();
+export const ContentType$Cbor$const = new Cbor();
+export const ContentType$Cbor = () => ContentType$Cbor$const;
 export const ContentType$isCbor = (value) => value instanceof Cbor;
 
 export class Cwt extends $CustomType {}
-export const ContentType$Cwt = () => new Cwt();
+export const ContentType$Cwt$const = new Cwt();
+export const ContentType$Cwt = () => ContentType$Cwt$const;
 export const ContentType$isCwt = (value) => value instanceof Cwt;
 
 export class CoseSign extends $CustomType {}
-export const ContentType$CoseSign = () => new CoseSign();
+export const ContentType$CoseSign$const = new CoseSign();
+export const ContentType$CoseSign = () => ContentType$CoseSign$const;
 export const ContentType$isCoseSign = (value) => value instanceof CoseSign;
 
 export class CoseSign1 extends $CustomType {}
-export const ContentType$CoseSign1 = () => new CoseSign1();
+export const ContentType$CoseSign1$const = new CoseSign1();
+export const ContentType$CoseSign1 = () => ContentType$CoseSign1$const;
 export const ContentType$isCoseSign1 = (value) => value instanceof CoseSign1;
 
 export class CoseEncrypt extends $CustomType {}
-export const ContentType$CoseEncrypt = () => new CoseEncrypt();
+export const ContentType$CoseEncrypt$const = new CoseEncrypt();
+export const ContentType$CoseEncrypt = () => ContentType$CoseEncrypt$const;
 export const ContentType$isCoseEncrypt = (value) =>
   value instanceof CoseEncrypt;
 
 export class CoseEncrypt0 extends $CustomType {}
-export const ContentType$CoseEncrypt0 = () => new CoseEncrypt0();
+export const ContentType$CoseEncrypt0$const = new CoseEncrypt0();
+export const ContentType$CoseEncrypt0 = () => ContentType$CoseEncrypt0$const;
 export const ContentType$isCoseEncrypt0 = (value) =>
   value instanceof CoseEncrypt0;
 
 export class CoseMac extends $CustomType {}
-export const ContentType$CoseMac = () => new CoseMac();
+export const ContentType$CoseMac$const = new CoseMac();
+export const ContentType$CoseMac = () => ContentType$CoseMac$const;
 export const ContentType$isCoseMac = (value) => value instanceof CoseMac;
 
 export class CoseMac0 extends $CustomType {}
-export const ContentType$CoseMac0 = () => new CoseMac0();
+export const ContentType$CoseMac0$const = new CoseMac0();
+export const ContentType$CoseMac0 = () => ContentType$CoseMac0$const;
 export const ContentType$isCoseMac0 = (value) => value instanceof CoseMac0;
 
 export class CoseKey extends $CustomType {}
-export const ContentType$CoseKey = () => new CoseKey();
+export const ContentType$CoseKey$const = new CoseKey();
+export const ContentType$CoseKey = () => ContentType$CoseKey$const;
 export const ContentType$isCoseKey = (value) => value instanceof CoseKey;
 
 export class CoseKeySet extends $CustomType {}
-export const ContentType$CoseKeySet = () => new CoseKeySet();
+export const ContentType$CoseKeySet$const = new CoseKeySet();
+export const ContentType$CoseKeySet = () => ContentType$CoseKeySet$const;
 export const ContentType$isCoseKeySet = (value) => value instanceof CoseKeySet;
 
 export class IntContentType extends $CustomType {
@@ -410,31 +424,31 @@ function content_type_from_cbor(value) {
   if (value instanceof $cbor.Int) {
     let $ = value[0];
     if ($ === 0) {
-      return new Ok(new TextPlain());
+      return new Ok(ContentType$TextPlain$const);
     } else if ($ === 42) {
-      return new Ok(new OctetStream());
+      return new Ok(ContentType$OctetStream$const);
     } else if ($ === 50) {
-      return new Ok(new Json());
+      return new Ok(ContentType$Json$const);
     } else if ($ === 60) {
-      return new Ok(new Cbor());
+      return new Ok(ContentType$Cbor$const);
     } else if ($ === 61) {
-      return new Ok(new Cwt());
+      return new Ok(ContentType$Cwt$const);
     } else if ($ === 101) {
-      return new Ok(new CoseSign());
+      return new Ok(ContentType$CoseSign$const);
     } else if ($ === 102) {
-      return new Ok(new CoseSign1());
+      return new Ok(ContentType$CoseSign1$const);
     } else if ($ === 103) {
-      return new Ok(new CoseEncrypt());
+      return new Ok(ContentType$CoseEncrypt$const);
     } else if ($ === 104) {
-      return new Ok(new CoseEncrypt0());
+      return new Ok(ContentType$CoseEncrypt0$const);
     } else if ($ === 105) {
-      return new Ok(new CoseMac());
+      return new Ok(ContentType$CoseMac$const);
     } else if ($ === 106) {
-      return new Ok(new CoseMac0());
+      return new Ok(ContentType$CoseMac0$const);
     } else if ($ === 10001) {
-      return new Ok(new CoseKey());
+      return new Ok(ContentType$CoseKey$const);
     } else if ($ === 10002) {
-      return new Ok(new CoseKeySet());
+      return new Ok(ContentType$CoseKeySet$const);
     } else {
       let n = $;
       return new Ok(new IntContentType(n));
@@ -548,7 +562,7 @@ export function header_from_cbor(pair) {
       } else if ($2 === 2) {
         let values = $1[0];
         return $result.map(
-          parse_int_list(values, toList([])),
+          parse_int_list(values, $List$Empty$const),
           (labels) => { return new Crit(labels); },
         );
       } else if ($2 === 3) {
@@ -845,7 +859,7 @@ function resolve_alg_metadata(k) {
     let alg = $[0];
     return encode_alg_metadata(alg);
   } else {
-    return new Ok(toList([]));
+    return new Ok($List$Empty$const);
   }
 }
 
@@ -856,7 +870,7 @@ function encode_metadata(k) {
     let kid$1 = $[0];
     _block = toList([[new $cbor.Int(2), new $cbor.Bytes(kid$1)]]);
   } else {
-    _block = toList([]);
+    _block = $List$Empty$const;
   }
   let kid_pair = _block;
   return $result.try$(
@@ -878,7 +892,7 @@ function encode_metadata(k) {
           ],
         ]);
       } else {
-        _block$1 = toList([]);
+        _block$1 = $List$Empty$const;
       }
       let ops_pair = _block$1;
       return new Ok($list.flatten(toList([kid_pair, alg_pair, ops_pair])));
@@ -948,7 +962,11 @@ function encode_xdh(mat) {
   } else {
     let public_key = mat.key;
     let c = mat.curve;
-    _block = [c, $xdh.public_key_to_bytes(public_key), new $option.None()];
+    _block = [
+      c,
+      $xdh.public_key_to_bytes(public_key),
+      $option.Option$None$const,
+    ];
   }
   let $ = _block;
   let curve = $[0];
@@ -990,7 +1008,11 @@ function encode_eddsa(mat) {
   } else {
     let public_key = mat.key;
     let c = mat.curve;
-    _block = [c, $eddsa.public_key_to_bytes(public_key), new $option.None()];
+    _block = [
+      c,
+      $eddsa.public_key_to_bytes(public_key),
+      $option.Option$None$const,
+    ];
   }
   let $ = _block;
   let curve = $[0];
@@ -1032,7 +1054,7 @@ function encode_ec(mat) {
   } else {
     let public_key = mat.key;
     let c = mat.curve;
-    _block = [c, public_key, new $option.None()];
+    _block = [c, public_key, $option.Option$None$const];
   }
   let $ = _block;
   let curve = $[0];
@@ -1150,21 +1172,21 @@ export function key_to_cbor(k) {
 
 function key_op_from_cose(id) {
   if (id === 1) {
-    return new Ok(new $gose.Sign());
+    return new Ok($gose.KeyOp$Sign$const);
   } else if (id === 2) {
-    return new Ok(new $gose.Verify());
+    return new Ok($gose.KeyOp$Verify$const);
   } else if (id === 3) {
-    return new Ok(new $gose.Encrypt());
+    return new Ok($gose.KeyOp$Encrypt$const);
   } else if (id === 4) {
-    return new Ok(new $gose.Decrypt());
+    return new Ok($gose.KeyOp$Decrypt$const);
   } else if (id === 5) {
-    return new Ok(new $gose.WrapKey());
+    return new Ok($gose.KeyOp$WrapKey$const);
   } else if (id === 6) {
-    return new Ok(new $gose.UnwrapKey());
+    return new Ok($gose.KeyOp$UnwrapKey$const);
   } else if (id === 7) {
-    return new Ok(new $gose.DeriveKey());
+    return new Ok($gose.KeyOp$DeriveKey$const);
   } else if (id === 8) {
-    return new Ok(new $gose.DeriveBits());
+    return new Ok($gose.KeyOp$DeriveBits$const);
   } else {
     return new Error(
       new $gose.ParseError("unknown COSE key_op: " + $int.to_string(id)),
@@ -1201,7 +1223,7 @@ function lookup_array_optional(map, label) {
       );
     }
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -1227,13 +1249,13 @@ function apply_key_ops(k, map) {
  */
 export function content_alg_from_int(id) {
   if (id === 1) {
-    return new Ok(new $gose.AesGcm(new $gose.Aes128()));
+    return new Ok(new $gose.AesGcm($gose.AesKeySize$Aes128$const));
   } else if (id === 2) {
-    return new Ok(new $gose.AesGcm(new $gose.Aes192()));
+    return new Ok(new $gose.AesGcm($gose.AesKeySize$Aes192$const));
   } else if (id === 3) {
-    return new Ok(new $gose.AesGcm(new $gose.Aes256()));
+    return new Ok(new $gose.AesGcm($gose.AesKeySize$Aes256$const));
   } else if (id === 24) {
-    return new Ok(new $gose.ChaCha20Poly1305());
+    return new Ok($gose.ContentAlg$ChaCha20Poly1305$const);
   } else {
     return new Error(
       new $gose.ParseError(
@@ -1255,27 +1277,52 @@ export function content_alg_from_int(id) {
  */
 export function key_encryption_alg_from_int(id) {
   if (id === -25) {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsDirect()));
+    return new Ok(new $gose.EcdhEs($gose.EcdhEsAlg$EcdhEsDirect$const));
   } else if (id === -26) {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsDirect()));
+    return new Ok(new $gose.EcdhEs($gose.EcdhEsAlg$EcdhEsDirect$const));
   } else if (id === -29) {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsAesKw(new $gose.Aes128())));
+    return new Ok(
+      new $gose.EcdhEs(new $gose.EcdhEsAesKw($gose.AesKeySize$Aes128$const)),
+    );
   } else if (id === -3) {
-    return new Ok(new $gose.AesKeyWrap(new $gose.AesKw(), new $gose.Aes128()));
+    return new Ok(
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesKw$const,
+        $gose.AesKeySize$Aes128$const,
+      ),
+    );
   } else if (id === -30) {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsAesKw(new $gose.Aes192())));
+    return new Ok(
+      new $gose.EcdhEs(new $gose.EcdhEsAesKw($gose.AesKeySize$Aes192$const)),
+    );
   } else if (id === -31) {
-    return new Ok(new $gose.EcdhEs(new $gose.EcdhEsAesKw(new $gose.Aes256())));
+    return new Ok(
+      new $gose.EcdhEs(new $gose.EcdhEsAesKw($gose.AesKeySize$Aes256$const)),
+    );
   } else if (id === -4) {
-    return new Ok(new $gose.AesKeyWrap(new $gose.AesKw(), new $gose.Aes192()));
+    return new Ok(
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesKw$const,
+        $gose.AesKeySize$Aes192$const,
+      ),
+    );
   } else if (id === -5) {
-    return new Ok(new $gose.AesKeyWrap(new $gose.AesKw(), new $gose.Aes256()));
+    return new Ok(
+      new $gose.AesKeyWrap(
+        $gose.AesKwMode$AesKw$const,
+        $gose.AesKeySize$Aes256$const,
+      ),
+    );
   } else if (id === -6) {
-    return new Ok(new $gose.Direct());
+    return new Ok($gose.KeyEncryptionAlg$Direct$const);
   } else if (id === -40) {
-    return new Ok(new $gose.RsaEncryption(new $gose.RsaOaepSha1()));
+    return new Ok(
+      new $gose.RsaEncryption($gose.RsaEncryptionAlg$RsaOaepSha1$const),
+    );
   } else if (id === -41) {
-    return new Ok(new $gose.RsaEncryption(new $gose.RsaOaepSha256()));
+    return new Ok(
+      new $gose.RsaEncryption($gose.RsaEncryptionAlg$RsaOaepSha256$const),
+    );
   } else {
     return new Error(
       new $gose.ParseError(
@@ -1290,11 +1337,11 @@ export function key_encryption_alg_from_int(id) {
  */
 export function mac_alg_from_int(id) {
   if (id === 5) {
-    return new Ok(new $gose.Hmac(new $gose.HmacSha256()));
+    return new Ok(new $gose.Hmac($gose.HmacAlg$HmacSha256$const));
   } else if (id === 6) {
-    return new Ok(new $gose.Hmac(new $gose.HmacSha384()));
+    return new Ok(new $gose.Hmac($gose.HmacAlg$HmacSha384$const));
   } else if (id === 7) {
-    return new Ok(new $gose.Hmac(new $gose.HmacSha512()));
+    return new Ok(new $gose.Hmac($gose.HmacAlg$HmacSha512$const));
   } else {
     return new Error(
       new $gose.ParseError("unknown COSE MAC algorithm: " + $int.to_string(id)),
@@ -1307,27 +1354,27 @@ export function mac_alg_from_int(id) {
  */
 export function signature_alg_from_int(id) {
   if (id === -257) {
-    return new Ok(new $gose.RsaPkcs1(new $gose.RsaPkcs1Sha256()));
+    return new Ok(new $gose.RsaPkcs1($gose.RsaPkcs1Alg$RsaPkcs1Sha256$const));
   } else if (id === -258) {
-    return new Ok(new $gose.RsaPkcs1(new $gose.RsaPkcs1Sha384()));
+    return new Ok(new $gose.RsaPkcs1($gose.RsaPkcs1Alg$RsaPkcs1Sha384$const));
   } else if (id === -259) {
-    return new Ok(new $gose.RsaPkcs1(new $gose.RsaPkcs1Sha512()));
+    return new Ok(new $gose.RsaPkcs1($gose.RsaPkcs1Alg$RsaPkcs1Sha512$const));
   } else if (id === -35) {
-    return new Ok(new $gose.Ecdsa(new $gose.EcdsaP384()));
+    return new Ok(new $gose.Ecdsa($gose.EcdsaAlg$EcdsaP384$const));
   } else if (id === -36) {
-    return new Ok(new $gose.Ecdsa(new $gose.EcdsaP521()));
+    return new Ok(new $gose.Ecdsa($gose.EcdsaAlg$EcdsaP521$const));
   } else if (id === -37) {
-    return new Ok(new $gose.RsaPss(new $gose.RsaPssSha256()));
+    return new Ok(new $gose.RsaPss($gose.RsaPssAlg$RsaPssSha256$const));
   } else if (id === -38) {
-    return new Ok(new $gose.RsaPss(new $gose.RsaPssSha384()));
+    return new Ok(new $gose.RsaPss($gose.RsaPssAlg$RsaPssSha384$const));
   } else if (id === -39) {
-    return new Ok(new $gose.RsaPss(new $gose.RsaPssSha512()));
+    return new Ok(new $gose.RsaPss($gose.RsaPssAlg$RsaPssSha512$const));
   } else if (id === -47) {
-    return new Ok(new $gose.Ecdsa(new $gose.EcdsaSecp256k1()));
+    return new Ok(new $gose.Ecdsa($gose.EcdsaAlg$EcdsaSecp256k1$const));
   } else if (id === -7) {
-    return new Ok(new $gose.Ecdsa(new $gose.EcdsaP256()));
+    return new Ok(new $gose.Ecdsa($gose.EcdsaAlg$EcdsaP256$const));
   } else if (id === -8) {
-    return new Ok(new $gose.Eddsa());
+    return new Ok($gose.DigitalSignatureAlg$Eddsa$const);
   } else {
     return new Error(
       new $gose.ParseError(
@@ -1399,7 +1446,7 @@ function lookup_int_optional(map, label) {
       );
     }
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -1435,7 +1482,7 @@ function lookup_bytes_optional(map, label) {
       );
     }
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -1605,13 +1652,13 @@ function decode_rsa(map) {
 
 export function ec_curve_from_cose(id) {
   if (id === 1) {
-    return new Ok(new $ec.P256());
+    return new Ok($ec.Curve$P256$const);
   } else if (id === 2) {
-    return new Ok(new $ec.P384());
+    return new Ok($ec.Curve$P384$const);
   } else if (id === 3) {
-    return new Ok(new $ec.P521());
+    return new Ok($ec.Curve$P521$const);
   } else if (id === 8) {
-    return new Ok(new $ec.Secp256k1());
+    return new Ok($ec.Curve$Secp256k1$const);
   } else {
     return new Error(
       new $gose.ParseError("unsupported COSE EC curve: " + $int.to_string(id)),
@@ -1815,13 +1862,13 @@ function decode_okp(map) {
     lookup_int(map, -1, "missing OKP curve (label -1)"),
     (crv_id) => {
       if (crv_id === 6) {
-        return decode_eddsa_key(new $eddsa.Ed25519(), map);
+        return decode_eddsa_key($eddsa.Curve$Ed25519$const, map);
       } else if (crv_id === 7) {
-        return decode_eddsa_key(new $eddsa.Ed448(), map);
+        return decode_eddsa_key($eddsa.Curve$Ed448$const, map);
       } else if (crv_id === 4) {
-        return decode_xdh_key(new $xdh.X25519(), map);
+        return decode_xdh_key($xdh.Curve$X25519$const, map);
       } else if (crv_id === 5) {
-        return decode_xdh_key(new $xdh.X448(), map);
+        return decode_xdh_key($xdh.Curve$X448$const, map);
       } else {
         return new Error(
           new $gose.ParseError(
@@ -1883,9 +1930,9 @@ export function key_from_cbor(data) {
 
 export function xdh_curve_from_cose(id) {
   if (id === 4) {
-    return new Ok(new $xdh.X25519());
+    return new Ok($xdh.Curve$X25519$const);
   } else if (id === 5) {
-    return new Ok(new $xdh.X448());
+    return new Ok($xdh.Curve$X448$const);
   } else {
     return new Error(
       new $gose.ParseError("unsupported COSE XDH curve: " + $int.to_string(id)),

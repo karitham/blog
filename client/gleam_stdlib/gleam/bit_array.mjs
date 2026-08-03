@@ -199,19 +199,19 @@ export function compare(loop$a, loop$b) {
         let f = first_byte;
         let s = second_byte;
         if (f > s) {
-          return new $order.Gt();
+          return $order.Order$Gt$const;
         } else {
           let f = first_byte;
           let s = second_byte;
           if (f < s) {
-            return new $order.Lt();
+            return $order.Order$Lt$const;
           } else {
             loop$a = first_rest;
             loop$b = second_rest;
           }
         }
       } else if (b.bitSize === 0) {
-        return new $order.Gt();
+        return $order.Order$Gt$const;
       } else {
         let first = a;
         let second = b;
@@ -220,24 +220,24 @@ export function compare(loop$a, loop$b) {
         let a$1 = $[0];
         let b$1 = $1[0];
         if (a$1 > b$1) {
-          return new $order.Gt();
+          return $order.Order$Gt$const;
         } else {
           let a$1 = $[0];
           let b$1 = $1[0];
           if (a$1 < b$1) {
-            return new $order.Lt();
+            return $order.Order$Lt$const;
           } else {
             let size_a = $[1];
             let size_b = $1[1];
             if (size_a > size_b) {
-              return new $order.Gt();
+              return $order.Order$Gt$const;
             } else {
               let size_a = $[1];
               let size_b = $1[1];
               if (size_a < size_b) {
-                return new $order.Lt();
+                return $order.Order$Lt$const;
               } else {
-                return new $order.Eq();
+                return $order.Order$Eq$const;
               }
             }
           }
@@ -245,12 +245,12 @@ export function compare(loop$a, loop$b) {
       }
     } else if (b.bitSize === 0) {
       if (a.bitSize === 0) {
-        return new $order.Eq();
+        return $order.Order$Eq$const;
       } else {
-        return new $order.Gt();
+        return $order.Order$Gt$const;
       }
     } else if (a.bitSize === 0) {
-      return new $order.Lt();
+      return $order.Order$Lt$const;
     } else {
       let first = a;
       let second = b;
@@ -259,24 +259,24 @@ export function compare(loop$a, loop$b) {
       let a$1 = $[0];
       let b$1 = $1[0];
       if (a$1 > b$1) {
-        return new $order.Gt();
+        return $order.Order$Gt$const;
       } else {
         let a$1 = $[0];
         let b$1 = $1[0];
         if (a$1 < b$1) {
-          return new $order.Lt();
+          return $order.Order$Lt$const;
         } else {
           let size_a = $[1];
           let size_b = $1[1];
           if (size_a > size_b) {
-            return new $order.Gt();
+            return $order.Order$Gt$const;
           } else {
             let size_a = $[1];
             let size_b = $1[1];
             if (size_a < size_b) {
-              return new $order.Lt();
+              return $order.Order$Lt$const;
             } else {
-              return new $order.Eq();
+              return $order.Order$Eq$const;
             }
           }
         }

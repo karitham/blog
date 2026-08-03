@@ -4,9 +4,15 @@ import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $string from "../../../gleam_stdlib/gleam/string.mjs";
 import * as $uri from "../../../gleam_stdlib/gleam/uri.mjs";
 import { Uri } from "../../../gleam_stdlib/gleam/uri.mjs";
-import { Ok, Error, toList, prepend as listPrepend, CustomType as $CustomType } from "../../gleam.mjs";
+import {
+  Ok,
+  Error,
+  List$Empty$const as $List$Empty$const,
+  prepend as listPrepend,
+  CustomType as $CustomType,
+} from "../../gleam.mjs";
 import * as $http from "../../gleam/http.mjs";
-import { Get } from "../../gleam/http.mjs";
+import { Method$Get$const } from "../../gleam/http.mjs";
 import * as $cookie from "../../gleam/http/cookie.mjs";
 
 export class Request extends $CustomType {
@@ -48,12 +54,12 @@ export const Request$Request$7 = (value) => value.query;
 export function to_uri(request) {
   return new Uri(
     new $option.Some($http.scheme_to_string(request.scheme)),
-    new $option.None(),
+    $option.Option$None$const,
     new $option.Some(request.host),
     request.port,
     request.path,
     request.query,
-    new $option.None(),
+    $option.Option$None$const,
   );
 }
 
@@ -75,8 +81,8 @@ export function from_uri(uri) {
         })(),
         (host) => {
           let req = new Request(
-            new Get(),
-            toList([]),
+            Method$Get$const,
+            $List$Empty$const,
             "",
             scheme,
             host,
@@ -199,7 +205,7 @@ export function get_query(request) {
     let query_string = $[0];
     return $uri.parse_query(query_string);
   } else {
-    return new Ok(toList([]));
+    return new Ok($List$Empty$const);
   }
 }
 
@@ -254,14 +260,14 @@ export function set_method(req, method) {
  */
 export function new$() {
   return new Request(
-    new Get(),
-    toList([]),
+    Method$Get$const,
+    $List$Empty$const,
     "",
-    new $http.Https(),
+    $http.Scheme$Https$const,
     "localhost",
-    new $option.None(),
+    $option.Option$None$const,
     "",
-    new $option.None(),
+    $option.Option$None$const,
   );
 }
 
@@ -390,7 +396,7 @@ export function get_cookies(req) {
         let value = header[1];
         return $cookie.parse(value);
       } else {
-        return toList([]);
+        return $List$Empty$const;
       }
     },
   );

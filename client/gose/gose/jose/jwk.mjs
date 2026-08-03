@@ -17,6 +17,7 @@ import {
   Ok,
   Error,
   toList,
+  List$Empty$const as $List$Empty$const,
   CustomType as $CustomType,
   makeError,
   isEqual,
@@ -107,7 +108,7 @@ function alg_fields(alg) {
     let a = alg[0];
     return toList([["alg", $json.string(alg_to_string(a))]]);
   } else {
-    return toList([]);
+    return $List$Empty$const;
   }
 }
 
@@ -141,7 +142,7 @@ function key_ops_fields(key_ops) {
       ],
     ]);
   } else {
-    return toList([]);
+    return $List$Empty$const;
   }
 }
 
@@ -158,7 +159,7 @@ function key_use_fields(key_use) {
     let u = key_use[0];
     return toList([["use", $json.string(key_use_to_string(u))]]);
   } else {
-    return toList([]);
+    return $List$Empty$const;
   }
 }
 
@@ -167,7 +168,7 @@ function kid_fields(kid) {
     let k = kid[0];
     return toList([["kid", $json.string(k)]]);
   } else {
-    return toList([]);
+    return $List$Empty$const;
   }
 }
 
@@ -485,27 +486,27 @@ function parse_optional(opt, parser) {
       (var0) => { return new $option.Some(var0); },
     );
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
 function key_op_from_string(s) {
   if (s === "sign") {
-    return new Ok(new $gose.Sign());
+    return new Ok($gose.KeyOp$Sign$const);
   } else if (s === "verify") {
-    return new Ok(new $gose.Verify());
+    return new Ok($gose.KeyOp$Verify$const);
   } else if (s === "encrypt") {
-    return new Ok(new $gose.Encrypt());
+    return new Ok($gose.KeyOp$Encrypt$const);
   } else if (s === "decrypt") {
-    return new Ok(new $gose.Decrypt());
+    return new Ok($gose.KeyOp$Decrypt$const);
   } else if (s === "wrapKey") {
-    return new Ok(new $gose.WrapKey());
+    return new Ok($gose.KeyOp$WrapKey$const);
   } else if (s === "unwrapKey") {
-    return new Ok(new $gose.UnwrapKey());
+    return new Ok($gose.KeyOp$UnwrapKey$const);
   } else if (s === "deriveKey") {
-    return new Ok(new $gose.DeriveKey());
+    return new Ok($gose.KeyOp$DeriveKey$const);
   } else if (s === "deriveBits") {
-    return new Ok(new $gose.DeriveBits());
+    return new Ok($gose.KeyOp$DeriveBits$const);
   } else {
     return new Error(new $gose.ParseError("invalid key_ops value: " + s));
   }
@@ -535,9 +536,9 @@ function parse_key_ops(ops) {
 
 function key_use_from_string(s) {
   if (s === "sig") {
-    return new Ok(new $gose.Signing());
+    return new Ok($gose.KeyUse$Signing$const);
   } else if (s === "enc") {
-    return new Ok(new $gose.Encrypting());
+    return new Ok($gose.KeyUse$Encrypting$const);
   } else {
     return new Error(new $gose.ParseError("invalid use value: " + s));
   }
@@ -722,27 +723,27 @@ function ec_decoder() {
             (y) => {
               return $decode.optional_field(
                 "d",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.string),
                 (d) => {
                   return $decode.optional_field(
                     "kid",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.string),
                     (kid) => {
                       return $decode.optional_field(
                         "use",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.string),
                         (use_) => {
                           return $decode.optional_field(
                             "key_ops",
-                            new $option.None(),
+                            $option.Option$None$const,
                             $decode.optional($decode.list($decode.string)),
                             (key_ops) => {
                               return $decode.optional_field(
                                 "alg",
-                                new $option.None(),
+                                $option.Option$None$const,
                                 $decode.optional($decode.string),
                                 (alg) => {
                                   return $decode.success(
@@ -987,54 +988,54 @@ function rsa_decoder() {
         (e) => {
           return $decode.optional_field(
             "d",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (d) => {
               return $decode.optional_field(
                 "p",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.string),
                 (p) => {
                   return $decode.optional_field(
                     "q",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.string),
                     (q) => {
                       return $decode.optional_field(
                         "dp",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.string),
                         (dp) => {
                           return $decode.optional_field(
                             "dq",
-                            new $option.None(),
+                            $option.Option$None$const,
                             $decode.optional($decode.string),
                             (dq) => {
                               return $decode.optional_field(
                                 "qi",
-                                new $option.None(),
+                                $option.Option$None$const,
                                 $decode.optional($decode.string),
                                 (qi) => {
                                   return $decode.optional_field(
                                     "kid",
-                                    new $option.None(),
+                                    $option.Option$None$const,
                                     $decode.optional($decode.string),
                                     (kid) => {
                                       return $decode.optional_field(
                                         "use",
-                                        new $option.None(),
+                                        $option.Option$None$const,
                                         $decode.optional($decode.string),
                                         (use_) => {
                                           return $decode.optional_field(
                                             "key_ops",
-                                            new $option.None(),
+                                            $option.Option$None$const,
                                             $decode.optional(
                                               $decode.list($decode.string),
                                             ),
                                             (key_ops) => {
                                               return $decode.optional_field(
                                                 "alg",
-                                                new $option.None(),
+                                                $option.Option$None$const,
                                                 $decode.optional($decode.string),
                                                 (alg) => {
                                                   return $decode.optional_field(
@@ -1139,22 +1140,22 @@ function oct_decoder() {
     (k) => {
       return $decode.optional_field(
         "kid",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.string),
         (kid) => {
           return $decode.optional_field(
             "use",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (use_) => {
               return $decode.optional_field(
                 "key_ops",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.list($decode.string)),
                 (key_ops) => {
                   return $decode.optional_field(
                     "alg",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.string),
                     (alg) => {
                       return $decode.success(
@@ -1375,27 +1376,27 @@ function okp_decoder() {
         (x) => {
           return $decode.optional_field(
             "d",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (d) => {
               return $decode.optional_field(
                 "kid",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.string),
                 (kid) => {
                   return $decode.optional_field(
                     "use",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.string),
                     (use_) => {
                       return $decode.optional_field(
                         "key_ops",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.list($decode.string)),
                         (key_ops) => {
                           return $decode.optional_field(
                             "alg",
-                            new $option.None(),
+                            $option.Option$None$const,
                             $decode.optional($decode.string),
                             (alg) => {
                               return $decode.success(
@@ -1516,10 +1517,10 @@ export function from_json_bits(json_bits) {
 export function decoder() {
   let placeholder = $gose.build(
     new $gose.OctetKey(toBitArray([])),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
-    new $option.None(),
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
+    $option.Option$None$const,
   );
   return $decode.new_primitive_decoder(
     "Key",

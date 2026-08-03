@@ -1,4 +1,8 @@
-import { toList, CustomType as $CustomType, isEqual } from "../gleam.mjs";
+import {
+  List$Empty$const as $List$Empty$const,
+  CustomType as $CustomType,
+  isEqual,
+} from "../gleam.mjs";
 import * as $list from "../gleam/list.mjs";
 import {
   concat as from_strings,
@@ -28,13 +32,14 @@ export {
 };
 
 class All extends $CustomType {}
+const Direction$All$const = new All();
 
 /**
  * Create an empty `StringTree`. Useful as the start of a pipe chaining many
  * trees together.
  */
 export function new$() {
-  return from_strings(toList([]));
+  return from_strings($List$Empty$const);
 }
 
 /**

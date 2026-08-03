@@ -1,4 +1,4 @@
-import { toList } from "../../gleam.mjs";
+import { toList, List$Empty$const as $List$Empty$const } from "../../gleam.mjs";
 import * as $attribute from "../../lustre/attribute.mjs";
 import * as $element from "../../lustre/element.mjs";
 import { namespaced } from "../../lustre/element.mjs";
@@ -175,7 +175,7 @@ export function ms(attrs, text) {
  *
  */
 export function mspace(attrs) {
-  return namespaced(namespace, "mspace", attrs, toList([]));
+  return namespaced(namespace, "mspace", attrs, $List$Empty$const);
 }
 
 /**

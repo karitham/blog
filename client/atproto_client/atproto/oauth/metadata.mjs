@@ -1,7 +1,7 @@
 import * as $decode from "../../../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $list from "../../../gleam_stdlib/gleam/list.mjs";
 import * as $option from "../../../gleam_stdlib/gleam/option.mjs";
-import { None } from "../../../gleam_stdlib/gleam/option.mjs";
+import { Option$None$const } from "../../../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../../../gleam_stdlib/gleam/result.mjs";
 import * as $xrpc from "../../atproto/xrpc.mjs";
 import { toList, CustomType as $CustomType } from "../../gleam.mjs";
@@ -70,7 +70,7 @@ function auth_server_decoder() {
                 (par) => {
                   return $decode.optional_field(
                     "revocation_endpoint",
-                    new None(),
+                    Option$None$const,
                     $decode.optional($decode.string),
                     (revocation_endpoint) => {
                       return $decode.success(
@@ -97,7 +97,7 @@ function auth_server_decoder() {
 export function fetch_protected_resource(client, pds) {
   let url = pds + "/.well-known/oauth-protected-resource";
   return $result.try$(
-    $xrpc.get(client, url, new None()),
+    $xrpc.get(client, url, Option$None$const),
     (resp) => { return $xrpc.parse(resp.body, protected_resource_decoder()); },
   );
 }
@@ -105,7 +105,7 @@ export function fetch_protected_resource(client, pds) {
 export function fetch_authorization_server(client, issuer) {
   let url = issuer + "/.well-known/oauth-authorization-server";
   return $result.try$(
-    $xrpc.get(client, url, new None()),
+    $xrpc.get(client, url, Option$None$const),
     (resp) => { return $xrpc.parse(resp.body, auth_server_decoder()); },
   );
 }

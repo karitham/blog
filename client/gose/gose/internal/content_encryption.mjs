@@ -102,11 +102,11 @@ export function aes_block_for_size(size) {
 
 export function hash_for_aes_size(size) {
   if (size instanceof $gose.Aes128) {
-    return new $hash.Sha256();
+    return $hash.HashAlgorithm$Sha256$const;
   } else if (size instanceof $gose.Aes192) {
-    return new $hash.Sha384();
+    return $hash.HashAlgorithm$Sha384$const;
   } else {
-    return new $hash.Sha512();
+    return $hash.HashAlgorithm$Sha512$const;
   }
 }
 

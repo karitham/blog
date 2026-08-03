@@ -23,7 +23,10 @@ function b64(bits) {
 export function generate() {
   let verifier = b64($crypto.strong_random_bytes(32));
   let challenge = b64(
-    $crypto.hash(new $crypto.Sha256(), $bit_array.from_string(verifier)),
+    $crypto.hash(
+      $crypto.HashAlgorithm$Sha256$const,
+      $bit_array.from_string(verifier),
+    ),
   );
   return new Pkce(verifier, challenge);
 }

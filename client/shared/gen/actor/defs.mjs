@@ -98,17 +98,17 @@ export function encode_profile_view_detailed(value) {
 export function profile_view_detailed_decoder() {
   return $decode.optional_field(
     "avatar",
-    new $option.None(),
+    $option.Option$None$const,
     $decode.optional($decode.string),
     (avatar) => {
       return $decode.optional_field(
         "banner",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.string),
         (banner) => {
           return $decode.optional_field(
             "description",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (description) => {
               return $decode.field(
@@ -117,17 +117,17 @@ export function profile_view_detailed_decoder() {
                 (did) => {
                   return $decode.optional_field(
                     "displayName",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.string),
                     (display_name) => {
                       return $decode.optional_field(
                         "followersCount",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.int),
                         (followers_count) => {
                           return $decode.optional_field(
                             "followsCount",
-                            new $option.None(),
+                            $option.Option$None$const,
                             $decode.optional($decode.int),
                             (follows_count) => {
                               return $decode.field(
@@ -136,12 +136,12 @@ export function profile_view_detailed_decoder() {
                                 (handle) => {
                                   return $decode.optional_field(
                                     "postsCount",
-                                    new $option.None(),
+                                    $option.Option$None$const,
                                     $decode.optional($decode.int),
                                     (posts_count) => {
                                       return $decode.optional_field(
                                         "pronouns",
-                                        new $option.None(),
+                                        $option.Option$None$const,
                                         $decode.optional($decode.string),
                                         (pronouns) => {
                                           return $decode.success(

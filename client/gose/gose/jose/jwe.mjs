@@ -17,6 +17,7 @@ import {
   Error,
   toList,
   Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
   prepend as listPrepend,
   CustomType as $CustomType,
   makeError,
@@ -44,6 +45,7 @@ class JweHeader extends $CustomType {
 }
 
 class NoBuilderAlgFields extends $CustomType {}
+const BuilderAlgFields$NoBuilderAlgFields$const = new NoBuilderAlgFields();
 
 class EcdhEsBuilderFields extends $CustomType {
   constructor(apu, apv) {
@@ -61,10 +63,14 @@ class Pbes2BuilderFields extends $CustomType {
 }
 
 class AesGcmKwBuilderFields extends $CustomType {}
+const BuilderAlgFields$AesGcmKwBuilderFields$const = new AesGcmKwBuilderFields();
 
 class ChaCha20KwBuilderFields extends $CustomType {}
+const BuilderAlgFields$ChaCha20KwBuilderFields$const =
+  new ChaCha20KwBuilderFields();
 
 class NoResolvedAlgFields extends $CustomType {}
+const ResolvedAlgFields$NoResolvedAlgFields$const = new NoResolvedAlgFields();
 
 class EcdhEsResolvedFields extends $CustomType {
   constructor(epk, apu, apv) {
@@ -267,16 +273,16 @@ export function key_decryptor(alg, enc, keys) {
 export function new_aes_gcm_kw(size, enc) {
   return new Jwe(
     new JweHeader(
-      new $gose.AesKeyWrap(new $gose.AesGcmKw(), size),
+      new $gose.AesKeyWrap($gose.AesKwMode$AesGcmKw$const, size),
       enc,
-      new $option.None(),
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
-    new $option.None(),
+    $option.Option$None$const,
     $dict.new$(),
     $dict.new$(),
-    new AesGcmKwBuilderFields(),
+    BuilderAlgFields$AesGcmKwBuilderFields$const,
   );
 }
 
@@ -294,16 +300,16 @@ export function new_aes_gcm_kw(size, enc) {
 export function new_aes_kw(size, enc) {
   return new Jwe(
     new JweHeader(
-      new $gose.AesKeyWrap(new $gose.AesKw(), size),
+      new $gose.AesKeyWrap($gose.AesKwMode$AesKw$const, size),
       enc,
-      new $option.None(),
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
-    new $option.None(),
+    $option.Option$None$const,
     $dict.new$(),
     $dict.new$(),
-    new NoBuilderAlgFields(),
+    BuilderAlgFields$NoBuilderAlgFields$const,
   );
 }
 
@@ -326,14 +332,14 @@ export function new_chacha20_kw(variant, enc) {
     new JweHeader(
       new $gose.ChaCha20KeyWrap(variant),
       enc,
-      new $option.None(),
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
-    new $option.None(),
+    $option.Option$None$const,
     $dict.new$(),
     $dict.new$(),
-    new ChaCha20KwBuilderFields(),
+    BuilderAlgFields$ChaCha20KwBuilderFields$const,
   );
 }
 
@@ -351,16 +357,16 @@ export function new_chacha20_kw(variant, enc) {
 export function new_direct(enc) {
   return new Jwe(
     new JweHeader(
-      new $gose.Direct(),
+      $gose.KeyEncryptionAlg$Direct$const,
       enc,
-      new $option.None(),
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
-    new $option.None(),
+    $option.Option$None$const,
     $dict.new$(),
     $dict.new$(),
-    new NoBuilderAlgFields(),
+    BuilderAlgFields$NoBuilderAlgFields$const,
   );
 }
 
@@ -377,18 +383,18 @@ export function new_direct(enc) {
  */
 export function new_ecdh_es(alg, enc) {
   let alg_fields = new EcdhEsBuilderFields(
-    new $option.None(),
-    new $option.None(),
+    $option.Option$None$const,
+    $option.Option$None$const,
   );
   return new Jwe(
     new JweHeader(
       new $gose.EcdhEs(alg),
       enc,
-      new $option.None(),
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
-    new $option.None(),
+    $option.Option$None$const,
     $dict.new$(),
     $dict.new$(),
     alg_fields,
@@ -414,14 +420,14 @@ export function new_pbes2(alg, enc) {
     new JweHeader(
       new $gose.Pbes2(alg),
       enc,
-      new $option.None(),
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
-    new $option.None(),
+    $option.Option$None$const,
     $dict.new$(),
     $dict.new$(),
-    new Pbes2BuilderFields(new $option.None()),
+    new Pbes2BuilderFields($option.Option$None$const),
   );
 }
 
@@ -441,14 +447,14 @@ export function new_rsa(alg, enc) {
     new JweHeader(
       new $gose.RsaEncryption(alg),
       enc,
-      new $option.None(),
-      new $option.None(),
-      new $option.None(),
+      $option.Option$None$const,
+      $option.Option$None$const,
+      $option.Option$None$const,
     ),
-    new $option.None(),
+    $option.Option$None$const,
     $dict.new$(),
     $dict.new$(),
-    new NoBuilderAlgFields(),
+    BuilderAlgFields$NoBuilderAlgFields$const,
   );
 }
 
@@ -817,7 +823,7 @@ function epk_to_json_field(epk) {
 
 function alg_fields_to_json(alg_fields) {
   if (alg_fields instanceof NoResolvedAlgFields) {
-    return toList([]);
+    return $List$Empty$const;
   } else if (alg_fields instanceof EcdhEsResolvedFields) {
     let epk = alg_fields.epk;
     let apu = alg_fields.apu;
@@ -972,9 +978,9 @@ function finalize_encryption(jwe, cek, encrypted_key, alg_fields, plaintext) {
           alg_fields,
           aad$1,
           shared_unprotected,
-          new $option.None(),
+          $option.Option$None$const,
           per_recipient_unprotected,
-          new $option.None(),
+          $option.Option$None$const,
         ),
       );
     },
@@ -1234,9 +1240,17 @@ function wrap_rsa_by_alg(alg, key, cek) {
   if (alg instanceof $gose.RsaPkcs1v15) {
     return $key_encryption.wrap_rsa_pkcs1v15(key, cek);
   } else if (alg instanceof $gose.RsaOaepSha1) {
-    return $key_encryption.wrap_rsa_oaep(key, cek, new $hash.Sha1());
+    return $key_encryption.wrap_rsa_oaep(
+      key,
+      cek,
+      $hash.HashAlgorithm$Sha1$const,
+    );
   } else {
-    return $key_encryption.wrap_rsa_oaep(key, cek, new $hash.Sha256());
+    return $key_encryption.wrap_rsa_oaep(
+      key,
+      cek,
+      $hash.HashAlgorithm$Sha256$const,
+    );
   }
 }
 
@@ -1293,7 +1307,7 @@ function do_encrypt_rsa(jwe, key, plaintext) {
             jwe,
             cek,
             encrypted_key,
-            new NoResolvedAlgFields(),
+            ResolvedAlgFields$NoResolvedAlgFields$const,
             plaintext,
           );
         },
@@ -1429,7 +1443,7 @@ function do_encrypt_aes_kw(jwe, key, plaintext) {
             jwe,
             cek,
             encrypted_key,
-            new NoResolvedAlgFields(),
+            ResolvedAlgFields$NoResolvedAlgFields$const,
             plaintext,
           );
         },
@@ -1469,7 +1483,7 @@ function do_encrypt_direct(jwe, key, plaintext) {
             jwe,
             cek,
             toBitArray([]),
-            new NoResolvedAlgFields(),
+            ResolvedAlgFields$NoResolvedAlgFields$const,
             plaintext,
           );
         },
@@ -1527,11 +1541,23 @@ export function encrypt(jwe, key, plaintext) {
 
 function resolve_pbes2_params(alg) {
   if (alg instanceof $gose.Pbes2Sha256Aes128Kw) {
-    return [new $hash.Sha256(), new $gose.Aes128(), 310_000];
+    return [
+      $hash.HashAlgorithm$Sha256$const,
+      $gose.AesKeySize$Aes128$const,
+      310_000,
+    ];
   } else if (alg instanceof $gose.Pbes2Sha384Aes192Kw) {
-    return [new $hash.Sha384(), new $gose.Aes192(), 250_000];
+    return [
+      $hash.HashAlgorithm$Sha384$const,
+      $gose.AesKeySize$Aes192$const,
+      250_000,
+    ];
   } else {
-    return [new $hash.Sha512(), new $gose.Aes256(), 120_000];
+    return [
+      $hash.HashAlgorithm$Sha512$const,
+      $gose.AesKeySize$Aes256$const,
+      120_000,
+    ];
   }
 }
 
@@ -2346,13 +2372,13 @@ function unwrap_cek(header, alg_fields, key, encrypted_key) {
       return $key_encryption.unwrap_rsa_oaep(
         key,
         encrypted_key,
-        new $hash.Sha1(),
+        $hash.HashAlgorithm$Sha1$const,
       );
     } else {
       return $key_encryption.unwrap_rsa_oaep(
         key,
         encrypted_key,
-        new $hash.Sha256(),
+        $hash.HashAlgorithm$Sha256$const,
       );
     }
   } else if ($ instanceof $gose.EcdhEs) {
@@ -2403,9 +2429,9 @@ function decrypt_with_key(jwe, key) {
   let _block;
   let $ = header.alg;
   if ($ instanceof $gose.EcdhEs) {
-    _block = new $key_helpers.ForKeyAgreement();
+    _block = $key_helpers.KeyPurpose$ForKeyAgreement$const;
   } else {
-    _block = new $key_helpers.ForDecryption();
+    _block = $key_helpers.KeyPurpose$ForDecryption$const;
   }
   let ops_purpose = _block;
   return $result.try$(
@@ -2883,7 +2909,7 @@ function build_parsed_alg_fields(alg, epk, apu, apv, p2s, p2c, kw_iv, kw_tag) {
           [$option.is_some(kw_tag), "tag"],
         ]),
       ),
-      (_) => { return new Ok(new NoResolvedAlgFields()); },
+      (_) => { return new Ok(ResolvedAlgFields$NoResolvedAlgFields$const); },
     );
   } else if (alg instanceof $gose.AesKeyWrap) {
     let $ = alg[0];
@@ -2901,7 +2927,7 @@ function build_parsed_alg_fields(alg, epk, apu, apv, p2s, p2c, kw_iv, kw_tag) {
             [$option.is_some(kw_tag), "tag"],
           ]),
         ),
-        (_) => { return new Ok(new NoResolvedAlgFields()); },
+        (_) => { return new Ok(ResolvedAlgFields$NoResolvedAlgFields$const); },
       );
     } else {
       return $result.try$(
@@ -2946,7 +2972,7 @@ function build_parsed_alg_fields(alg, epk, apu, apv, p2s, p2c, kw_iv, kw_tag) {
           [$option.is_some(kw_tag), "tag"],
         ]),
       ),
-      (_) => { return new Ok(new NoResolvedAlgFields()); },
+      (_) => { return new Ok(ResolvedAlgFields$NoResolvedAlgFields$const); },
     );
   } else if (alg instanceof $gose.EcdhEs) {
     let $ = alg[0];
@@ -3032,7 +3058,7 @@ function parse_optional_base64(opt, name) {
       (decoded) => { return new Ok(new $option.Some(decoded)); },
     );
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -3096,7 +3122,7 @@ function parse_optional_epk(epk_raw) {
       },
     );
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -3106,7 +3132,7 @@ function validate_crit(crit) {
     return $utils.validate_crit_headers(
       extensions,
       standard_headers,
-      toList([]),
+      $List$Empty$const,
     );
   } else {
     return new Ok(undefined);
@@ -3128,7 +3154,7 @@ function parse_header_json(json_bits) {
             (x) => {
               return $decode.optional_field(
                 "y",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.string),
                 (y) => { return $decode.success([kty, crv, x, y]); },
               );
@@ -3148,57 +3174,57 @@ function parse_header_json(json_bits) {
         (enc) => {
           return $decode.optional_field(
             "kid",
-            new $option.None(),
+            $option.Option$None$const,
             $decode.optional($decode.string),
             (kid) => {
               return $decode.optional_field(
                 "typ",
-                new $option.None(),
+                $option.Option$None$const,
                 $decode.optional($decode.string),
                 (typ) => {
                   return $decode.optional_field(
                     "cty",
-                    new $option.None(),
+                    $option.Option$None$const,
                     $decode.optional($decode.string),
                     (cty) => {
                       return $decode.optional_field(
                         "epk",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional(epk_decoder),
                         (epk_raw) => {
                           return $decode.optional_field(
                             "apu",
-                            new $option.None(),
+                            $option.Option$None$const,
                             $decode.optional($decode.string),
                             (apu) => {
                               return $decode.optional_field(
                                 "apv",
-                                new $option.None(),
+                                $option.Option$None$const,
                                 $decode.optional($decode.string),
                                 (apv) => {
                                   return $decode.optional_field(
                                     "p2s",
-                                    new $option.None(),
+                                    $option.Option$None$const,
                                     $decode.optional($decode.string),
                                     (p2s) => {
                                       return $decode.optional_field(
                                         "p2c",
-                                        new $option.None(),
+                                        $option.Option$None$const,
                                         $decode.optional($decode.int),
                                         (p2c) => {
                                           return $decode.optional_field(
                                             "iv",
-                                            new $option.None(),
+                                            $option.Option$None$const,
                                             $decode.optional($decode.string),
                                             (kw_iv) => {
                                               return $decode.optional_field(
                                                 "tag",
-                                                new $option.None(),
+                                                $option.Option$None$const,
                                                 $decode.optional($decode.string),
                                                 (kw_tag) => {
                                                   return $decode.optional_field(
                                                     "crit",
-                                                    new $option.None(),
+                                                    $option.Option$None$const,
                                                     $decode.optional(
                                                       $decode.list(
                                                         $decode.string,
@@ -3207,7 +3233,7 @@ function parse_header_json(json_bits) {
                                                     (crit) => {
                                                       return $decode.optional_field(
                                                         "zip",
-                                                        new $option.None(),
+                                                        $option.Option$None$const,
                                                         $decode.optional(
                                                           $decode.string,
                                                         ),
@@ -3493,11 +3519,11 @@ export function parse_compact(token) {
                                               ciphertext,
                                               tag,
                                               alg_fields,
-                                              new $option.None(),
+                                              $option.Option$None$const,
                                               $dict.new$(),
-                                              new $option.None(),
+                                              $option.Option$None$const,
                                               $dict.new$(),
-                                              new $option.None(),
+                                              $option.Option$None$const,
                                             ),
                                           );
                                         },
@@ -3583,7 +3609,7 @@ function parse_unprotected_header(raw) {
       },
     );
   } else {
-    return new Ok([new $option.None(), toList([])]);
+    return new Ok([$option.Option$None$const, $List$Empty$const]);
   }
 }
 
@@ -3616,7 +3642,7 @@ function validate_jwe_header_disjointness(
 ) {
   let _block;
   if (alg_fields instanceof NoResolvedAlgFields) {
-    _block = toList([]);
+    _block = $List$Empty$const;
   } else if (alg_fields instanceof EcdhEsResolvedFields) {
     let epk = alg_fields.epk;
     let apu = alg_fields.apu;
@@ -3888,7 +3914,7 @@ export function serialize_json_general(jwe) {
   let _block;
   let $ = $bit_array.byte_size(encrypted_key);
   if ($ === 0) {
-    _block = toList([]);
+    _block = $List$Empty$const;
   } else {
     _block = toList([["encrypted_key", $json.string(ek_b64)]]);
   }
@@ -3922,7 +3948,7 @@ function decode_optional_base64_url(opt, name) {
     let _pipe = $utils.decode_base64_url(b64, name);
     return $result.map(_pipe, (var0) => { return new $option.Some(var0); });
   } else {
-    return new Ok(new $option.None());
+    return new Ok($option.Option$None$const);
   }
 }
 
@@ -3942,7 +3968,7 @@ function parse_json_flattened(json_str) {
     (protected$) => {
       return $decode.optional_field(
         "encrypted_key",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.string),
         (encrypted_key) => {
           return $decode.field(
@@ -3959,17 +3985,17 @@ function parse_json_flattened(json_str) {
                     (tag) => {
                       return $decode.optional_field(
                         "header",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.dynamic),
                         (header_raw) => {
                           return $decode.optional_field(
                             "aad",
-                            new $option.None(),
+                            $option.Option$None$const,
                             $decode.optional($decode.string),
                             (aad_b64) => {
                               return $decode.optional_field(
                                 "unprotected",
-                                new $option.None(),
+                                $option.Option$None$const,
                                 $decode.optional($decode.dynamic),
                                 (unprotected_raw) => {
                                   return $decode.success(
@@ -4119,12 +4145,12 @@ function parse_json_flattened(json_str) {
 function parse_json_general(json_str) {
   let recipient_decoder = $decode.optional_field(
     "encrypted_key",
-    new $option.None(),
+    $option.Option$None$const,
     $decode.optional($decode.string),
     (encrypted_key) => {
       return $decode.optional_field(
         "header",
-        new $option.None(),
+        $option.Option$None$const,
         $decode.optional($decode.dynamic),
         (header_raw) => { return $decode.success([encrypted_key, header_raw]); },
       );
@@ -4152,12 +4178,12 @@ function parse_json_general(json_str) {
                     (tag) => {
                       return $decode.optional_field(
                         "aad",
-                        new $option.None(),
+                        $option.Option$None$const,
                         $decode.optional($decode.string),
                         (aad_b64) => {
                           return $decode.optional_field(
                             "unprotected",
-                            new $option.None(),
+                            $option.Option$None$const,
                             $decode.optional($decode.dynamic),
                             (unprotected_raw) => {
                               return $decode.success(

@@ -38,11 +38,13 @@ export const ExitMessage$ExitMessage$reason = (value) => value.reason;
 export const ExitMessage$ExitMessage$1 = (value) => value.reason;
 
 export class Normal extends $CustomType {}
-export const ExitReason$Normal = () => new Normal();
+export const ExitReason$Normal$const = new Normal();
+export const ExitReason$Normal = () => ExitReason$Normal$const;
 export const ExitReason$isNormal = (value) => value instanceof Normal;
 
 export class Killed extends $CustomType {}
-export const ExitReason$Killed = () => new Killed();
+export const ExitReason$Killed$const = new Killed();
+export const ExitReason$Killed = () => ExitReason$Killed$const;
 export const ExitReason$isKilled = (value) => value instanceof Killed;
 
 export class Abnormal extends $CustomType {
@@ -57,8 +59,10 @@ export const ExitReason$Abnormal$reason = (value) => value.reason;
 export const ExitReason$Abnormal$0 = (value) => value.reason;
 
 class Anything extends $CustomType {}
+const AnythingSelectorTag$Anything$const = new Anything();
 
 class Process extends $CustomType {}
+const ProcessMonitorFlag$Process$const = new Process();
 
 export class ProcessDown extends $CustomType {
   constructor(monitor, pid, reason) {
@@ -103,7 +107,8 @@ export const Down$reason = (value) => value.reason;
  * The timer could not be found. It likely has already triggered.
  */
 export class TimerNotFound extends $CustomType {}
-export const Cancelled$TimerNotFound = () => new TimerNotFound();
+export const Cancelled$TimerNotFound$const = new TimerNotFound();
+export const Cancelled$TimerNotFound = () => Cancelled$TimerNotFound$const;
 export const Cancelled$isTimerNotFound = (value) =>
   value instanceof TimerNotFound;
 
@@ -127,6 +132,7 @@ export const Cancelled$Cancelled$time_remaining = (value) =>
 export const Cancelled$Cancelled$0 = (value) => value.time_remaining;
 
 class Kill extends $CustomType {}
+const KillFlag$Kill$const = new Kill();
 
 /**
  * Create a subject for the given process with the give tag. This is unsafe!
