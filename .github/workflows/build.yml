@@ -8,30 +8,42 @@ concurrency:
 
 jobs:
   build:
-    name: build
     runs-on: ubuntu-latest
+    # Every run step needs the nix dev shell's tools (gleam, cargo,
+    # just), so use it as the job shell instead of repeating
+    # `nix develop -c` on each step.
+    defaults:
+      run:
+        shell: nix develop -c bash -- {0}
     steps:
       - uses: actions/checkout@v7
       - uses: determinatesystems/determinate-nix-action@v3
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix develop -c just test
-      # The plays pipeline (CAR -> stats) lives in Rust; make sure the
-      # flake package and its unit tests stay green too.
-      - run: nix build .#parse-plays
-      - run: nix develop -c cargo test --release --manifest-path tools/parse-plays/Cargo.toml
-      # Cover art lookups (MusicBrainz + Cover Art Archive) are the slow,
-      # network-heavy part of refresh. The cache is append-only, so a
-      # unique key per run plus a prefix restore keeps it growing without
-      # re-hitting the APIs for pairs already resolved.
-      - name: Cache cover art lookups
-        uses: actions/cache@v4
+
+      - run: just test
+
+      # Cargo artifacts keyed on Cargo.lock: restored as-is between
+      # runs (cargo reuses the target via fingerprints) and only
+      # rewritten when the dependency set actually changes.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            tools/parse-plays/target
+          key: cargo-${{ hashFiles('tools/parse-plays/Cargo.lock') }}
+          restore-keys: cargo-
+      # The cover-art cache is append-only and grows every run, so it
+      # must save each time — but it's a few KB, unlike the target dir.
+      - uses: actions/cache@v4
         with:
           path: priv/cache/cover-cache.json
           key: cover-cache-${{ github.run_id }}
           restore-keys: cover-cache-
-      # Regenerate the listening stats (never committed to the repo).
-      - run: nix develop -c just refresh
-      - run: nix develop -c just build
+
+      - run: cargo test --release --manifest-path tools/parse-plays/Cargo.toml
+      - run: just refresh
+      - run: just build
+
       - uses: actions/upload-artifact@v4
         with:
           name: site
@@ -42,7 +54,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
