@@ -107,10 +107,11 @@ function on_profile(text) {
   let $ = $fetch.decode_profile(text);
   if ($ instanceof Ok) {
     let profile = $[0];
-    return $browser.set_inner_html(
+    $browser.set_inner_html(
       "profile-section",
       $dynamic.render($profile_view.profile(profile)),
     );
+    return $browser.rewrite_remote_images();
   } else {
     let reason = $[0];
     return $browser.log_error(

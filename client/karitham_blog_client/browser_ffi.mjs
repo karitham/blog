@@ -24,6 +24,30 @@ export function set_inner_html(id, html) {
   }
 }
 
+// Point every <img src> in the document at its local mirror. The map
+// is the `#image-rewrites` JSON script tag the SSG embeds (remote URL
+// -> local /img path); URLs not in the map (e.g. a freshly-changed
+// avatar the build hasn't mirrored yet) keep their remote src and
+// fall back to loading from the original host.
+export function rewrite_remote_images() {
+  var script = document.getElementById("image-rewrites");
+  if (!script) return;
+  var map;
+  try {
+    map = JSON.parse(script.textContent);
+  } catch (_) {
+    console.warn("rewrite_remote_images: bad #image-rewrites JSON");
+    return;
+  }
+  var imgs = document.querySelectorAll("img[src]");
+  for (var i = 0; i < imgs.length; i++) {
+    var src = imgs[i].getAttribute("src");
+    if (src && Object.prototype.hasOwnProperty.call(map, src)) {
+      imgs[i].setAttribute("src", map[src]);
+    }
+  }
+}
+
 export function set_attribute(id, name, value) {
   var el = document.getElementById(id);
   if (el) {

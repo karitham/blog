@@ -1,6 +1,7 @@
 import {
   fetch_text,
   set_inner_html,
+  rewrite_remote_images,
   set_attribute,
   remove_attribute,
   has_element,
@@ -19,6 +20,7 @@ export {
   log_error,
   on_visibility_change,
   remove_attribute,
+  rewrite_remote_images,
   set_attribute,
   set_inner_html,
   set_interval,
