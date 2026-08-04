@@ -19,9 +19,12 @@
 
 mod car;
 mod covers;
+mod images;
+mod net;
 mod stats;
 
 use serde_json::json;
+use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() {
@@ -33,8 +36,12 @@ async fn main() {
         _ => {
             eprintln!("usage:");
             eprintln!("  parse-plays car <car-file>  — dump plays JSON to stdout");
-            eprintln!("  parse-plays stats <plays.json|-> <stats-out> [--covers <cache.json>]");
-            eprintln!("  parse-plays refresh <car-file> <stats-out> [--covers <cache.json>]");
+            eprintln!(
+                "  parse-plays stats <plays.json|-> <stats-out> [--covers <cache.json>] [--images <dir>]"
+            );
+            eprintln!(
+                "  parse-plays refresh <car-file> <stats-out> [--covers <cache.json>] [--images <dir>]"
+            );
             std::process::exit(2);
         }
     };
@@ -42,6 +49,28 @@ async fn main() {
         eprintln!("error: {e}");
         std::process::exit(1);
     }
+}
+
+/// Parse the `--covers <path>` / `--images <dir>` options that trail
+/// the positional arguments. Unknown tokens are ignored.
+fn parse_options(args: &[String]) -> (Option<String>, Option<String>) {
+    let mut covers = None;
+    let mut images = None;
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--covers" => {
+                covers = args.get(i + 1).cloned();
+                i += 2;
+            }
+            "--images" => {
+                images = args.get(i + 1).cloned();
+                i += 2;
+            }
+            _ => i += 1,
+        }
+    }
+    (covers, images)
 }
 
 async fn cmd_car(args: &[String]) -> Result<(), String> {
@@ -54,10 +83,7 @@ async fn cmd_car(args: &[String]) -> Result<(), String> {
 fn cmd_stats(args: &[String]) -> Result<(), String> {
     let plays_path = args.first().ok_or("missing <plays.json>")?;
     let stats_out = args.get(1).ok_or("missing <stats-out>")?;
-    let cache_path = match args.get(2).map(String::as_str) {
-        Some("--covers") => args.get(3).map(String::as_str),
-        _ => None,
-    };
+    let (cache_path, images_dir) = parse_options(&args[2..]);
 
     // Gather: raw history from the previous pipeline step. `-` reads
     // stdin so `parse-plays car ... | parse-plays stats - ...` avoids
@@ -79,16 +105,18 @@ fn cmd_stats(args: &[String]) -> Result<(), String> {
     let agg = stats::aggregate(&plays, chrono::Utc::now().date_naive());
 
     // Commit (impure): resolve covers through the cache, then serialize.
-    write_stats(&agg, cache_path, stats_out)
+    write_stats(
+        &agg,
+        cache_path.as_deref(),
+        stats_out,
+        images_dir.as_deref(),
+    )
 }
 
 async fn cmd_refresh(args: &[String]) -> Result<(), String> {
     let car_path = args.first().ok_or("missing <car-file>")?;
     let stats_out = args.get(1).ok_or("missing <stats-out>")?;
-    let cache_path = match args.get(2).map(String::as_str) {
-        Some("--covers") => args.get(3).map(String::as_str),
-        _ => None,
-    };
+    let (cache_path, images_dir) = parse_options(&args[2..]);
 
     // Gather: raw history straight from the CAR, no JSON round-trip.
     let plays = car::read_plays(car_path).await?;
@@ -97,16 +125,23 @@ async fn cmd_refresh(args: &[String]) -> Result<(), String> {
     let agg = stats::aggregate(&plays, chrono::Utc::now().date_naive());
 
     // Commit (impure).
-    write_stats(&agg, cache_path, stats_out)
+    write_stats(
+        &agg,
+        cache_path.as_deref(),
+        stats_out,
+        images_dir.as_deref(),
+    )
 }
 
 /// Shared tail of `stats` and `refresh`: resolve covers, artist
-/// images, and MusicBrainz page links for the top-N entries, serialize
-/// the grids, write the stats file.
+/// images, and MusicBrainz page links for the top-N entries, mirror
+/// the remote images into a local dir, serialize the grids, write the
+/// stats file.
 fn write_stats(
     agg: &stats::Aggregated,
     cache_path: Option<&str>,
     stats_out: &str,
+    images_dir: Option<&str>,
 ) -> Result<(), String> {
     let pairs = stats::needed_pairs(agg);
     let artists = stats::needed_artists(agg);
@@ -118,11 +153,52 @@ fn write_stats(
         artists.len(),
         pairs.len() + artists.len() + tracks.len()
     );
-    let cover_map = covers::resolve(&pairs, cache_path);
-    let artist_map = covers::resolve_artists(&artists, cache_path);
-    let album_url_map = covers::resolve_album_urls(&pairs, cache_path);
-    let artist_url_map = covers::resolve_artist_urls(&artists, cache_path);
-    let track_url_map = covers::resolve_track_urls(&tracks, cache_path);
+
+    // Shared lookup cache: loaded once, written by every phase under
+    // the mutex, persisted once after all phases. Without a cache path
+    // we still share an (empty) cache — behavior is unchanged.
+    let cache = std::sync::Mutex::new(cache_path.map(covers::load_cache).unwrap_or_default());
+
+    // Stage 1: the image sources — cover art and artist photos. These
+    // two are the slow ones (MusicBrainz + Wikidata chains), so they
+    // run first and in parallel.
+    let (cover_map, artist_map) = rayon::join(
+        || covers::resolve(&pairs, &cache),
+        || covers::resolve_artists(&artists, &cache),
+    );
+
+    // Stage 2: mirror the images in parallel with resolving the
+    // MusicBrainz page links — the downloads only need the two image
+    // maps from stage 1, so the URL lookups overlap them instead of
+    // running serially before them.
+    let image_urls: Vec<String> = cover_map
+        .values()
+        .chain(artist_map.values())
+        .cloned()
+        .collect();
+    let mut download_map: HashMap<String, String> = HashMap::new();
+    let mut album_url_map = HashMap::new();
+    let mut artist_url_map = HashMap::new();
+    let mut track_url_map = HashMap::new();
+    rayon::scope(|s| {
+        if let Some(dir) = images_dir {
+            s.spawn(|_| {
+                download_map = images::download_many(&image_urls, std::path::Path::new(dir));
+            });
+        }
+        s.spawn(|_| album_url_map = covers::resolve_album_urls(&pairs, &cache));
+        s.spawn(|_| artist_url_map = covers::resolve_artist_urls(&artists, &cache));
+        s.spawn(|_| track_url_map = covers::resolve_track_urls(&tracks, &cache));
+    });
+    if let Some(dir) = images_dir {
+        eprintln!("mirrored images into {dir}");
+    }
+
+    // Persist the merged cache once, after every phase has finished.
+    if let Some(path) = cache_path {
+        covers::save_cache_atomically(path, &cache.into_inner().unwrap());
+    }
+
     let cover = |artist: &str, album: &str| -> String {
         cover_map
             .get(&(stats::normalize(artist), stats::normalize(album)))
@@ -162,7 +238,10 @@ fn write_stats(
     };
 
     let stats_json = stats::build_ranges(agg, &lookups);
-    let doc = json!({ "ranges": stats_json });
+    let mut doc = json!({ "ranges": stats_json });
+    // Point the image fields at the local mirrors; any URL missing
+    // from the map (failed download) keeps its remote value.
+    images::apply_rewrites(&mut doc, &download_map);
     std::fs::write(
         stats_out,
         serde_json::to_string_pretty(&doc).expect("serialize"),

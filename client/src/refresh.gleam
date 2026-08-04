@@ -44,11 +44,15 @@ fn fetch_profile() -> Nil {
 
 fn on_profile(text: String) -> Nil {
   case fetch.decode_profile(text) {
-    Ok(profile) ->
+    Ok(profile) -> {
       browser.set_inner_html(
         "profile-section",
         dynamic.render(profile_view.profile(profile)),
       )
+      // The fresh profile carries the PDS's remote avatar/banner URLs;
+      // point them at the local mirrors from the build.
+      browser.rewrite_remote_images()
+    }
     Error(reason) ->
       browser.log_error("decode_profile failed: " <> string.inspect(reason))
   }

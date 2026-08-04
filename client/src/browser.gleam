@@ -4,6 +4,9 @@ pub fn fetch_text(url: String, callback: fn(String) -> Nil) -> Nil
 @external(javascript, "./browser_ffi.mjs", "set_inner_html")
 pub fn set_inner_html(id: String, html: String) -> Nil
 
+@external(javascript, "./browser_ffi.mjs", "rewrite_remote_images")
+pub fn rewrite_remote_images() -> Nil
+
 @external(javascript, "./browser_ffi.mjs", "set_attribute")
 pub fn set_attribute(id: String, name: String, value: String) -> Nil
 

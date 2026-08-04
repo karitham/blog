@@ -1,37 +1,43 @@
 //! Cover art resolution: the impure boundary between the pure stats
-//! core and MusicBrainz / Cover Art Archive.
+//! core and MusicBrainz / Cover Art Archive / Wikidata.
 //!
-//! `resolve` is cache-first: with a cache path, known pairs are served
-//! instantly and only missing pairs hit the network — two parallel
-//! phases (MusicBrainz searches, then Cover Art Archive fetches) with
-//! per-endpoint rate limiting and 503/429 retry. The cache is updated
-//! atomically after every successful lookup so interrupted runs keep
-//! their work. Without a cache path nothing is fetched at all.
+//! All five `resolve_*` phases share one `Cache` (a mutex-guarded map,
+//! loaded once and persisted once by the caller) so they can safely
+//! run concurrently. Each phase is cache-first: known keys are served
+//! instantly and only missing entries hit the network — parallel
+//! workers with per-endpoint rate limiting, and every request goes
+//! through `net::retry` (jittered backoff, `Retry-After` honor, and
+//! retries on transport errors, not just HTTP status codes).
 
-use crate::stats;
+use crate::{net, stats};
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-const USER_AGENT: &str = "karitham-blog/0.1.0 (https://karitham.dev)";
+pub(crate) const USER_AGENT: &str = "karitham-blog/0.1.0 (https://karitham.dev)";
+
+/// The shared lookup cache. One entry per resolved key (see the
+/// `*_cache_key` helpers); the caller loads it once and persists it
+/// once after all phases complete.
+pub(crate) type Cache = Mutex<HashMap<String, String>>;
 
 /// Global rate limiter shared by workers: at most `rate_per_sec`
 /// acquisitions per second across all threads.
-struct Limiter {
+pub(crate) struct Limiter {
     min_interval: Duration,
     last: Mutex<Instant>,
 }
 
 impl Limiter {
-    fn new(rate_per_sec: f64) -> Self {
+    pub(crate) fn new(rate_per_sec: f64) -> Self {
         Self {
             min_interval: Duration::from_secs_f64(1.0 / rate_per_sec),
             last: Mutex::new(Instant::now()),
         }
     }
 
-    fn acquire(&self) {
+    pub(crate) fn acquire(&self) {
         let mut last = self.last.lock().unwrap();
         let since = Instant::now().duration_since(*last);
         if since < self.min_interval {
@@ -41,16 +47,72 @@ impl Limiter {
     }
 }
 
-fn is_retryable(code: u16) -> bool {
+pub(crate) fn is_retryable(code: u16) -> bool {
     code == 429 || code == 500 || code == 503
 }
 
+static RETRY_POLICY: net::RetryPolicy = net::RetryPolicy {
+    max_attempts: 5,
+    base_delay: Duration::from_millis(500),
+    max_delay: Duration::from_secs(8),
+};
+
+/// Load the cache from disk; a missing or corrupt file is an empty
+/// cache, never a failure.
+pub(crate) fn load_cache(path: &str) -> HashMap<String, String> {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
+/// Persist the cache atomically (tmp + rename) so a crash mid-write
+/// never corrupts the previous state.
+pub(crate) fn save_cache_atomically(path: &str, cache: &HashMap<String, String>) {
+    let Ok(serialized) = serde_json::to_string_pretty(cache) else {
+        return;
+    };
+    let tmp = format!("{path}.tmp");
+    if std::fs::write(&tmp, serialized).is_ok() {
+        let _ = std::fs::rename(&tmp, path);
+    }
+}
+
 fn clean_query(s: &str) -> String {
-    s.replace('"', "").replace('\\', "")
+    s.replace(['"', '\\'], "")
+}
+
+/// GET a JSON API with the given query params, retried through
+/// `net::retry`. A 200 that fails to parse is a permanent miss — the
+/// endpoint answered, the shape just isn't what we expected.
+fn get_json(agent: &ureq::Agent, url: &str, params: &[(&str, &str)]) -> Option<serde_json::Value> {
+    net::retry(&RETRY_POLICY, || {
+        let mut req = agent.get(url);
+        for (key, value) in params {
+            req = req.query(key, value);
+        }
+        match req.call() {
+            Ok(resp) if resp.status() == 200 => match resp.into_string() {
+                Ok(body) => match serde_json::from_str(&body) {
+                    Ok(value) => net::Attempt::Done(value),
+                    Err(_) => net::Attempt::Stop,
+                },
+                Err(_) => net::Attempt::Stop,
+            },
+            Ok(_) => net::Attempt::Stop,
+            Err(ureq::Error::Status(code, resp)) if is_retryable(code) => {
+                net::Attempt::Again(net::retry_after(&resp))
+            }
+            // Transport-level failures (timeouts, resets, DNS) are
+            // transient — retry rather than dropping the link for this
+            // whole build.
+            Err(_) => net::Attempt::Again(None),
+        }
+    })
 }
 
 /// MusicBrainz release search → best-guess release MBID. Retries on
-/// rate-limit/5xx with exponential backoff, which lets us run a bit
+/// rate-limit/5xx with jittered backoff, which lets us run a bit
 /// hotter than the nominal 1 req/s and have MB push back politely.
 fn musicbrainz_release(agent: &ureq::Agent, artist: &str, album: &str) -> Option<String> {
     let query = format!(
@@ -58,49 +120,33 @@ fn musicbrainz_release(agent: &ureq::Agent, artist: &str, album: &str) -> Option
         clean_query(album),
         clean_query(artist)
     );
-    for attempt in 0..3u32 {
-        match agent
-            .get("https://musicbrainz.org/ws/2/release")
-            .query("query", &query)
-            .query("fmt", "json")
-            .query("limit", "1")
-            .call()
-        {
-            Ok(resp) => {
-                let body: serde_json::Value =
-                    serde_json::from_str(&resp.into_string().ok()?).ok()?;
-                return body["releases"]
-                    .as_array()?
-                    .first()?
-                    .get("id")?
-                    .as_str()
-                    .map(str::to_string);
-            }
-            Err(ureq::Error::Status(code, _)) if is_retryable(code) => {
-                std::thread::sleep(Duration::from_secs(1 << attempt));
-            }
-            Err(_) => return None,
-        }
-    }
-    None
+    get_json(
+        agent,
+        "https://musicbrainz.org/ws/2/release",
+        &[("query", &query), ("fmt", "json"), ("limit", "1")],
+    )
+    .and_then(|body| {
+        body["releases"]
+            .as_array()?
+            .first()?
+            .get("id")?
+            .as_str()
+            .map(str::to_string)
+    })
 }
 
-/// Cover Art Archive front image for a release, 500px. Same retry
-/// policy as the MusicBrainz search; a non-2xx response (e.g. 404 —
-/// no front art) is a permanent miss.
+/// Cover Art Archive front image for a release, 500px. A non-2xx
+/// response (e.g. 404 — no front art) is a permanent miss.
 fn coverart_url(agent: &ureq::Agent, mbid: &str) -> Option<String> {
     let url = format!("https://coverartarchive.org/release/{mbid}/front-500");
-    for attempt in 0..3u32 {
-        match agent.get(&url).call() {
-            Ok(resp) if resp.status() == 200 => return Some(url),
-            Ok(_) => return None,
-            Err(ureq::Error::Status(code, _)) if is_retryable(code) => {
-                std::thread::sleep(Duration::from_secs(1 << attempt));
-            }
-            Err(_) => return None,
+    net::retry(&RETRY_POLICY, || match agent.get(&url).call() {
+        Ok(resp) if resp.status() == 200 => net::Attempt::Done(url.clone()),
+        Ok(_) => net::Attempt::Stop,
+        Err(ureq::Error::Status(code, resp)) if is_retryable(code) => {
+            net::Attempt::Again(net::retry_after(&resp))
         }
-    }
-    None
+        Err(_) => net::Attempt::Again(None),
+    })
 }
 
 fn cache_key(artist: &str, album: &str) -> String {
@@ -142,55 +188,34 @@ fn track_url_cache_key(artist: &str, track: &str) -> String {
     )
 }
 
-fn load_cache(path: &str) -> HashMap<String, String> {
-    std::fs::read_to_string(path)
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default()
-}
-
-fn save_cache_atomically(path: &str, cache: &HashMap<String, String>) {
-    let Ok(serialized) = serde_json::to_string_pretty(cache) else {
-        return;
-    };
-    let tmp = format!("{path}.tmp");
-    if std::fs::write(&tmp, serialized).is_ok() {
-        let _ = std::fs::rename(&tmp, path);
-    }
-}
-
 /// Resolve cover URLs for the given (artist, album, optional MBID)
-/// triples. See the module docs for the cache-first, parallel,
-/// retried behavior. Known MBIDs skip the MusicBrainz search phase,
-/// but when a provided MBID has no Cover Art Archive image we fall
-/// back to a name search — piper/lazuli MBIDs sometimes point at
-/// release variants without art while the canonical release has it.
+/// triples. Known MBIDs skip the MusicBrainz search phase, but when a
+/// provided MBID has no Cover Art Archive image we fall back to a name
+/// search — piper/lazuli MBIDs sometimes point at release variants
+/// without art while the canonical release has it.
 pub fn resolve(
     pairs: &[(String, String, Option<String>)],
-    cache_path: Option<&str>,
+    cache: &Cache,
 ) -> HashMap<(String, String), String> {
-    let Some(path) = cache_path else {
-        return HashMap::new();
-    };
-
-    let mut cache = load_cache(path);
-
     let mut out: HashMap<(String, String), String> = HashMap::new();
-    let missing: Vec<(String, String, Option<String>)> = pairs
-        .iter()
-        .filter_map(
-            |(artist, album, mbid)| match cache.get(&cache_key(artist, album)) {
-                Some(url) => {
-                    out.insert(
-                        (stats::normalize(artist), stats::normalize(album)),
-                        url.clone(),
-                    );
-                    None
-                }
-                None => Some((artist.clone(), album.clone(), mbid.clone())),
-            },
-        )
-        .collect();
+    let missing: Vec<(String, String, Option<String>)> = {
+        let cache = cache.lock().unwrap();
+        pairs
+            .iter()
+            .filter_map(
+                |(artist, album, mbid)| match cache.get(&cache_key(artist, album)) {
+                    Some(url) => {
+                        out.insert(
+                            (stats::normalize(artist), stats::normalize(album)),
+                            url.clone(),
+                        );
+                        None
+                    }
+                    None => Some((artist.clone(), album.clone(), mbid.clone())),
+                },
+            )
+            .collect()
+    };
 
     if missing.is_empty() {
         return out;
@@ -244,16 +269,18 @@ pub fn resolve(
         })
         .collect();
 
-    for (artist, album, _, url) in &caa_outcomes {
-        let Some(url) = url else { continue };
-        cache.insert(cache_key(artist, album), url.clone());
-        // Keys are normalized so the pure `cover` lookup in main
-        // (which normalizes both sides) finds them regardless of case.
-        out.insert(
-            (stats::normalize(artist), stats::normalize(album)),
-            url.clone(),
-        );
-        save_cache_atomically(path, &cache);
+    {
+        let mut cache = cache.lock().unwrap();
+        for (artist, album, _, url) in &caa_outcomes {
+            let Some(url) = url else { continue };
+            cache.insert(cache_key(artist, album), url.clone());
+            // Keys are normalized so the pure `cover` lookup in main
+            // (which normalizes both sides) finds them regardless of case.
+            out.insert(
+                (stats::normalize(artist), stats::normalize(album)),
+                url.clone(),
+            );
+        }
     }
 
     // Fallback: provided MBIDs with no art get a name search — the
@@ -282,10 +309,10 @@ pub fn resolve(
             })
             .collect();
 
+        let mut cache = cache.lock().unwrap();
         for (artist, album, url) in caa2 {
             cache.insert(cache_key(&artist, &album), url.clone());
             out.insert((stats::normalize(&artist), stats::normalize(&album)), url);
-            save_cache_atomically(path, &cache);
         }
     }
 
@@ -295,24 +322,21 @@ pub fn resolve(
 /// Resolve real artist images via the Wikidata chain (MusicBrainz
 /// artist search → url-rels → P18 → Commons). Cache-first, same
 /// append-only pattern.
-pub fn resolve_artists(artists: &[String], cache_path: Option<&str>) -> HashMap<String, String> {
-    let Some(path) = cache_path else {
-        return HashMap::new();
-    };
-
-    let mut cache = load_cache(path);
-
+pub fn resolve_artists(artists: &[String], cache: &Cache) -> HashMap<String, String> {
     let mut out: HashMap<String, String> = HashMap::new();
-    let missing: Vec<String> = artists
-        .iter()
-        .filter_map(|name| match cache.get(&artist_cache_key(name)) {
-            Some(url) => {
-                out.insert(stats::normalize(name), url.clone());
-                None
-            }
-            None => Some(name.clone()),
-        })
-        .collect();
+    let missing: Vec<String> = {
+        let cache = cache.lock().unwrap();
+        artists
+            .iter()
+            .filter_map(|name| match cache.get(&artist_cache_key(name)) {
+                Some(url) => {
+                    out.insert(stats::normalize(name), url.clone());
+                    None
+                }
+                None => Some(name.clone()),
+            })
+            .collect()
+    };
 
     if missing.is_empty() {
         return out;
@@ -344,10 +368,10 @@ pub fn resolve_artists(artists: &[String], cache_path: Option<&str>) -> HashMap<
         })
         .collect();
 
+    let mut cache = cache.lock().unwrap();
     for (name, url) in results {
         cache.insert(artist_cache_key(&name), url.clone());
         out.insert(stats::normalize(&name), url);
-        save_cache_atomically(path, &cache);
     }
 
     out
@@ -356,92 +380,58 @@ pub fn resolve_artists(artists: &[String], cache_path: Option<&str>) -> HashMap<
 /// MusicBrainz artist search → best-guess artist MBID.
 fn musicbrainz_artist_mbid(agent: &ureq::Agent, name: &str) -> Option<String> {
     let query = format!("artist:\"{}\"", clean_query(name));
-    for attempt in 0..3u32 {
-        match agent
-            .get("https://musicbrainz.org/ws/2/artist")
-            .query("query", &query)
-            .query("fmt", "json")
-            .query("limit", "1")
-            .call()
-        {
-            Ok(resp) => {
-                let body: serde_json::Value =
-                    serde_json::from_str(&resp.into_string().ok()?).ok()?;
-                return body["artists"]
-                    .as_array()?
-                    .first()?
-                    .get("id")?
-                    .as_str()
-                    .map(str::to_string);
-            }
-            Err(ureq::Error::Status(code, _)) if is_retryable(code) => {
-                std::thread::sleep(Duration::from_secs(1 << attempt));
-            }
-            Err(_) => return None,
-        }
-    }
-    None
+    get_json(
+        agent,
+        "https://musicbrainz.org/ws/2/artist",
+        &[("query", &query), ("fmt", "json"), ("limit", "1")],
+    )
+    .and_then(|body| {
+        body["artists"]
+            .as_array()?
+            .first()?
+            .get("id")?
+            .as_str()
+            .map(str::to_string)
+    })
 }
 
 /// MB artist lookup with URL relations → the artist's Wikidata QID.
 fn wikidata_qid(agent: &ureq::Agent, mbid: &str) -> Option<String> {
-    for attempt in 0..3u32 {
-        let resp = match agent
-            .get(&format!("https://musicbrainz.org/ws/2/artist/{mbid}"))
-            .query("inc", "url-rels")
-            .query("fmt", "json")
-            .call()
-        {
-            Ok(resp) => resp,
-            Err(ureq::Error::Status(code, _)) if is_retryable(code) => {
-                std::thread::sleep(Duration::from_secs(1 << attempt));
-                continue;
-            }
-            Err(_) => return None,
-        };
-        let body: serde_json::Value = serde_json::from_str(&resp.into_string().ok()?).ok()?;
-        for relation in body["relations"].as_array()? {
-            if relation["type"].as_str() == Some("wikidata") {
-                let url = relation["url"]["resource"].as_str()?;
-                // https://www.wikidata.org/wiki/Q130798
-                return url.rsplit('/').next().map(str::to_string);
-            }
+    let body = get_json(
+        agent,
+        &format!("https://musicbrainz.org/ws/2/artist/{mbid}"),
+        &[("inc", "url-rels"), ("fmt", "json")],
+    )?;
+    for relation in body["relations"].as_array()? {
+        if relation["type"].as_str() == Some("wikidata") {
+            let url = relation["url"]["resource"].as_str()?;
+            // https://www.wikidata.org/wiki/Q130798
+            return url.rsplit('/').next().map(str::to_string);
         }
-        return None;
     }
     None
 }
 
 /// Wikidata `P18` (image) claim → Commons filename.
 fn wikidata_p18(agent: &ureq::Agent, qid: &str) -> Option<String> {
-    for attempt in 0..3u32 {
-        match agent
-            .get("https://www.wikidata.org/w/api.php")
-            .query("action", "wbgetclaims")
-            .query("property", "P18")
-            .query("entity", qid)
-            .query("format", "json")
-            .call()
-        {
-            Ok(resp) => {
-                let body: serde_json::Value =
-                    serde_json::from_str(&resp.into_string().ok()?).ok()?;
-                return body["claims"]["P18"]
-                    .as_array()?
-                    .first()?
-                    .get("mainsnak")?
-                    .get("datavalue")?
-                    .get("value")?
-                    .as_str()
-                    .map(str::to_string);
-            }
-            Err(ureq::Error::Status(code, _)) if is_retryable(code) => {
-                std::thread::sleep(Duration::from_secs(1 << attempt));
-            }
-            Err(_) => return None,
-        }
-    }
-    None
+    let body = get_json(
+        agent,
+        "https://www.wikidata.org/w/api.php",
+        &[
+            ("action", "wbgetclaims"),
+            ("property", "P18"),
+            ("entity", qid),
+            ("format", "json"),
+        ],
+    )?;
+    body["claims"]["P18"]
+        .as_array()?
+        .first()?
+        .get("mainsnak")?
+        .get("datavalue")?
+        .get("value")?
+        .as_str()
+        .map(str::to_string)
 }
 
 /// Commons image URL for a filename, resized to 600px.
@@ -473,31 +463,19 @@ fn musicbrainz_recording(agent: &ureq::Agent, artist: &str, track: &str) -> Opti
         clean_query(track),
         clean_query(artist)
     );
-    for attempt in 0..3u32 {
-        match agent
-            .get("https://musicbrainz.org/ws/2/recording")
-            .query("query", &query)
-            .query("fmt", "json")
-            .query("limit", "1")
-            .call()
-        {
-            Ok(resp) => {
-                let body: serde_json::Value =
-                    serde_json::from_str(&resp.into_string().ok()?).ok()?;
-                return body["recordings"]
-                    .as_array()?
-                    .first()?
-                    .get("id")?
-                    .as_str()
-                    .map(str::to_string);
-            }
-            Err(ureq::Error::Status(code, _)) if is_retryable(code) => {
-                std::thread::sleep(Duration::from_secs(1 << attempt));
-            }
-            Err(_) => return None,
-        }
-    }
-    None
+    get_json(
+        agent,
+        "https://musicbrainz.org/ws/2/recording",
+        &[("query", &query), ("fmt", "json"), ("limit", "1")],
+    )
+    .and_then(|body| {
+        body["recordings"]
+            .as_array()?
+            .first()?
+            .get("id")?
+            .as_str()
+            .map(str::to_string)
+    })
 }
 
 /// Resolve MusicBrainz release pages for the top albums. Cache-first,
@@ -506,30 +484,27 @@ fn musicbrainz_recording(agent: &ureq::Agent, artist: &str, track: &str) -> Opti
 /// (artist, album) pairs.
 pub fn resolve_album_urls(
     pairs: &[(String, String, Option<String>)],
-    cache_path: Option<&str>,
+    cache: &Cache,
 ) -> HashMap<(String, String), String> {
-    let Some(path) = cache_path else {
-        return HashMap::new();
-    };
-
-    let mut cache = load_cache(path);
-
     let mut out: HashMap<(String, String), String> = HashMap::new();
-    let missing: Vec<(String, String, Option<String>)> = pairs
-        .iter()
-        .filter_map(
-            |(artist, album, mbid)| match cache.get(&album_url_cache_key(artist, album)) {
-                Some(url) => {
-                    out.insert(
-                        (stats::normalize(artist), stats::normalize(album)),
-                        url.clone(),
-                    );
-                    None
+    let missing: Vec<(String, String, Option<String>)> = {
+        let cache = cache.lock().unwrap();
+        pairs
+            .iter()
+            .filter_map(|(artist, album, mbid)| {
+                match cache.get(&album_url_cache_key(artist, album)) {
+                    Some(url) => {
+                        out.insert(
+                            (stats::normalize(artist), stats::normalize(album)),
+                            url.clone(),
+                        );
+                        None
+                    }
+                    None => Some((artist.clone(), album.clone(), mbid.clone())),
                 }
-                None => Some((artist.clone(), album.clone(), mbid.clone())),
-            },
-        )
-        .collect();
+            })
+            .collect()
+    };
 
     if missing.is_empty() {
         return out;
@@ -557,10 +532,10 @@ pub fn resolve_album_urls(
         })
         .collect();
 
+    let mut cache = cache.lock().unwrap();
     for (artist, album, url) in results {
         cache.insert(album_url_cache_key(&artist, &album), url.clone());
         out.insert((stats::normalize(&artist), stats::normalize(&album)), url);
-        save_cache_atomically(path, &cache);
     }
 
     out
@@ -569,27 +544,21 @@ pub fn resolve_album_urls(
 /// Resolve MusicBrainz artist pages for the top artists. Cache-first;
 /// a miss does the same artist search as the image pipeline. Keys are
 /// normalized artist names.
-pub fn resolve_artist_urls(
-    artists: &[String],
-    cache_path: Option<&str>,
-) -> HashMap<String, String> {
-    let Some(path) = cache_path else {
-        return HashMap::new();
-    };
-
-    let mut cache = load_cache(path);
-
+pub fn resolve_artist_urls(artists: &[String], cache: &Cache) -> HashMap<String, String> {
     let mut out: HashMap<String, String> = HashMap::new();
-    let missing: Vec<String> = artists
-        .iter()
-        .filter_map(|name| match cache.get(&artist_url_cache_key(name)) {
-            Some(url) => {
-                out.insert(stats::normalize(name), url.clone());
-                None
-            }
-            None => Some(name.clone()),
-        })
-        .collect();
+    let missing: Vec<String> = {
+        let cache = cache.lock().unwrap();
+        artists
+            .iter()
+            .filter_map(|name| match cache.get(&artist_url_cache_key(name)) {
+                Some(url) => {
+                    out.insert(stats::normalize(name), url.clone());
+                    None
+                }
+                None => Some(name.clone()),
+            })
+            .collect()
+    };
 
     if missing.is_empty() {
         return out;
@@ -614,10 +583,10 @@ pub fn resolve_artist_urls(
         })
         .collect();
 
+    let mut cache = cache.lock().unwrap();
     for (name, url) in results {
         cache.insert(artist_url_cache_key(&name), url.clone());
         out.insert(stats::normalize(&name), url);
-        save_cache_atomically(path, &cache);
     }
 
     out
@@ -628,30 +597,27 @@ pub fn resolve_artist_urls(
 /// normalized (artist, track) pairs.
 pub fn resolve_track_urls(
     tracks: &[(String, String)],
-    cache_path: Option<&str>,
+    cache: &Cache,
 ) -> HashMap<(String, String), String> {
-    let Some(path) = cache_path else {
-        return HashMap::new();
-    };
-
-    let mut cache = load_cache(path);
-
     let mut out: HashMap<(String, String), String> = HashMap::new();
-    let missing: Vec<(String, String)> = tracks
-        .iter()
-        .filter_map(
-            |(artist, track)| match cache.get(&track_url_cache_key(artist, track)) {
-                Some(url) => {
-                    out.insert(
-                        (stats::normalize(artist), stats::normalize(track)),
-                        url.clone(),
-                    );
-                    None
-                }
-                None => Some((artist.clone(), track.clone())),
-            },
-        )
-        .collect();
+    let missing: Vec<(String, String)> = {
+        let cache = cache.lock().unwrap();
+        tracks
+            .iter()
+            .filter_map(
+                |(artist, track)| match cache.get(&track_url_cache_key(artist, track)) {
+                    Some(url) => {
+                        out.insert(
+                            (stats::normalize(artist), stats::normalize(track)),
+                            url.clone(),
+                        );
+                        None
+                    }
+                    None => Some((artist.clone(), track.clone())),
+                },
+            )
+            .collect()
+    };
 
     if missing.is_empty() {
         return out;
@@ -677,10 +643,10 @@ pub fn resolve_track_urls(
         })
         .collect();
 
+    let mut cache = cache.lock().unwrap();
     for (artist, track, url) in results {
         cache.insert(track_url_cache_key(&artist, &track), url.clone());
         out.insert((stats::normalize(&artist), stats::normalize(&track)), url);
-        save_cache_atomically(path, &cache);
     }
 
     out

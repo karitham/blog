@@ -34,9 +34,14 @@ jobs:
           restore-keys: cargo-
       # The cover-art cache is append-only and grows every run, so it
       # must save each time — but it's a few KB, unlike the target dir.
+      # The mirrored image cache (priv/cache/img) gets the same
+      # treatment: once a cover/artist photo is downloaded it never
+      # needs the network again.
       - uses: actions/cache@v4
         with:
-          path: priv/cache/cover-cache.json
+          path: |
+            priv/cache/cover-cache.json
+            priv/cache/img
           key: cover-cache-${{ github.run_id }}
           restore-keys: cover-cache-
 

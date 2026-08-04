@@ -31,15 +31,18 @@ new *ARGS:
 # Fetch fresh listening data from PDS, then derive the stats the site embeds.
 # One pass: CAR in, stats out — the ~100MB raw dump is never materialized.
 # `--covers` enables MusicBrainz/Cover Art Archive lookups for pairs not yet
-# cached; with a warm cache the stats step is offline.
+# cached; with a warm cache the stats step is offline. `--images` mirrors the
+# resolved cover/artist images into priv/cache/img so the browser never hits
+# Cover Art Archive / Wikimedia at page load; a warm image cache is also offline.
 refresh:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	mkdir -p priv/cache
+	mkdir -p priv/cache priv/cache/img
 	curl -sL "https://eurosky.social/xrpc/com.atproto.sync.getRepo?did=did:plc:kcgwlowulc3rac43lregdawo" \
 		-o priv/cache/repo.car
 	cd tools/parse-plays && cargo run --release -- refresh ../../priv/cache/repo.car \
-		../../priv/cache/plays-stats.json --covers ../../priv/cache/cover-cache.json
+		../../priv/cache/plays-stats.json --covers ../../priv/cache/cover-cache.json \
+		--images ../../priv/cache/img
 
 # Wipe build artifacts.
 clean:

@@ -1,11 +1,12 @@
 # karitham.dev
 
-Personal site. Gleam SSG that fetches from the AT Protocol (Bluesky PDS + Tangled) at build time, hydrates client-side with a Lustre component tree.
+Personal site. Gleam SSG that fetches from the AT Protocol (Bluesky PDS + Tangled) at build time, hydrates client-side with a Lustre component tree. Album covers, artist photos, and the profile avatar/banner are mirrored into the site at build time, so the visitor's browser never has to fetch from Cover Art Archive, Wikimedia, or the PDS directly — every image is served from `/img/...` on the site itself.
 
 ## Build
 
 ```sh
 nix develop          # or: direnv reload
+just refresh         # data pipeline: plays + covers + mirrored images
 just build           # codegen → client JS → static site → ./dist/
 just test            # run all tests
 just clean           # wipe build artifacts
@@ -23,6 +24,20 @@ Needs Gleam 1.17+ and Erlang/OTP 28+ — `nix develop` provides everything.
 ```sh
 BLOG_URL="http://localhost:8000" just build
 ```
+
+## Refreshing listening data
+
+The Music section's stats, covers, and page links come from a data pipeline that runs before `just build`:
+
+```sh
+just refresh
+```
+
+`refresh` downloads your play history as a CAR file from the PDS, aggregates top-N artists/albums/tracks per time range, resolves album covers (Cover Art Archive), artist photos (MusicBrainz → Wikidata → Wikimedia Commons), and MusicBrainz page links, then writes `priv/cache/plays-stats.json` and mirrors every image into `priv/cache/img/` for the SSG to copy into `dist/img/`.
+
+Every lookup is cache-first with per-endpoint rate limiting, jittered retries, and `Retry-After` handling; with a warm cache `refresh` is fully offline and only new plays touch the network. A failed or interrupted run never corrupts the caches (atomic writes), and the next run simply re-does what didn't finish.
+
+CI runs `just refresh && just build` on every push and caches `priv/cache/cover-cache.json` + `priv/cache/img` between runs, so deploys only resolve and download what's new. The whole `priv/cache` dir is gitignored and wiped by `just clean`.
 
 ## Adding a post
 
@@ -60,13 +75,14 @@ error if something's wrong.
 
 ## Layout
 
-Three Gleam packages sharing generated types, decoders, and view code:
+Four components:
 
-| Package       | Role                                                                              |
-| ------------- | --------------------------------------------------------------------------------- |
-| **`shared/`** | Model types, generated decoders, view components (compiled to both Erlang and JS) |
-| **root**      | SSG — fetches data, renders, writes `dist/`                                       |
-| **`client/`** | Browser bundle — fetches fresh data on page load, polls plays every 30s           |
+| Component               | Role                                                                                                                    |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **`shared/`**           | Model types, generated decoders, view components (compiled to both Erlang and JS)                                       |
+| **root**                | SSG — fetches data, mirrors images, renders, writes `dist/`                                                             |
+| **`client/`**           | Browser bundle — fetches fresh data on page load (profile images rewritten to the local mirrors), polls plays every 30s |
+| **`tools/parse-plays`** | Rust CLI — CAR → play stats, cover/artist resolution, image mirroring                                                   |
 
 ## Tests
 

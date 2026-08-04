@@ -1,19 +1,21 @@
 import api
 import data/fetch
+import data/images
 import data/model.{type Post, type SiteData, SiteData}
 import dynamic
 import encode
 import filepath
 import gen/actor/defs.{type ProfileViewDetailed}
 import gleam/io
+import gleam/json
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{type Option, None, Some, map as option_map}
 import gleam/result
 import gleam/string
 import hydration.{HydrationModel}
-import lustre/attribute.{class, id}
+import lustre/attribute.{class, id, type_}
 import lustre/element.{type Element, fragment, text, to_document_string}
-import lustre/element/html.{div, h2}
+import lustre/element/html.{div, h2, script}
 import simplifile
 import view/components/post_view
 import view/layout
@@ -30,6 +32,12 @@ pub fn build() {
   io.println("Fetching data...")
   let site_data = fetch.fetch_all()
 
+  // Mirror the profile's avatar/banner blobs into the site so the
+  // browser never hits the PDS for them; the returned profile points
+  // at the local copies and `rewrites` lets the client do the same.
+  let profile_images = images.mirror_profile_images(site_data.profile)
+  let site_data = SiteData(..site_data, profile: profile_images.profile)
+
   // Drafts are excluded from the SSG output but the user should
   // know they exist (so they don't lose work or wonder where
   // their post went).
@@ -41,7 +49,7 @@ pub fn build() {
 
   let published_data = SiteData(..site_data, posts: published)
 
-  write_index(published_data)
+  write_index(published_data, profile_images.rewrites)
   write_posts(published, published_data.profile)
   write_posts(drafts, published_data.profile)
   write_style()
@@ -50,6 +58,7 @@ pub fn build() {
   copy_post_assets(published)
   copy_post_assets(drafts)
   copy_favicons()
+  copy_image_cache()
   copy_client_js()
 
   io.println("Done! Site generated in " <> dist_dir)
@@ -59,10 +68,10 @@ fn log_draft(post: Post) -> Nil {
   io.println("  [draft] " <> post.slug <> " — " <> post.title)
 }
 
-fn write_index(data: SiteData) {
+fn write_index(data: SiteData, rewrites: List(#(String, String))) {
   let og_image: Option(String) = case data.profile.banner {
-    Some(img) -> Some(img)
-    None -> data.profile.avatar
+    Some(img) -> Some(absolutize_img(img))
+    None -> option_map(data.profile.avatar, absolutize_img)
   }
 
   let description = case data.profile.description {
@@ -87,8 +96,18 @@ fn write_index(data: SiteData) {
       ),
     ])
 
+  // The client re-fetches the profile on page load and re-renders it
+  // with the PDS's remote avatar/banner URLs; this map lets it point
+  // those at the local mirrors instead.
+  let rewrites_script =
+    script(
+      [type_("application/json"), id("image-rewrites")],
+      encode_rewrites(rewrites),
+    )
+
   let content =
     fragment([
+      rewrites_script,
       dynamic,
       div([class("section")], [
         div([class("section-header")], [
@@ -103,7 +122,7 @@ fn write_index(data: SiteData) {
       description: description,
       image: og_image,
       url: api.site_url() <> "/",
-      logo: data.profile.avatar,
+      logo: option_map(data.profile.avatar, absolutize_img),
       page_type: layout.Website,
     )
 
@@ -123,7 +142,7 @@ fn write_single_post(post: Post, profile: ProfileViewDetailed) {
 
   let title = post.title <> " - Kar"
   let og_image: Option(String) = case post.image {
-    "" -> profile.avatar
+    "" -> option_map(profile.avatar, absolutize_img)
     img -> Some(resolve_og_image_url(post.slug, img))
   }
 
@@ -244,6 +263,37 @@ fn copy_client_js() {
       io.println(
         "  client JS not built — skip 'cd client && gleam build' first",
       )
+  }
+}
+
+/// Copy the mirrored cover/artist images from the refresh cache into
+/// the site so the browser serves them locally instead of hitting
+/// Cover Art Archive / Wikimedia at page load. No-op without a cache.
+fn copy_image_cache() {
+  case simplifile.is_directory("priv/cache/img") {
+    Ok(True) -> copy_dir("priv/cache/img", dist_dir <> "/img")
+    _ -> Nil
+  }
+}
+
+/// The remote→local rewrite map as a JSON object, embedded in
+/// `#image-rewrites` for the client (client/browser_ffi.mjs).
+fn encode_rewrites(rewrites: List(#(String, String))) -> String {
+  rewrites
+  |> list.map(fn(pair) {
+    let #(remote, local) = pair
+    #(remote, json.string(local))
+  })
+  |> json.object
+  |> json.to_string
+}
+
+/// OG/Twitter image tags must be absolute URLs for crawlers; the
+/// mirrored images are root-relative paths.
+fn absolutize_img(img: String) -> String {
+  case string.starts_with(img, "/") {
+    True -> api.site_url() <> img
+    False -> img
   }
 }
 
