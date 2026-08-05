@@ -1,5 +1,5 @@
-import refresh
+import app
 
 pub fn main() {
-  refresh.start()
+  app.start()
 }

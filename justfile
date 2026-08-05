@@ -20,9 +20,11 @@ client:
 ssg:
 	gleam run
 
-# Run all tests (root + shared).
+# Run all tests (root + shared + client).
 test:
-	gleam test && cd shared && gleam test
+	gleam test
+	cd shared && gleam test
+	cd client && gleam test
 
 # Scaffold a new post. Usage: just new my-post-slug
 new *ARGS:

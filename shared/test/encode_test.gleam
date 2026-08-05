@@ -1,6 +1,6 @@
+import atproto.{type DecodedRecord, DecodedRecord}
 import decode
 import encode
-import fetch.{type DecodedRecord, DecodedRecord}
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
 import gen/alpha/feed/play.{type AlphaFeedPlay, AlphaFeedPlay, ArtistView}
 import gen/repo.{type Repo, Repo}

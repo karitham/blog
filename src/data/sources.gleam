@@ -1,14 +1,15 @@
 //// Gather all site data for the SSG.
 ////
 //// Each section fetches its own URL through the shared decoders in
-//// `shared/src/fetch.gleam`. Failure on a section logs a warning
-//// and returns an empty value, so one slow PDS doesn't take the
-//// whole build down.
+//// `shared/src/atproto.gleam`. The `http_get` seam is injected from
+//// `build.gleam` (which passes `transport.fetch_body`) so this module
+//// is testable with stub functions and the network stays out of the
+//// decision logic. Failure on a section logs a warning and returns an
+//// empty value, so one slow PDS doesn't take the whole build down.
 
+import atproto.{type DecodedRecord}
 import data/frontmatter
 import data/model.{type Post, type SiteData, SiteData}
-import data/transport
-import fetch.{type DecodedRecord}
 import gen/alpha/feed/play.{type AlphaFeedPlay}
 import gen/repo.{type Repo}
 import gleam/io
@@ -19,12 +20,17 @@ import gleam/string
 import simplifile
 import stats
 
-pub fn fetch_all() -> SiteData {
-  let pinned_dids = fetch_pinned_dids()
-  let profile = fetch_profile()
-  let recent_plays = fetch_plays()
+/// A GET request that returns the response body as a string. The SSG
+/// passes `transport.fetch_body`; tests pass canned stubs.
+pub type HttpGet =
+  fn(String) -> Result(String, String)
+
+pub fn fetch_all(http_get: HttpGet) -> SiteData {
+  let pinned_dids = fetch_pinned_dids(http_get)
+  let profile = fetch_profile(http_get)
+  let recent_plays = fetch_plays(http_get)
   let plays_stats = fetch_plays_stats()
-  let repos = fetch_repos(pinned_dids)
+  let repos = fetch_repos(http_get, pinned_dids)
 
   SiteData(profile:, recent_plays:, plays_stats:, repos:, posts: read_posts())
 }
@@ -48,10 +54,10 @@ fn fetch_plays_stats() -> stats.StatsData {
 
 // --- profile ---
 
-fn fetch_profile() {
-  case transport.fetch_body(fetch.profile_url()) {
+fn fetch_profile(http_get: HttpGet) {
+  case http_get(atproto.profile_url()) {
     Ok(body) ->
-      case fetch.decode_profile(body) {
+      case atproto.decode_profile(body) {
         Ok(profile) -> profile
         Error(e) -> log_fail_and_panic("profile", string.inspect(e))
       }
@@ -61,27 +67,35 @@ fn fetch_profile() {
 
 // --- plays ---
 
-fn fetch_plays() -> List(AlphaFeedPlay) {
-  case transport.fetch_body(fetch.plays_url()) {
-    Ok(body) ->
-      case fetch.decode_plays(body) {
-        Ok(plays) -> plays
-        Error(e) -> log_fail("plays", string.inspect(e), [])
-      }
-    Error(e) -> log_fail("plays", e, [])
+fn fetch_plays(http_get: HttpGet) -> List(AlphaFeedPlay) {
+  case http_get(atproto.plays_url()) {
+    Ok(body) -> plays_from_body(body)
+    Error(reason) -> log_fail("plays", reason, [])
+  }
+}
+
+/// Pure: decode a plays `listRecords` body, falling back to the empty
+/// list when a record fails to decode.
+pub fn plays_from_body(body: String) -> List(AlphaFeedPlay) {
+  case atproto.decode_plays(body) {
+    Ok(plays) -> plays
+    Error(e) -> log_fail("plays", string.inspect(e), [])
   }
 }
 
 // --- repos ---
 
-fn fetch_repos(pinned_dids: List(String)) -> List(DecodedRecord(Repo)) {
-  case transport.fetch_body(fetch.repos_url()) {
+fn fetch_repos(
+  http_get: HttpGet,
+  pinned_dids: List(String),
+) -> List(DecodedRecord(Repo)) {
+  case http_get(atproto.repos_url()) {
     Ok(body) ->
-      case fetch.decode_repos(body) {
+      case atproto.decode_repos(body) {
         Ok(records) ->
           records
-          |> fetch.filter_repos_by_did(pinned_dids)
-          |> list.map(fetch.resolve_repo_name)
+          |> atproto.filter_repos_by_did(pinned_dids)
+          |> list.map(atproto.resolve_repo_name)
         Error(e) -> log_fail("repos", string.inspect(e), [])
       }
     Error(e) -> log_fail("repos", e, [])
@@ -90,11 +104,11 @@ fn fetch_repos(pinned_dids: List(String)) -> List(DecodedRecord(Repo)) {
 
 // --- pinned DIDs ---
 
-fn fetch_pinned_dids() -> List(String) {
-  case transport.fetch_body(fetch.pinned_dids_url()) {
+fn fetch_pinned_dids(http_get: HttpGet) -> List(String) {
+  case http_get(atproto.pinned_dids_url()) {
     Ok(body) ->
-      case fetch.decode_actor_profiles(body) {
-        Ok(profiles) -> fetch.pinned_dids_from_profiles(profiles)
+      case atproto.decode_actor_profiles(body) {
+        Ok(profiles) -> atproto.pinned_dids_from_profiles(profiles)
         Error(_) -> []
       }
     Error(_) -> []

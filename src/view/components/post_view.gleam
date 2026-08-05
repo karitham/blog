@@ -62,7 +62,11 @@ pub fn render_single(post: Post) -> Element(Nil) {
   ])
 }
 
-fn resolve_image_url(slug: String, img: String) -> String {
+/// Resolve a post's `image:` frontmatter value to a URL usable in an
+/// `<img>` tag: absolute URLs pass through, relative paths resolve
+/// against `/posts/<slug>/`. Shared with `render/page.gleam` so the
+/// article hero and the OG meta never disagree.
+pub fn resolve_image_url(slug: String, img: String) -> String {
   case
     string.starts_with(img, "http://") || string.starts_with(img, "https://")
   {

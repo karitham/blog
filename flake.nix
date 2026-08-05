@@ -56,6 +56,7 @@
                 beamMinimal28Packages.rebar3
                 treefmt
                 just
+                nodejs
 
                 rustc
                 cargo

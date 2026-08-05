@@ -1,28 +1,28 @@
-//// CLI subcommands for working with the blog.
+//// CLI subcommands for working with the blog — the impure shell.
 ////
 //// Usage:
 ////   gleam run                 Build the static site (default)
 ////   gleam run build           same
-////   gleam run client          Build the client JS bundle
 ////   gleam run new <slug>      Scaffold a new post at priv/posts/<slug>/
 ////   gleam run help            Print usage
 ////
+//// The pure helpers (slugify, template) live in `cli/slug` and
+//// `cli/template`; this module does the filesystem work and panics.
 //// The SSG and the client build are separate `gleam run` commands
 //// because shelling out from Gleam on the BEAM is fragile (the
 //// `os:cmd/1` FFI in this OTP version rejects our binary form).
 //// For a one-command build, use `make build` which chains them.
 
 import build
-import date
-import gleam/int
+import cli/slug
+import cli/template
 import gleam/io
-import gleam/list
 import gleam/string
 import simplifile
 
 /// Build the static site. Assumes the client JS bundle is already
 /// present at `client/build/dev/javascript/karitham_blog_client/`.
-/// Use `gleam run client` (or `make build`) to produce that first.
+/// Use `make build` to produce that first.
 pub fn build_site() {
   let bundle = "client/build/dev/javascript/karitham_blog_client/client.mjs"
   case simplifile.is_file(bundle) {
@@ -31,23 +31,12 @@ pub fn build_site() {
       io.println(
         "Client bundle not found at "
         <> bundle
-        <> ". Run `gleam run client` (or `make build`) first.",
+        <> ". Run `make build` (or `cd client && gleam build --target javascript`) first.",
       )
       panic as "client bundle missing"
     }
   }
   build.build()
-}
-
-/// Print a hint that client building isn't wired into this binary.
-/// The real build happens via `cd client && gleam build --target
-/// javascript` or `make client`.
-pub fn build_client() {
-  io.println(
-    "Run `cd client && gleam build --target javascript` to build the client.",
-  )
-  io.println("(Or use `make client` from the project root.)")
-  Nil
 }
 
 /// Scaffold a new post at `priv/posts/<slug>/index.md` from a
@@ -57,7 +46,7 @@ pub fn build_client() {
 /// `priv/posts/my-new-post/`. Defaults to `draft: true` so
 /// half-written posts don't go live.
 pub fn new_post(input: String) {
-  let slug = slugify(input)
+  let slug = slug.slugify(input)
   case slug {
     "" -> {
       io.println(
@@ -77,7 +66,7 @@ pub fn new_post(input: String) {
         }
         _ -> {
           let _ = simplifile.create_directory_all(dir)
-          let content = template(slug)
+          let content = template.template(slug, today())
           case simplifile.write(to: path, contents: content) {
             Ok(_) -> {
               io.println("Created " <> path)
@@ -96,52 +85,11 @@ pub fn new_post(input: String) {
   }
 }
 
-/// Normalize free-form text into a valid slug: lowercase, every
-/// non-`[a-z0-9-]` character becomes a hyphen, runs of hyphens
-/// collapse to one, leading/trailing hyphens stripped. Returns
-/// `""` for input that contains no usable characters.
-pub fn slugify(input: String) -> String {
-  input
-  |> string.lowercase
-  |> string.trim
-  |> string.to_graphemes
-  |> list.map(slugify_char)
-  |> string.join("")
-  |> collapse_dashes
-  |> trim_dashes
-}
-
-fn slugify_char(c: String) -> String {
-  case string.contains("abcdefghijklmnopqrstuvwxyz0123456789-", c) {
-    True -> c
-    False -> "-"
-  }
-}
-
-fn collapse_dashes(s: String) -> String {
-  case string.contains(s, "--") {
-    True -> collapse_dashes(string.replace(s, each: "--", with: "-"))
-    False -> s
-  }
-}
-
-fn trim_dashes(s: String) -> String {
-  case string.starts_with(s, "-") {
-    True -> trim_dashes(string.drop_start(s, 1))
-    False ->
-      case string.ends_with(s, "-") {
-        True -> trim_dashes(string.drop_end(s, 1))
-        False -> s
-      }
-  }
-}
-
 pub fn print_usage() {
   io.println(
     "Usage:
   gleam run                 Build the static site (alias for `build`)
   gleam run build           Build the static site
-  gleam run client          Hint: build the client bundle with make
   gleam run new <slug>      Scaffold a new post at priv/posts/<slug>/
   gleam run help            Show this message
 
@@ -151,43 +99,6 @@ separately; for a one-shot build use `make build`.",
 }
 
 // --- helpers ---
-
-/// Render the post template for a given slug. Uses today's date
-/// so the scaffolded post sorts to the top of the timeline.
-fn template(slug: String) -> String {
-  let #(y, m, d) = today()
-  let date = int.to_string(y) <> "-" <> date.pad2(m) <> "-" <> date.pad2(d)
-  "---\n"
-  <> "title: "
-  <> title_from_slug(slug)
-  <> "\n"
-  <> "description: \n"
-  <> "date: "
-  <> date
-  <> "\n"
-  <> "tags: []\n"
-  <> "draft: true\n"
-  <> "image: \n"
-  <> "---\n"
-  <> "\n"
-  <> "Write your post here.\n"
-}
-
-fn title_from_slug(slug: String) -> String {
-  // "hello-world" -> "Hello World". Best-effort — the user will
-  // overwrite the title anyway once they start writing.
-  slug
-  |> string.split(on: "-")
-  |> list.map(capitalize)
-  |> string.join(" ")
-}
-
-fn capitalize(word: String) -> String {
-  case string.to_graphemes(word) {
-    [] -> ""
-    [first, ..rest] -> string.uppercase(first) <> string.join(rest, "")
-  }
-}
 
 @external(erlang, "erlang", "date")
 fn erlang_date() -> #(Int, Int, Int)

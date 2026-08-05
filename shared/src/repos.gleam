@@ -6,8 +6,9 @@ import gleam/option.{Some, unwrap}
 import gleam/order
 import gleam/string
 import gleam/time/timestamp
-import lustre/element.{type Element, none}
-import section
+import lustre/attribute.{class, id}
+import lustre/element.{type Element, none, text}
+import lustre/element/html.{div, h2}
 
 const max_repos = 5
 
@@ -36,14 +37,19 @@ fn compare_repos_newest_first(a: Repo, b: Repo) -> order.Order {
 pub fn repos_section(repos: List(Repo)) -> Element(msg) {
   case select_top_repos(repos) {
     [] -> none()
-    top ->
-      section.section(
-        "Projects",
-        "repos",
-        False,
-        list.map(top, render_repo_card),
-      )
+    top -> section("Projects", "repos", list.map(top, render_repo_card))
   }
+}
+
+/// The section frame used by the repos list: a titled container with
+/// `data-stale` support for the client's refresh cycle (the CSS keys
+/// off `.section[data-stale="true"]` for a pulsing dot in the header).
+fn section(
+  title: String,
+  id_str: String,
+  items: List(Element(msg)),
+) -> Element(msg) {
+  div([id(id_str), class("section")], [h2([], [text(title)]), ..items])
 }
 
 fn dedup_by_did(repos: List(Repo)) -> List(Repo) {

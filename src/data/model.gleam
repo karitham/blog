@@ -1,4 +1,4 @@
-import fetch.{type DecodedRecord}
+import atproto.{type DecodedRecord}
 import gen/actor/defs.{type ProfileViewDetailed}
 import gen/alpha/feed/play.{type AlphaFeedPlay}
 import gen/repo.{type Repo}

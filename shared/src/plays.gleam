@@ -143,7 +143,7 @@ fn render_play_row(play: AlphaFeedPlay) -> Element(msg) {
 
 /// Render a play's `played_time` as `HH:MM` in UTC, and return the
 /// original ISO string for client-side re-localization.
-fn format_play_time(iso: String) -> #(String, String) {
+pub fn format_play_time(iso: String) -> #(String, String) {
   case timestamp.parse_rfc3339(iso) {
     Ok(ts) -> {
       let #(_, time) = timestamp.to_calendar(ts, calendar.utc_offset)

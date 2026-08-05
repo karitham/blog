@@ -3,13 +3,16 @@
 //// `fetch_body` does a GET and returns the response body as a string;
 //// `fetch_image` does a GET and returns raw bytes plus the response's
 //// Content-Type (for picking a file extension). Status and error
-//// handling stay here so the shared decoders in `shared/src/fetch.gleam`
+//// handling stay here so the shared decoders in `shared/src/atproto.gleam`
 //// can stay pure.
 ////
 //// Both retry transient failures (network errors, 429/5xx) a few times
 //// with a short fixed delay, so a blip from the PDS or a CDN doesn't
-//// blank out a section for this build.
+//// blank out a section for this build. The retry decision tree is pure
+//// and lives in `data/transport/core`; this module owns the httpc
+//// calls and the sleep.
 
+import data/transport/core.{type HttpError}
 import gleam/http/request
 import gleam/http/response
 import gleam/httpc
@@ -19,13 +22,6 @@ import gleam/string
 
 @external(erlang, "transport_ffi", "sleep")
 fn sleep(ms: Int) -> Nil
-
-/// Retryable vs permanent failure. Transport errors and 429/5xx are
-/// transient; 4xx and invalid URLs are permanent.
-type HttpError {
-  Transient(String)
-  Permanent(String)
-}
 
 const max_attempts = 3
 
@@ -53,17 +49,13 @@ fn retry_from(
   f: fn() -> Result(a, HttpError),
   attempts: Int,
 ) -> Result(a, String) {
-  case f() {
-    Ok(value) -> Ok(value)
-    Error(Permanent(reason)) -> Error(reason)
-    Error(Transient(reason)) ->
-      case attempts <= 1 {
-        True -> Error(reason)
-        False -> {
-          sleep(retry_delay_ms)
-          retry_from(f, attempts - 1)
-        }
-      }
+  case core.decide(f(), attempts) {
+    core.Succeeded(value) -> Ok(value)
+    core.GivenUp(reason) -> Error(reason)
+    core.Retry(_) -> {
+      sleep(retry_delay_ms)
+      retry_from(f, attempts - 1)
+    }
   }
 }
 
@@ -71,16 +63,17 @@ fn fetch_body_once(url: String) -> Result(String, HttpError) {
   use req <- result.try(
     request.to(url)
     |> result.replace_error("invalid url: " <> url)
-    |> result.map_error(fn(e) { Permanent(e) }),
+    |> result.map_error(fn(e) { core.Permanent(e) }),
   )
   use resp <- result.try(
-    httpc.send(req) |> result.map_error(fn(e) { Transient(string.inspect(e)) }),
+    httpc.send(req)
+    |> result.map_error(fn(e) { core.Transient(string.inspect(e)) }),
   )
   case resp.status >= 200 && resp.status < 300 {
     True -> Ok(resp.body)
     False -> {
       let reason = "HTTP " <> int.to_string(resp.status) <> ": " <> resp.body
-      classify_status(resp.status, reason)
+      core.classify_status(resp.status, reason)
     }
   }
 }
@@ -90,24 +83,18 @@ fn fetch_image_once(url: String) -> Result(#(BitArray, String), HttpError) {
     request.to(url)
     |> result.map(fn(req) { request.set_body(req, <<>>) })
     |> result.replace_error("invalid url: " <> url)
-    |> result.map_error(fn(e) { Permanent(e) }),
+    |> result.map_error(fn(e) { core.Permanent(e) }),
   )
   use resp <- result.try(
     httpc.send_bits(req)
-    |> result.map_error(fn(e) { Transient(string.inspect(e)) }),
+    |> result.map_error(fn(e) { core.Transient(string.inspect(e)) }),
   )
   case resp.status >= 200 && resp.status < 300 {
-    False -> classify_status(resp.status, "HTTP " <> int.to_string(resp.status))
+    False ->
+      core.classify_status(resp.status, "HTTP " <> int.to_string(resp.status))
     True -> {
       let content_type = response.get_header(resp, "content-type")
       Ok(#(resp.body, result.unwrap(content_type, "")))
     }
-  }
-}
-
-fn classify_status(status: Int, reason: String) -> Result(a, HttpError) {
-  case status == 429 || status >= 500 {
-    True -> Error(Transient(reason))
-    False -> Error(Permanent(reason))
   }
 }

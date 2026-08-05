@@ -1,4 +1,4 @@
-import api
+import data/model.{type Post}
 import date
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -25,14 +25,18 @@ pub type Meta {
   )
 }
 
+/// Render the full document shell. `site_url` is threaded in (not
+/// read from the environment) so the whole view layer is pure and
+/// testable with a fixed URL.
 pub fn page(
+  site_url: String,
   title: String,
   model_json: String,
   content: Element(Nil),
   meta: Meta,
 ) -> Element(Nil) {
   html.html([attribute.lang("en")], [
-    html.head([], head_children(title, model_json, meta)),
+    html.head([], head_children(site_url, title, model_json, meta)),
     html.body([], [
       html.div([attribute.id("content")], [
         nav_bar(),
@@ -44,6 +48,7 @@ pub fn page(
 }
 
 fn head_children(
+  site_url: String,
   title: String,
   model_json: String,
   meta: Meta,
@@ -64,7 +69,7 @@ fn head_children(
     // Open Graph
     html.meta([
       attribute.attribute("property", "og:site_name"),
-      attribute.content(string.replace(api.site_url(), "https://", "")),
+      attribute.content(string.replace(site_url, "https://", "")),
     ]),
     html.meta([
       attribute.attribute("property", "og:type"),
@@ -353,26 +358,24 @@ fn icon_email() -> Element(Nil) {
   )
 }
 
-pub fn rss_feed(posts: List(#(String, String, String, String))) -> String {
-  let items =
-    list.map(posts, fn(t) {
-      let #(title, description, slug, date_str) = t
-      "  <item>
-    <title>" <> title <> "</title>
-    <description>" <> description <> "</description>
-    <link>" <> api.site_url() <> "/posts/" <> slug <> "/</link>
-    <pubDate>" <> date.to_rfc822(date_str) <> "</pubDate>
-  </item>"
-    })
+/// Render the RSS feed. `site_url` is threaded in so absolute links
+/// are correct in local previews (`BLOG_URL=http://localhost:8000`).
+pub fn rss_feed(posts: List(Post), site_url: String) -> String {
+  let items = list.map(posts, fn(post) { "  <item>
+    <title>" <> post.title <> "</title>
+    <description>" <> post.description <> "</description>
+    <link>" <> site_url <> "/posts/" <> post.slug <> "/</link>
+    <pubDate>" <> date.to_rfc822(post.date) <> "</pubDate>
+  </item>" })
 
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">
   <channel>
     <title>Karitham's Thoughts</title>
-    <link>" <> api.site_url() <> "</link>
+    <link>" <> site_url <> "</link>
     <description>Kar's thoughts</description>
     <language>en</language>
-    <atom:link href=\"" <> api.site_url() <> "/rss.xml\" rel=\"self\" type=\"application/rss+xml\"/>
+    <atom:link href=\"" <> site_url <> "/rss.xml\" rel=\"self\" type=\"application/rss+xml\"/>
     " <> string.join(items, "\n") <> "
   </channel>
 </rss>"

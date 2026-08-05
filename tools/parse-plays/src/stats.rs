@@ -693,4 +693,31 @@ mod tests {
         assert_eq!(normalize("JAY-Z"), normalize("Jay Z"));
         assert_eq!(normalize_name("  Animals "), "animals");
     }
+
+    #[test]
+    fn cross_language_contract_fixture_matches() {
+        // The Gleam decoder (shared/src/stats.gleam) and this Rust
+        // emitter must agree on the plays-stats.json shape. Both sides
+        // pin the shared golden file tests/fixtures/plays-stats.min.json:
+        // if the shape drifts on either side, one of the two tests
+        // fails. See blog/test/stats_contract_test.gleam.
+        let fixture = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/fixtures/plays-stats.min.json"
+        ))
+        .expect("golden fixture missing — run `cargo test` from tools/parse-plays");
+        let expected: serde_json::Value = serde_json::from_str(&fixture).unwrap();
+
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 8, 3).unwrap();
+        let plays = vec![
+            play("Alpha", "Artist A", "Album A", "2026-07-20T10:00:00Z", 1000),
+            play("Beta", "Artist B", "Album B", "2026-02-10T10:00:00Z", 3000),
+        ];
+        let agg = aggregate(&plays, today);
+        // main.rs wraps the ranges map in {"ranges": ...} before
+        // writing the file; pin that same file shape here.
+        let actual = json!({ "ranges": build_ranges(&agg, &ResolvedStats::default()) });
+
+        assert_eq!(actual, expected);
+    }
 }

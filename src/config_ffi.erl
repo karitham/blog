@@ -1,4 +1,4 @@
--module(api_ffi).
+-module(config_ffi).
 -export([getenv/1]).
 
 getenv(Name) ->

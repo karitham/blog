@@ -19,6 +19,7 @@
 
 import gleam/dynamic
 import gleam/dynamic/decode
+import gleam/json
 import gleam/list
 import gleam/result
 
@@ -131,4 +132,59 @@ pub fn is_empty(stats: StatsData) -> Bool {
     && list.is_empty(range_stats.albums)
     && list.is_empty(range_stats.tracks)
   })
+}
+
+/// Encode `StatsData` back to the plays-stats.json shape. Mirrors the
+/// decoder so the cross-language contract test can round-trip the
+/// golden fixture; optional fields are omitted when empty, exactly
+/// like `tools/parse-plays` writes them.
+pub fn encode_stats(data: StatsData) -> String {
+  json.object([
+    #(
+      "ranges",
+      json.object(
+        list.map(data.ranges, fn(pair) {
+          let #(range, rs) = pair
+          #(
+            range_key(range),
+            json.object([
+              #("artists", json.array(from: rs.artists, of: encode_item)),
+              #("albums", json.array(from: rs.albums, of: encode_item)),
+              #("tracks", json.array(from: rs.tracks, of: encode_item)),
+            ]),
+          )
+        }),
+      ),
+    ),
+  ])
+  |> json.to_string
+}
+
+fn encode_item(item: StatsItem) -> json.Json {
+  json.object(
+    [
+      #("name", json.string(item.name)),
+      #("plays", json.int(item.plays)),
+      #("ms_played", json.int(item.ms_played)),
+    ]
+    |> list.append(encode_optional(item)),
+  )
+}
+
+fn encode_optional(item: StatsItem) -> List(#(String, json.Json)) {
+  [
+    case item.artist {
+      "" -> []
+      a -> [#("artist", json.string(a))]
+    },
+    case item.image {
+      "" -> []
+      i -> [#("image", json.string(i))]
+    },
+    case item.url {
+      "" -> []
+      u -> [#("url", json.string(u))]
+    },
+  ]
+  |> list.flatten
 }

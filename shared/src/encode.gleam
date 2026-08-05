@@ -1,4 +1,4 @@
-import fetch.{type DecodedRecord}
+import atproto.{type DecodedRecord}
 import gen/actor/defs.{profile_view_detailed_fields}
 import gen/alpha/feed/play.{alpha_feed_play_fields}
 import gen/repo.{type Repo, repo_fields}

@@ -5,7 +5,7 @@ on:
   # and redeploy so the Music section stays current between pushes.
   # Runs on the default branch with the latest committed code.
   schedule:
-    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
   workflow_dispatch:
 
 concurrency:

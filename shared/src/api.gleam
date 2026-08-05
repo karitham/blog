@@ -1,17 +1,9 @@
-import gleam/string
-
-/// Returns the site URL, preferring the BLOG_URL environment variable
-/// if set. Falls back to the hardcoded default.
-pub fn site_url() -> String {
-  case os_getenv("BLOG_URL") {
-    Ok(url) -> string.trim(url)
-    Error(_) -> "https://karitham.dev"
-  }
-}
-
-@external(erlang, "api_ffi", "getenv")
-fn os_getenv(name: String) -> Result(String, Nil)
-
+/// Shared constants for AT Protocol endpoints and site identity.
+///
+/// Pure constants only — no FFI, no environment reads, so this module
+/// compiles and behaves identically on Erlang and JS. The site URL
+/// used for OG/RSS absolute links lives in the SSG's `config.gleam`
+/// (`BLOG_URL`), not here.
 pub const pds_endpoint = "https://eurosky.social"
 
 pub const public_api = "https://public.api.bsky.app"
