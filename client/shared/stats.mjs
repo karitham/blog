@@ -1,3 +1,4 @@
+import * as $json from "../gleam_json/gleam/json.mjs";
 import * as $dynamic from "../gleam_stdlib/gleam/dynamic.mjs";
 import * as $decode from "../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $list from "../gleam_stdlib/gleam/list.mjs";
@@ -247,4 +248,86 @@ export function is_empty(stats) {
       )) && $list.is_empty(range_stats.tracks);
     },
   );
+}
+
+function encode_optional(item) {
+  let _pipe = toList([
+    (() => {
+      let $ = item.artist;
+      if ($ === "") {
+        return $List$Empty$const;
+      } else {
+        let a = $;
+        return toList([["artist", $json.string(a)]]);
+      }
+    })(),
+    (() => {
+      let $ = item.image;
+      if ($ === "") {
+        return $List$Empty$const;
+      } else {
+        let i = $;
+        return toList([["image", $json.string(i)]]);
+      }
+    })(),
+    (() => {
+      let $ = item.url;
+      if ($ === "") {
+        return $List$Empty$const;
+      } else {
+        let u = $;
+        return toList([["url", $json.string(u)]]);
+      }
+    })(),
+  ]);
+  return $list.flatten(_pipe);
+}
+
+function encode_item(item) {
+  return $json.object(
+    (() => {
+      let _pipe = toList([
+        ["name", $json.string(item.name)],
+        ["plays", $json.int(item.plays)],
+        ["ms_played", $json.int(item.ms_played)],
+      ]);
+      return $list.append(_pipe, encode_optional(item));
+    })(),
+  );
+}
+
+/**
+ * Encode `StatsData` back to the plays-stats.json shape. Mirrors the
+ * decoder so the cross-language contract test can round-trip the
+ * golden fixture; optional fields are omitted when empty, exactly
+ * like `tools/parse-plays` writes them.
+ */
+export function encode_stats(data) {
+  let _pipe = $json.object(
+    toList([
+      [
+        "ranges",
+        $json.object(
+          $list.map(
+            data.ranges,
+            (pair) => {
+              let range = pair[0];
+              let rs = pair[1];
+              return [
+                range_key(range),
+                $json.object(
+                  toList([
+                    ["artists", $json.array(rs.artists, encode_item)],
+                    ["albums", $json.array(rs.albums, encode_item)],
+                    ["tracks", $json.array(rs.tracks, encode_item)],
+                  ]),
+                ),
+              ];
+            },
+          ),
+        ),
+      ],
+    ]),
+  );
+  return $json.to_string(_pipe);
 }

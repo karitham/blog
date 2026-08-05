@@ -110,6 +110,13 @@ a {
   }
 }
 
+/* Keyboard focus — one consistent treatment for every interactive
+   element (links, tabs, socials) instead of per-widget rules. */
+:is(a, .music-tab, .stats-tab):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 strong {
   color: var(--blue);
 }
@@ -300,12 +307,13 @@ footer {
   padding: 0;
 }
 
-/* Avatar + text row */
+/* Avatar + text row — same 0.5rem gutter as cards/play rows so the
+   profile column lines up with the lists below it. */
 .profile-header {
   display: flex;
   align-items: flex-end;
   gap: 0.85rem;
-  padding: 0.5rem 0 0 1.5rem;
+  padding: 0.5rem 0 0 0.5rem;
 }
 
 .profile-info {
@@ -352,23 +360,8 @@ footer {
   color: var(--text-dim);
   line-height: 1.55;
   margin: 0.6rem 0 0;
-  padding-left: 1.5rem;
+  padding-left: 0.5rem;
   text-wrap: pretty;
-}
-
-.profile-stats {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.82rem;
-  color: var(--text-dimmer);
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border);
-
-  & strong {
-    font-variant-numeric: tabular-nums;
-    color: var(--text);
-  }
 }
 
 /* ============================================================
@@ -379,9 +372,12 @@ footer {
   margin: 2.5rem 0;
 }
 
+/* Section headers get a shell prompt. Green — the same color as the
+   cursor and the stale dot — so "$ Music •" reads as one terminal
+   unit; mauve stays reserved for links and selected controls. */
 :is(#plays, #repos, .section-header) h2::before {
   content: "$ ";
-  color: var(--accent);
+  color: var(--green);
 }
 
 /* Stale-data indicator. Set on the section root by the SSG (plays
@@ -550,7 +546,7 @@ footer {
 
 :is(.music-tab, .stats-tab) {
   display: inline-block;
-  padding: 0.2rem 0.7rem;
+  padding: 0.4rem 0.7rem;
   margin: 0.5rem 0.25rem 0 0;
   font-size: 0.8rem;
   color: var(--text-dim);
@@ -609,7 +605,8 @@ footer {
   margin-top: 0.9rem;
 
   /* Grid subtitles read as article h2s: same size, marker, and
-     weight, only the (smaller) margin differs to fit the panel. */
+     weight, only the (smaller) margin differs to fit the panel.
+     Teal marker so the stats grid isn't more mauve-on-mauve. */
   & h3 {
     margin: 0 0 0.5rem;
     font-size: 1.2rem;
@@ -618,7 +615,7 @@ footer {
 
     &::before {
       content: "## ";
-      color: var(--accent);
+      color: var(--teal);
     }
   }
 }
@@ -647,11 +644,6 @@ footer {
 
   &:active {
     transform: scale(0.96);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
   }
 }
 
@@ -706,6 +698,32 @@ footer {
 
 .tile-cover--tracks .tile-initial {
   color: var(--peach);
+}
+
+/* Coverless tiles get a faint category tint on the surface itself —
+   the monogram color alone is easy to miss at a glance. */
+.tile-cover--artists {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--lavender) 18%, var(--bg-alt)),
+    var(--bg-alt)
+  );
+}
+
+.tile-cover--albums {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--teal) 18%, var(--bg-alt)),
+    var(--bg-alt)
+  );
+}
+
+.tile-cover--tracks {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--peach) 18%, var(--bg-alt)),
+    var(--bg-alt)
+  );
 }
 
 /* Hover popup: name, artist, plays. Anchored above the tile and
@@ -1006,6 +1024,88 @@ footer {
 
 .hljs-emphasis {
   font-style: italic;
+}
+
+/* ============================================================
+   Touch devices — tile names are hover-only on desktop
+   ============================================================ */
+
+/* On touch there's no hover, so the tooltip (which carries the tile's
+   name) would never appear. Turn it into a static caption under the
+   cover instead of floating it. */
+@media (hover: none) {
+  .tile-tooltip {
+    position: static;
+    opacity: 1;
+    transform: none;
+    width: auto;
+    max-width: none;
+    padding: 0.35rem 0.2rem 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    pointer-events: auto;
+    text-align: center;
+  }
+
+  .tile-tooltip::before,
+  .tile-tooltip::after {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Small screens
+   ============================================================ */
+
+@media (max-width: 560px) {
+  #content {
+    padding: 0 1rem;
+  }
+
+  #nav {
+    padding: 0.6rem 1rem;
+  }
+
+  footer {
+    padding: 2.5rem 1rem 2rem;
+  }
+
+  #banner img {
+    height: 160px;
+  }
+
+  .hero-image img {
+    height: 200px;
+  }
+
+  .profile-header {
+    gap: 0.6rem;
+  }
+
+  #profile .avatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  /* Three tile columns still work on phones (squares just shrink),
+     but the four-column play row doesn't — drop the release column
+     and rebalance the remaining two. */
+  .play-row {
+    gap: 0.75rem;
+  }
+
+  .play-release {
+    display: none;
+  }
+
+  .play-track {
+    flex: 1.4;
+  }
+
+  .play-artist {
+    flex: 1;
+  }
 }
 
 /* ============================================================

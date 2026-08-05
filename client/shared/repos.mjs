@@ -4,13 +4,22 @@ import { Some, unwrap } from "../gleam_stdlib/gleam/option.mjs";
 import * as $order from "../gleam_stdlib/gleam/order.mjs";
 import * as $string from "../gleam_stdlib/gleam/string.mjs";
 import * as $timestamp from "../gleam_time/gleam/time/timestamp.mjs";
+import * as $attribute from "../lustre/lustre/attribute.mjs";
+import { class$, id } from "../lustre/lustre/attribute.mjs";
 import * as $element from "../lustre/lustre/element.mjs";
-import { none } from "../lustre/lustre/element.mjs";
+import { none, text } from "../lustre/lustre/element.mjs";
+import * as $html from "../lustre/lustre/element/html.mjs";
+import { div, h2 } from "../lustre/lustre/element/html.mjs";
 import * as $card from "./card.mjs";
 import * as $date from "./date.mjs";
 import * as $repo from "./gen/repo.mjs";
-import { Ok, toList, Empty as $Empty, List$Empty$const as $List$Empty$const } from "./gleam.mjs";
-import * as $section from "./section.mjs";
+import {
+  Ok,
+  toList,
+  Empty as $Empty,
+  List$Empty$const as $List$Empty$const,
+  prepend as listPrepend,
+} from "./gleam.mjs";
 
 const max_repos = 5;
 
@@ -78,17 +87,26 @@ function render_repo_card(repo) {
   );
 }
 
+/**
+ * The section frame used by the repos list: a titled container with
+ * `data-stale` support for the client's refresh cycle (the CSS keys
+ * off `.section[data-stale="true"]` for a pulsing dot in the header).
+ * 
+ * @ignore
+ */
+function section(title, id_str, items) {
+  return div(
+    toList([id(id_str), class$("section")]),
+    listPrepend(h2($List$Empty$const, toList([text(title)])), items),
+  );
+}
+
 export function repos_section(repos) {
   let $ = select_top_repos(repos);
   if ($ instanceof $Empty) {
     return none();
   } else {
     let top = $;
-    return $section.section(
-      "Projects",
-      "repos",
-      false,
-      $list.map(top, render_repo_card),
-    );
+    return section("Projects", "repos", $list.map(top, render_repo_card));
   }
 }

@@ -238,10 +238,8 @@ function stats_view(data) {
 /**
  * Render a play's `played_time` as `HH:MM` in UTC, and return the
  * original ISO string for client-side re-localization.
- * 
- * @ignore
  */
-function format_play_time(iso) {
+export function format_play_time(iso) {
   let $ = $timestamp.parse_rfc3339(iso);
   if ($ instanceof Ok) {
     let ts = $[0];

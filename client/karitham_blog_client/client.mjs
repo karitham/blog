@@ -1,5 +1,5 @@
-import * as $refresh from "./refresh.mjs";
+import * as $app from "./app.mjs";
 
 export function main() {
-  return $refresh.start();
+  return $app.start();
 }

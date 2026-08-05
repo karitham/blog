@@ -1,7 +1,7 @@
 import * as $json from "../gleam_json/gleam/json.mjs";
 import * as $decode from "../gleam_stdlib/gleam/dynamic/decode.mjs";
-import * as $fetch from "./fetch.mjs";
-import { DecodedRecord } from "./fetch.mjs";
+import * as $atproto from "./atproto.mjs";
+import { DecodedRecord } from "./atproto.mjs";
 import * as $defs from "./gen/actor/defs.mjs";
 import { profile_view_detailed_decoder } from "./gen/actor/defs.mjs";
 import * as $play from "./gen/alpha/feed/play.mjs";

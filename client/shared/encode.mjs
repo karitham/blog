@@ -1,5 +1,5 @@
 import * as $json from "../gleam_json/gleam/json.mjs";
-import * as $fetch from "./fetch.mjs";
+import * as $atproto from "./atproto.mjs";
 import * as $defs from "./gen/actor/defs.mjs";
 import { profile_view_detailed_fields } from "./gen/actor/defs.mjs";
 import * as $play from "./gen/alpha/feed/play.mjs";
