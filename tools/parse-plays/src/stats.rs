@@ -2,12 +2,18 @@
 //!
 //! No I/O here — everything is deterministic and testable with plain
 //! values. The imperative shell in `main` calls `aggregate`, then
-//! `needed_pairs` (to know which covers to fetch), then `build_ranges`
-//! with a cover lookup function supplied from outside.
+//! `needed` (to know which covers/links to resolve), then
+//! `build_ranges` with the resolved data. Keys are typed newtypes
+//! (`ArtistKey`/`AlbumRef`/`TrackRef`), so display names can never be
+//! mistaken for keys.
 
+use crate::model::{
+    AlbumKey, AlbumRef, ArtistKey, Href, MusicBrainzId, ResolvedStats, TrackKey, TrackRef,
+};
 use serde::Serialize;
 use serde_json::json;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
 
 pub const TOP_N: usize = 9;
 
@@ -62,16 +68,20 @@ struct Counter {
 #[derive(Default)]
 pub struct Aggregated {
     /// range -> artist_key -> (counter, display name)
-    artists: HashMap<Range, HashMap<String, (Counter, String)>>,
-    /// range -> (artist_key, album_key) -> album entry
-    albums: HashMap<Range, HashMap<(String, String), AlbumEntry>>,
-    /// range -> (artist_key, track_key) -> (counter, artist display, track display, album_key)
-    tracks: HashMap<Range, HashMap<(String, String), (Counter, String, String, String)>>,
+    artists: HashMap<Range, HashMap<ArtistKey, (Counter, String)>>,
+    /// range -> album_ref -> album entry
+    albums: HashMap<Range, HashMap<AlbumRef, AlbumEntry>>,
+    /// range -> track_ref -> (counter, artist display, track display, album key)
+    tracks: HashMap<Range, HashMap<TrackRef, TrackCounter>>,
     /// artist_key -> (top album key, plays) — used to proxy artist cover art.
-    top_albums: HashMap<String, (String, u64)>,
+    top_albums: HashMap<ArtistKey, (AlbumKey, u64)>,
     /// artist_key -> display name
-    artist_names: HashMap<String, String>,
+    artist_names: HashMap<ArtistKey, String>,
 }
+
+/// One track's accumulated stats: the counter, the display names, and
+/// which album (if any) its cover falls back to.
+type TrackCounter = (Counter, String, String, AlbumKey);
 
 /// One album's accumulated stats. `release_mbid` is carried through
 /// from the play records (piper/lazuli emit it on recent plays) so
@@ -82,26 +92,48 @@ pub struct AlbumEntry {
     counter: Counter,
     artist_display: String,
     album_display: String,
-    release_mbid: Option<String>,
+    release_mbid: Option<MusicBrainzId>,
 }
 
-/// Strip the `mbid:` prefix some clients add to MBID fields.
-pub fn clean_mbid(s: &str) -> Option<String> {
-    let id = s.rsplit(':').next()?.to_string();
-    (!id.is_empty()).then_some(id)
+/// What the top-N grids actually reference: the keys resolution works
+/// on, plus the display names queries are built from.
+pub struct AlbumNeed {
+    pub album: AlbumRef,
+    pub artist_display: String,
+    pub album_display: String,
+    pub mbid: Option<MusicBrainzId>,
+}
+
+pub struct ArtistNeed {
+    pub key: ArtistKey,
+    pub display: String,
+}
+
+pub struct TrackNeed {
+    pub track: TrackRef,
+    pub artist_display: String,
+    pub track_display: String,
+}
+
+/// Everything one refresh needs resolved, deduplicated across ranges.
+#[derive(Default)]
+pub struct Needs {
+    pub albums: Vec<AlbumNeed>,
+    pub artists: Vec<ArtistNeed>,
+    pub tracks: Vec<TrackNeed>,
 }
 
 #[derive(Serialize)]
 struct StatsItem {
     name: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    artist: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    artist: Option<String>,
     plays: u64,
     ms_played: u64,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    image: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    image: Option<Href>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    url: Option<Href>,
 }
 
 #[derive(Serialize)]
@@ -109,67 +141,6 @@ struct RangeStats {
     artists: Vec<StatsItem>,
     albums: Vec<StatsItem>,
     tracks: Vec<StatsItem>,
-}
-
-// ---------------------------------------------------------------- helpers
-
-/// Sanitized grouping key for artist names: lowercase, punctuation
-/// dropped, collaboration credit cut to the first artist, junction
-/// words (feat/with/&/vs...) removed. Two spellings of the same
-/// artist ("JAY-Z" vs "Jay Z", "A$AP" vs "ASAP") land in the same
-/// bucket; display names keep their original spelling.
-pub fn normalize(s: &str) -> String {
-    const JUNCTION_WORDS: [&str; 12] = [
-        "and",
-        "with",
-        "feat",
-        "featuring",
-        "ft",
-        "vs",
-        "versus",
-        "present",
-        "presents",
-        "pres",
-        "b2b",
-        "x",
-    ];
-
-    let lower = s.to_lowercase();
-    // Collab credit strings: keep only the part before the first
-    // comma/ampersand/plus — "tofubeats, HITOMITOI" groups as tofubeats.
-    let head = lower
-        .split(['&', '+', ','])
-        .next()
-        .unwrap_or(lower.as_str());
-    head
-        // Any run of non-alphanumerics is a word boundary ("JAY-Z",
-        // "A$AP", "Café" -> "caf", accents are dropped with them).
-        .split(|c: char| !c.is_alphanumeric())
-        .take_while(|word| !JUNCTION_WORDS.contains(word))
-        .filter(|word| !word.is_empty())
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-/// Plain key for album/track name components: trim + lowercase only.
-fn normalize_name(s: &str) -> String {
-    s.trim().to_lowercase()
-}
-
-/// Resolve the display name of an album from the all-time album map.
-fn album_display_for(agg: &Aggregated, artist_key: &str, album_key: &str) -> Option<String> {
-    agg.albums
-        .get(&Range::AllTime)?
-        .get(&(artist_key.to_string(), album_key.to_string()))
-        .map(|entry| entry.album_display.clone())
-}
-
-/// The most recent MusicBrainz release ID for an album, if any.
-fn album_mbid_for(agg: &Aggregated, artist_key: &str, album_key: &str) -> Option<String> {
-    agg.albums
-        .get(&Range::AllTime)?
-        .get(&(artist_key.to_string(), album_key.to_string()))
-        .and_then(|entry| entry.release_mbid.clone())
 }
 
 // ---------------------------------------------------------------- aggregate
@@ -198,17 +169,19 @@ pub fn aggregate(plays: &[serde_json::Value], today: chrono::NaiveDate) -> Aggre
             continue;
         }
 
-        let artist_key = normalize(artist_display);
-        let track_key = normalize_name(track_display);
+        let artist_key = ArtistKey::from(artist_display);
+        let track_key = TrackKey::from(track_display);
         let ms_played = play["msPlayed"].as_u64().unwrap_or(0);
 
         let (album_key, album_display) = match play["releaseName"].as_str() {
             Some(name) if !name.trim().is_empty() => {
-                (normalize_name(name), name.trim().to_string())
+                (AlbumKey::from(name), name.trim().to_string())
             }
-            _ => (String::new(), String::new()),
+            _ => (AlbumKey::from(""), String::new()),
         };
-        let release_mbid = play["releaseMbId"].as_str().and_then(clean_mbid);
+        let release_mbid = play["releaseMbId"]
+            .as_str()
+            .and_then(|s| MusicBrainzId::from_str(s).ok());
 
         // Bucket by age; unparseable dates count as all-time only.
         let age_days = play["playedTime"]
@@ -239,12 +212,15 @@ pub fn aggregate(plays: &[serde_json::Value], today: chrono::NaiveDate) -> Aggre
             artist.0.plays += 1;
             artist.0.ms_played += ms_played;
 
-            if !album_key.is_empty() {
+            if !album_key.as_ref().is_empty() {
                 let album = agg
                     .albums
                     .entry(range)
                     .or_default()
-                    .entry((artist_key.clone(), album_key.clone()))
+                    .entry(AlbumRef {
+                        artist: artist_key.clone(),
+                        album: album_key.clone(),
+                    })
                     .or_insert_with(|| AlbumEntry {
                         counter: Counter::default(),
                         artist_display: artist_display.to_string(),
@@ -259,12 +235,15 @@ pub fn aggregate(plays: &[serde_json::Value], today: chrono::NaiveDate) -> Aggre
                 }
             }
 
-            if !track_key.is_empty() {
+            if !track_key.as_ref().is_empty() {
                 let track = agg
                     .tracks
                     .entry(range)
                     .or_default()
-                    .entry((artist_key.clone(), track_key.clone()))
+                    .entry(TrackRef {
+                        artist: artist_key.clone(),
+                        track: track_key.clone(),
+                    })
                     .or_insert_with(|| {
                         (
                             Counter::default(),
@@ -282,13 +261,13 @@ pub fn aggregate(plays: &[serde_json::Value], today: chrono::NaiveDate) -> Aggre
     // Per artist, remember the album with the most plays — its cover
     // proxies the artist tile.
     if let Some(map) = agg.albums.get(&Range::AllTime) {
-        for ((artist_key, album_key), entry) in map {
+        for (album_ref, entry) in map {
             let record = agg
                 .top_albums
-                .entry(artist_key.clone())
-                .or_insert_with(|| (album_key.clone(), 0));
+                .entry(album_ref.artist.clone())
+                .or_insert_with(|| (album_ref.album.clone(), 0));
             if entry.counter.plays > record.1 {
-                *record = (album_key.clone(), entry.counter.plays);
+                *record = (album_ref.album.clone(), entry.counter.plays);
             }
         }
     }
@@ -317,119 +296,151 @@ where
 }
 
 /// Top-N keys by (plays, ms_played), for picking which covers we need.
+/// The key itself breaks ties so the selection is deterministic —
+/// HashMap iteration order is random per process, and at a tied
+/// top-N boundary it would otherwise pick a different set every run.
 fn top_keys<'a, T>(entries: impl Iterator<Item = (T, &'a Counter)>) -> Vec<T>
 where
-    T: Clone,
+    T: Clone + Ord,
 {
     let mut list: Vec<(&Counter, T)> = entries.map(|(key, counter)| (counter, key)).collect();
     list.sort_by(|a, b| {
         b.0.plays
             .cmp(&a.0.plays)
             .then_with(|| b.0.ms_played.cmp(&a.0.ms_played))
+            .then_with(|| a.1.cmp(&b.1))
     });
     list.into_iter().take(TOP_N).map(|(_, key)| key).collect()
 }
 
-/// Top-N artist display names across all ranges — the set we need
-/// real artist images for. Deduplicated.
-pub fn needed_artists(agg: &Aggregated) -> Vec<String> {
-    use std::collections::HashSet;
+// ---------------------------------------------------------------- needs
 
-    let mut seen: HashSet<String> = HashSet::new();
+/// The (deduplicated) set of keys the top-N grids reference — what the
+/// resolution pipeline must fetch. Display names and MBIDs are carried
+/// for building queries; `album`/`artist`/`track` are the typed keys
+/// the resolved maps are keyed by.
+pub fn needed(agg: &Aggregated) -> Needs {
+    let mut album_seen: HashSet<AlbumRef> = HashSet::new();
+    let mut artist_seen: HashSet<ArtistKey> = HashSet::new();
+    let mut track_seen: HashSet<TrackRef> = HashSet::new();
+
     for range in Range::ALL {
-        if let Some(map) = agg.artists.get(&range) {
-            for artist_key in top_keys(map.iter().map(|(key, value)| (key, &value.0))) {
-                if let Some(display) = agg.artist_names.get(artist_key) {
-                    seen.insert(display.clone());
+        if let Some(map) = agg.albums.get(&range) {
+            for key in top_keys(map.iter().map(|(k, v)| (k.clone(), &v.counter))) {
+                album_seen.insert(key);
+            }
+        }
+        if let Some(map) = agg.tracks.get(&range) {
+            for key in top_keys(map.iter().map(|(k, v)| (k.clone(), &v.0))) {
+                if let Some((_, _, _, album_key)) = map.get(&key)
+                    && !album_key.as_ref().is_empty()
+                {
+                    album_seen.insert(AlbumRef {
+                        artist: key.artist.clone(),
+                        album: album_key.clone(),
+                    });
                 }
+                track_seen.insert(key);
+            }
+        }
+        if let Some(map) = agg.artists.get(&range) {
+            for artist_key in top_keys(map.iter().map(|(k, v)| (k.clone(), &v.0))) {
+                if let Some((album_key, _)) = agg.top_albums.get(&artist_key) {
+                    album_seen.insert(AlbumRef {
+                        artist: artist_key.clone(),
+                        album: album_key.clone(),
+                    });
+                }
+                artist_seen.insert(artist_key);
             }
         }
     }
-    seen.into_iter().collect()
-}
 
-/// Top-N (artist, track) display-name pairs across all ranges — the
-/// set we need MusicBrainz recording links for. Deduplicated.
-pub fn needed_tracks(agg: &Aggregated) -> Vec<(String, String)> {
-    use std::collections::HashSet;
+    let all_albums = agg.albums.get(&Range::AllTime);
+    let mut albums = Vec::new();
+    for album_ref in album_seen {
+        let entry = all_albums.and_then(|m| m.get(&album_ref));
+        if let (Some(artist_display), Some(entry)) =
+            (agg.artist_names.get(&album_ref.artist), entry)
+        {
+            albums.push(AlbumNeed {
+                album: album_ref,
+                artist_display: artist_display.clone(),
+                album_display: entry.album_display.clone(),
+                mbid: entry.release_mbid.clone(),
+            });
+        }
+    }
 
-    let mut seen: HashSet<(String, String)> = HashSet::new();
-    for range in Range::ALL {
-        if let Some(map) = agg.tracks.get(&range) {
-            for (artist_key, track_key) in top_keys(map.iter().map(|(key, value)| (key, &value.0)))
-            {
-                seen.insert((artist_key.clone(), track_key.clone()));
-            }
+    let mut artists = Vec::new();
+    for key in artist_seen {
+        if let Some(display) = agg.artist_names.get(&key) {
+            artists.push(ArtistNeed {
+                key,
+                display: display.clone(),
+            });
         }
     }
 
     // Display names live in the all-time map, which contains every
     // track ever played (so any range top is present there).
     let all_tracks = agg.tracks.get(&Range::AllTime);
-    let mut out = Vec::new();
-    for (artist_key, track_key) in seen {
+    let mut tracks = Vec::new();
+    for track_ref in track_seen {
         if let Some((_, artist_display, track_display, _)) =
-            all_tracks.and_then(|map| map.get(&(artist_key.clone(), track_key.clone())))
+            all_tracks.and_then(|m| m.get(&track_ref))
         {
-            out.push((artist_display.clone(), track_display.clone()));
+            tracks.push(TrackNeed {
+                track: track_ref,
+                artist_display: artist_display.clone(),
+                track_display: track_display.clone(),
+            });
         }
     }
-    out
+
+    Needs {
+        albums,
+        artists,
+        tracks,
+    }
 }
 
-// ---------------------------------------------------------------- covers
+// ---------------------------------------------------------------- serialize
 
 /// Cover art URL for an artist tile: the artist's own image when
-/// resolved (via `artist_cover`), falling back to the cover of its
-/// most-played album.
+/// resolved, falling back to the cover of its most-played album.
 fn artist_image(
     agg: &Aggregated,
-    artist_key: &str,
-    cover: &dyn Fn(&str, &str) -> String,
-    artist_cover: &dyn Fn(&str) -> String,
-) -> String {
-    let Some(artist_display) = agg.artist_names.get(artist_key) else {
-        return String::new();
-    };
-    let direct = artist_cover(artist_display);
-    if !direct.is_empty() {
-        return direct;
+    artist_key: &ArtistKey,
+    resolved: &ResolvedStats,
+) -> Option<Href> {
+    if let Some(url) = resolved.artist_cover.get(artist_key) {
+        return Some(url.clone());
     }
-    let Some((album_key, _)) = agg.top_albums.get(artist_key) else {
-        return String::new();
-    };
-    let Some(album_display) = album_display_for(agg, artist_key, album_key) else {
-        return String::new();
-    };
-    cover(artist_display, &album_display)
-}
-
-/// Lookup closures handed to `build_ranges`: image URLs and page
-/// links for the top-N entries. Keys are normalized display names, so
-/// the callers resolve case/spelling variants the same way the
-/// aggregation does.
-pub struct Lookups<'a> {
-    pub cover: &'a dyn Fn(&str, &str) -> String,
-    pub artist_cover: &'a dyn Fn(&str) -> String,
-    pub album_url: &'a dyn Fn(&str, &str) -> String,
-    pub artist_url: &'a dyn Fn(&str) -> String,
-    pub track_url: &'a dyn Fn(&str, &str) -> String,
+    let (album_key, _) = agg.top_albums.get(artist_key)?;
+    resolved
+        .cover
+        .get(&AlbumRef {
+            artist: artist_key.clone(),
+            album: album_key.clone(),
+        })
+        .cloned()
 }
 
 /// Build the top-N lists for one range.
-fn build_range_stats(agg: &Aggregated, range: Range, lookups: &Lookups) -> RangeStats {
+fn build_range_stats(agg: &Aggregated, range: Range, resolved: &ResolvedStats) -> RangeStats {
     let artists = agg.artists.get(&range).map_or(vec![], |map| {
         sort_top(
             map.iter().map(|(key, value)| (key, &value.0)),
             |artist_key| {
-                let (counter, display) = &map[&artist_key.clone()];
+                let (counter, display) = &map[artist_key];
                 StatsItem {
                     name: display.clone(),
-                    artist: String::new(),
+                    artist: None,
                     plays: counter.plays,
                     ms_played: counter.ms_played,
-                    image: artist_image(agg, artist_key, lookups.cover, lookups.artist_cover),
-                    url: (lookups.artist_url)(display),
+                    image: artist_image(agg, artist_key, resolved),
+                    url: resolved.artist_url.get(artist_key).cloned(),
                 }
             },
         )
@@ -438,15 +449,15 @@ fn build_range_stats(agg: &Aggregated, range: Range, lookups: &Lookups) -> Range
     let albums = agg.albums.get(&range).map_or(vec![], |map| {
         sort_top(
             map.iter().map(|(key, value)| (key, &value.counter)),
-            |(artist_key, album_key)| {
-                let entry = &map[&(artist_key.clone(), album_key.clone())];
+            |album_ref| {
+                let entry = &map[album_ref];
                 StatsItem {
                     name: entry.album_display.clone(),
-                    artist: entry.artist_display.clone(),
+                    artist: Some(entry.artist_display.clone()),
                     plays: entry.counter.plays,
                     ms_played: entry.counter.ms_played,
-                    image: (lookups.cover)(&entry.artist_display, &entry.album_display),
-                    url: (lookups.album_url)(&entry.artist_display, &entry.album_display),
+                    image: resolved.cover.get(album_ref).cloned(),
+                    url: resolved.album_url.get(album_ref).cloned(),
                 }
             },
         )
@@ -455,22 +466,26 @@ fn build_range_stats(agg: &Aggregated, range: Range, lookups: &Lookups) -> Range
     let tracks = agg.tracks.get(&range).map_or(vec![], |map| {
         sort_top(
             map.iter().map(|(key, value)| (key, &value.0)),
-            |(artist_key, track_key)| {
-                let (counter, artist_display, track_display, album_key) =
-                    &map[&(artist_key.clone(), track_key.clone())];
-                let image = if album_key.is_empty() {
-                    String::new()
+            |track_ref| {
+                let (counter, artist_display, track_display, album_key) = &map[track_ref];
+                let image = if album_key.as_ref().is_empty() {
+                    None
                 } else {
-                    album_display_for(agg, artist_key, album_key)
-                        .map_or(String::new(), |ad| (lookups.cover)(artist_display, &ad))
+                    resolved
+                        .cover
+                        .get(&AlbumRef {
+                            artist: track_ref.artist.clone(),
+                            album: album_key.clone(),
+                        })
+                        .cloned()
                 };
                 StatsItem {
                     name: track_display.clone(),
-                    artist: artist_display.clone(),
+                    artist: Some(artist_display.clone()),
                     plays: counter.plays,
                     ms_played: counter.ms_played,
                     image,
-                    url: (lookups.track_url)(artist_display, track_display),
+                    url: resolved.track_url.get(track_ref).cloned(),
                 }
             },
         )
@@ -483,64 +498,13 @@ fn build_range_stats(agg: &Aggregated, range: Range, lookups: &Lookups) -> Range
     }
 }
 
-/// (artist, album, optional MusicBrainz release ID) triples whose
-/// covers the top-N grids actually reference — derived from the
-/// trimmed top-N of each range, never the full history. The MBID is
-/// carried through so cover resolution can skip the search.
-pub fn needed_pairs(agg: &Aggregated) -> Vec<(String, String, Option<String>)> {
-    use std::collections::HashSet;
-
-    let mut seen: HashSet<(String, String)> = HashSet::new();
-
-    for range in Range::ALL {
-        if let Some(map) = agg.albums.get(&range) {
-            for (artist_key, album_key) in
-                top_keys(map.iter().map(|(key, value)| (key, &value.counter)))
-            {
-                seen.insert((artist_key.clone(), album_key.clone()));
-            }
-        }
-        if let Some(map) = agg.tracks.get(&range) {
-            for (artist_key, track_key) in top_keys(map.iter().map(|(key, value)| (key, &value.0)))
-            {
-                if let Some((_, _, _, album_key)) =
-                    map.get(&(artist_key.clone(), track_key.clone()))
-                {
-                    if !album_key.is_empty() {
-                        seen.insert((artist_key.clone(), album_key.clone()));
-                    }
-                }
-            }
-        }
-        if let Some(map) = agg.artists.get(&range) {
-            for artist_key in top_keys(map.iter().map(|(key, value)| (key, &value.0))) {
-                if let Some((album_key, _)) = agg.top_albums.get(artist_key) {
-                    seen.insert((artist_key.clone(), album_key.clone()));
-                }
-            }
-        }
-    }
-
-    let mut pairs = Vec::new();
-    for (artist_key, album_key) in seen {
-        if let Some(artist_display) = agg.artist_names.get(&artist_key) {
-            if let Some(album_display) = album_display_for(agg, &artist_key, &album_key) {
-                let mbid = album_mbid_for(agg, &artist_key, &album_key);
-                pairs.push((artist_display.clone(), album_display, mbid));
-            }
-        }
-    }
-    pairs
-}
-
-// ---------------------------------------------------------------- serialize
-
-/// Serialize every range's top-N grids. `lookups` maps display names
-/// to cover art, artist images, and page links (or "" when none).
-pub fn build_ranges(agg: &Aggregated, lookups: &Lookups) -> serde_json::Value {
+/// Serialize every range's top-N grids. `resolved` carries the cover
+/// art, artist images, and page links (or `None` when absent — the
+/// serialized JSON omits those keys entirely).
+pub fn build_ranges(agg: &Aggregated, resolved: &ResolvedStats) -> serde_json::Value {
     let mut ranges = serde_json::Map::new();
     for range in Range::ALL {
-        let rs = build_range_stats(agg, range, lookups);
+        let rs = build_range_stats(agg, range, resolved);
         ranges.insert(
             range.key().to_string(),
             serde_json::to_value(rs).expect("serialize range stats"),
@@ -554,6 +518,7 @@ pub fn build_ranges(agg: &Aggregated, lookups: &Lookups) -> serde_json::Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::{AlbumKey, ArtistKey, normalize, normalize_name};
 
     fn play(track: &str, artist: &str, album: &str, date: &str, ms: u64) -> serde_json::Value {
         json!({
@@ -563,25 +528,6 @@ mod tests {
             "playedTime": date,
             "msPlayed": ms,
         })
-    }
-
-    #[test]
-    fn normalize_collapses_spelling_variants() {
-        assert_eq!(normalize("JAY-Z"), "jay z");
-        assert_eq!(normalize("Jay Z"), "jay z");
-        // Punctuation is a word boundary: A$AP splits, but every
-        // spelling of "A$AP ..." still lands in the same bucket.
-        assert_eq!(normalize("A$AP Rocky"), "a ap rocky");
-        assert_eq!(normalize("A$AP Rocky"), normalize("a$ap-rocky"));
-        assert_eq!(normalize("US3"), "us3");
-        assert_eq!(normalize("us3"), "us3");
-        // Collaboration credit cuts to the first artist...
-        assert_eq!(normalize("JAY-Z feat. Beyoncé"), "jay z");
-        assert_eq!(normalize("tofubeats, HITOMITOI"), "tofubeats");
-        assert_eq!(normalize("Drake & 21 Savage"), "drake");
-        assert_eq!(normalize("Freddie Gibbs vs Madlib"), "freddie gibbs");
-        // Single-token names pass through untouched.
-        assert_eq!(normalize("XXXTENTACION"), "xxxtentacion");
     }
 
     #[test]
@@ -597,24 +543,30 @@ mod tests {
         let agg = aggregate(&plays, today);
 
         let all = agg.artists.get(&Range::AllTime).unwrap();
-        assert_eq!(all.get("artist a").unwrap().0.plays, 3);
-        assert_eq!(all.get("artist b").unwrap().0.plays, 1);
-        assert_eq!(all.get("artist c").unwrap().0.plays, 1);
+        assert_eq!(all.get(&ArtistKey::from("Artist A")).unwrap().0.plays, 3);
+        assert_eq!(all.get(&ArtistKey::from("Artist B")).unwrap().0.plays, 1);
+        assert_eq!(all.get(&ArtistKey::from("Artist C")).unwrap().0.plays, 1);
 
         // 1m: only Artist A (plays within 30 days of Aug 3).
         let one_m = agg.artists.get(&Range::OneMonth).unwrap();
         assert_eq!(one_m.len(), 1);
-        assert_eq!(one_m.get("artist a").unwrap().0.plays, 2);
+        assert_eq!(one_m.get(&ArtistKey::from("Artist A")).unwrap().0.plays, 2);
 
         // 6m: A (2 in-range) + B (1).
         let six_m = agg.artists.get(&Range::SixMonths).unwrap();
         assert_eq!(six_m.len(), 2);
 
         // Album with most plays per artist.
-        assert_eq!(agg.top_albums.get("artist a").unwrap().0, "album a");
+        assert_eq!(
+            agg.top_albums.get(&ArtistKey::from("Artist A")).unwrap().0,
+            AlbumKey::from("Album A")
+        );
 
         // msPlayed accumulates.
-        assert_eq!(all.get("artist a").unwrap().0.ms_played, 7000);
+        assert_eq!(
+            all.get(&ArtistKey::from("Artist A")).unwrap().0.ms_played,
+            7000
+        );
     }
 
     #[test]
@@ -632,18 +584,113 @@ mod tests {
             })
             .collect();
         let agg = aggregate(&plays, today);
-        let empty = |_: &str| String::new();
-        let empty_pair = |_: &str, _: &str| String::new();
-        let lookups = Lookups {
-            cover: &empty_pair,
-            artist_cover: &empty,
-            album_url: &empty_pair,
-            artist_url: &empty,
-            track_url: &empty_pair,
-        };
-        let rs = build_range_stats(&agg, Range::OneMonth, &lookups);
+        let resolved = ResolvedStats::default();
+        let rs = build_range_stats(&agg, Range::OneMonth, &resolved);
         assert_eq!(rs.artists.len(), TOP_N);
         assert_eq!(rs.albums.len(), TOP_N);
         assert_eq!(rs.tracks.len(), TOP_N);
+    }
+
+    #[test]
+    fn build_ranges_emits_exact_json_with_optional_fields() {
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 8, 3).unwrap();
+        let plays = vec![
+            play("Alpha", "Artist A", "Album A", "2026-07-20T10:00:00Z", 1000),
+            play("Beta", "Artist B", "Album B", "2026-02-10T10:00:00Z", 3000),
+        ];
+        let agg = aggregate(&plays, today);
+
+        let mut resolved = ResolvedStats::default();
+        resolved.cover.insert(
+            AlbumRef {
+                artist: ArtistKey::from("Artist A"),
+                album: AlbumKey::from("Album A"),
+            },
+            Href::from_str("https://example.com/cover.jpg").unwrap(),
+        );
+        resolved.artist_url.insert(
+            ArtistKey::from("Artist A"),
+            Href::from_str("https://musicbrainz.org/artist/abc").unwrap(),
+        );
+
+        let value = build_ranges(&agg, &resolved);
+
+        // Artist tile: no `artist` field; no direct artist image, so
+        // the tile falls back to its top album's cover; url present.
+        let artist = value["all"]["artists"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|a| a["name"] == "Artist A")
+            .unwrap();
+        assert_eq!(artist["name"], "Artist A");
+        assert!(artist.get("artist").is_none());
+        assert_eq!(artist["url"], "https://musicbrainz.org/artist/abc");
+        assert_eq!(artist["image"], "https://example.com/cover.jpg");
+
+        // Album tile: artist present, cover present, no url.
+        let album = value["all"]["albums"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|a| a["name"] == "Album A")
+            .unwrap();
+        assert_eq!(album["artist"], "Artist A");
+        assert_eq!(album["image"], "https://example.com/cover.jpg");
+        assert!(album.get("url").is_none());
+
+        // The unresolved artist's tile carries no image/url keys at all.
+        let artist_b = value["all"]["artists"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|a| a["name"] == "Artist B")
+            .unwrap();
+        assert_eq!(artist_b["name"], "Artist B");
+        assert!(artist_b.get("image").is_none());
+        assert!(artist_b.get("url").is_none());
+    }
+
+    #[test]
+    fn needed_dedupes_across_ranges_and_carries_mbids() {
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 8, 3).unwrap();
+        let mut plays = vec![
+            play("Alpha", "Artist A", "Album A", "2026-07-20T10:00:00Z", 1000),
+            play("Alpha", "Artist A", "Album A", "2026-01-20T10:00:00Z", 1000),
+            play("Beta", "Artist B", "Album B", "2026-01-20T10:00:00Z", 1000),
+        ];
+        // Give Artist A's album an MBID on the most recent play.
+        plays[0]["releaseMbId"] = json!("mbid:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+        let agg = aggregate(&plays, today);
+
+        let needs = needed(&agg);
+        // Album A (with MBID) and Album B, each once.
+        assert_eq!(needs.albums.len(), 2);
+        let album_a = needs
+            .albums
+            .iter()
+            .find(|n| n.album_display == "Album A")
+            .unwrap();
+        assert_eq!(
+            album_a.mbid.as_ref().unwrap().as_ref(),
+            "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        );
+        // Artists and tracks deduplicated.
+        assert_eq!(needs.artists.len(), 2);
+        assert_eq!(needs.tracks.len(), 2);
+        let artist_a = needs
+            .artists
+            .iter()
+            .find(|n| n.display == "Artist A")
+            .unwrap();
+        assert_eq!(artist_a.key, ArtistKey::from("Artist A"));
+    }
+
+    #[test]
+    fn normalize_collapses_spelling_variants() {
+        // The derivation lives in model; a thin smoke check that stats
+        // and keys share it.
+        assert_eq!(normalize("JAY-Z"), normalize("Jay Z"));
+        assert_eq!(normalize_name("  Animals "), "animals");
     }
 }

@@ -10,21 +10,28 @@
 //!
 //! `stats` reads that JSON dump (or stdin when the path is `-`),
 //! aggregates top-N artists/albums/tracks per time range (pure, in
-//! `stats`), hydrates cover art through the cached MusicBrainz +
-//! Cover Art Archive pipeline (impure, in `covers`), and writes the
-//! small stats file the SSG reads at build.
+//! `stats`), hydrates covers/links through the impure `sources`
+//! boundary, and writes the small stats file the SSG reads at build.
 //!
 //! `refresh` is the one-shot used by `just refresh`/CI: CAR in, stats
 //! out, without ever materializing the ~100MB JSON dump.
+//!
+//! The pipeline is a strict impure-pure-impure sandwich: gather the
+//! cache + needs, decide what to fetch purely (`resolve::plan`), fetch
+//! (`sources`), fold the outcomes purely (`resolve::finalize`), then
+//! commit (cache save, image mirroring, stats write).
 
+mod cache;
 mod car;
-mod covers;
 mod images;
+mod model;
 mod net;
+mod resolve;
+mod sources;
 mod stats;
 
 use serde_json::json;
-use std::collections::HashMap;
+use std::time::SystemTime;
 
 #[tokio::main]
 async fn main() {
@@ -104,7 +111,7 @@ fn cmd_stats(args: &[String]) -> Result<(), String> {
     // Process (pure): aggregate and figure out which covers we need.
     let agg = stats::aggregate(&plays, chrono::Utc::now().date_naive());
 
-    // Commit (impure): resolve covers through the cache, then serialize.
+    // Commit (impure): resolve through the cache, then serialize.
     write_stats(
         &agg,
         cache_path.as_deref(),
@@ -133,115 +140,80 @@ async fn cmd_refresh(args: &[String]) -> Result<(), String> {
     )
 }
 
-/// Shared tail of `stats` and `refresh`: resolve covers, artist
-/// images, and MusicBrainz page links for the top-N entries, mirror
-/// the remote images into a local dir, serialize the grids, write the
-/// stats file.
+/// The impure-pure-impure sandwich: load the cache and the needs,
+/// plan the resolution (pure), fetch (impure), finalize (pure), then
+/// commit — staged cache writes, image mirroring, and the stats file.
 fn write_stats(
     agg: &stats::Aggregated,
     cache_path: Option<&str>,
     stats_out: &str,
     images_dir: Option<&str>,
 ) -> Result<(), String> {
-    let pairs = stats::needed_pairs(agg);
-    let artists = stats::needed_artists(agg);
-    let tracks = stats::needed_tracks(agg);
-
+    // Gather: needs + cache.
+    let needs = stats::needed(agg);
     eprintln!(
         "resolving {} album covers, {} artist images, {} links",
-        pairs.len(),
-        artists.len(),
-        pairs.len() + artists.len() + tracks.len()
+        needs.albums.len(),
+        needs.artists.len(),
+        needs.albums.len() + needs.artists.len() + needs.tracks.len()
     );
+    let mut cache = cache::Cache::load(cache_path);
+    let now = SystemTime::now();
 
-    // Shared lookup cache: loaded once, written by every phase under
-    // the mutex, persisted once after all phases. Without a cache path
-    // we still share an (empty) cache — behavior is unchanged.
-    let cache = std::sync::Mutex::new(cache_path.map(covers::load_cache).unwrap_or_default());
+    // Process: decide what the cache can't satisfy.
+    let plan = resolve::plan(&needs, &cache, now);
 
-    // Stage 1: the image sources — cover art and artist photos. These
-    // two are the slow ones (MusicBrainz + Wikidata chains), so they
-    // run first and in parallel.
-    let (cover_map, artist_map) = rayon::join(
-        || covers::resolve(&pairs, &cache),
-        || covers::resolve_artists(&artists, &cache),
-    );
+    // Gather: fetch the queries (MusicBrainz/CAA/Wikidata).
+    let sources = sources::MusicSources::new();
+    let results = sources.run_queries(&plan);
 
-    // Stage 2: mirror the images in parallel with resolving the
-    // MusicBrainz page links — the downloads only need the two image
-    // maps from stage 1, so the URL lookups overlap them instead of
-    // running serially before them.
-    let image_urls: Vec<String> = cover_map
-        .values()
-        .chain(artist_map.values())
-        .cloned()
-        .collect();
-    let mut download_map: HashMap<String, String> = HashMap::new();
-    let mut album_url_map = HashMap::new();
-    let mut artist_url_map = HashMap::new();
-    let mut track_url_map = HashMap::new();
-    rayon::scope(|s| {
-        if let Some(dir) = images_dir {
-            s.spawn(|_| {
-                download_map = images::download_many(&image_urls, std::path::Path::new(dir));
-            });
-        }
-        s.spawn(|_| album_url_map = covers::resolve_album_urls(&pairs, &cache));
-        s.spawn(|_| artist_url_map = covers::resolve_artist_urls(&artists, &cache));
-        s.spawn(|_| track_url_map = covers::resolve_track_urls(&tracks, &cache));
-    });
-    if let Some(dir) = images_dir {
-        eprintln!("mirrored images into {dir}");
+    // Process: fold outcomes into resolutions + staged cache writes.
+    let mut fin = resolve::finalize(&plan, results, now);
+
+    // One fallback round: provided MBIDs with no Cover Art Archive art
+    // get a name search (usually lands on the canonical release).
+    if !fin.pending.is_empty() {
+        let fallback = resolve::ResolvePlan {
+            resolved: Vec::new(),
+            queries: std::mem::take(&mut fin.pending),
+        };
+        let results = sources.run_queries(&fallback);
+        let fin2 = resolve::finalize(&fallback, results, now);
+        fin.resolutions.extend(fin2.resolutions);
+        fin.writes.extend(fin2.writes);
     }
 
-    // Persist the merged cache once, after every phase has finished.
+    // Commit: staged cache writes once, then the stats document.
+    let resolved = resolve::collect(&plan, &fin);
+    cache.merge(fin.writes);
     if let Some(path) = cache_path {
-        covers::save_cache_atomically(path, &cache.into_inner().unwrap());
+        cache
+            .save_atomically(path)
+            .map_err(|e| format!("failed to save cache: {e}"))?;
     }
 
-    let cover = |artist: &str, album: &str| -> String {
-        cover_map
-            .get(&(stats::normalize(artist), stats::normalize(album)))
+    let mut doc = json!({ "ranges": stats::build_ranges(agg, &resolved) });
+    if let Some(dir) = images_dir {
+        // Mirror the remote images beside the site so the browser
+        // never hits Cover Art Archive / Wikimedia at page load.
+        let image_urls: Vec<model::Href> = resolved
+            .cover
+            .values()
+            .chain(resolved.artist_cover.values())
             .cloned()
-            .unwrap_or_default()
-    };
-    let artist_cover = |name: &str| -> String {
-        artist_map
-            .get(&stats::normalize(name))
-            .cloned()
-            .unwrap_or_default()
-    };
-    let album_url = |artist: &str, album: &str| -> String {
-        album_url_map
-            .get(&(stats::normalize(artist), stats::normalize(album)))
-            .cloned()
-            .unwrap_or_default()
-    };
-    let artist_url = |name: &str| -> String {
-        artist_url_map
-            .get(&stats::normalize(name))
-            .cloned()
-            .unwrap_or_default()
-    };
-    let track_url = |artist: &str, track: &str| -> String {
-        track_url_map
-            .get(&(stats::normalize(artist), stats::normalize(track)))
-            .cloned()
-            .unwrap_or_default()
-    };
-    let lookups = stats::Lookups {
-        cover: &cover,
-        artist_cover: &artist_cover,
-        album_url: &album_url,
-        artist_url: &artist_url,
-        track_url: &track_url,
-    };
+            .collect();
+        let download_map = images::download_many(
+            &sources.client,
+            &sources.limits,
+            &image_urls,
+            std::path::Path::new(dir),
+        );
+        eprintln!("mirrored images into {dir}");
+        // Point the image fields at the local mirrors; any URL missing
+        // from the map (failed download) keeps its remote value.
+        images::apply_rewrites(&mut doc, &download_map);
+    }
 
-    let stats_json = stats::build_ranges(agg, &lookups);
-    let mut doc = json!({ "ranges": stats_json });
-    // Point the image fields at the local mirrors; any URL missing
-    // from the map (failed download) keeps its remote value.
-    images::apply_rewrites(&mut doc, &download_map);
     std::fs::write(
         stats_out,
         serde_json::to_string_pretty(&doc).expect("serialize"),

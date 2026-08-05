@@ -1,4 +1,6 @@
-//! Shared retry/backoff for external HTTP lookups.
+//! Shared HTTP boundary: the single owner of "how we talk to the
+//! network" — agent construction, retry policy, user agent, rate
+//! limiting, and retryable-status classification.
 //!
 //! Every endpoint we touch (MusicBrainz, Cover Art Archive, Wikidata,
 //! Wikimedia Commons) is rate-limited and occasionally flakes. Retrying
@@ -7,7 +9,18 @@
 //! link from this build is now retried, and the jitter stops a herd of
 //! parallel workers from hammering the endpoint at identical instants.
 
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::sync::Mutex;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+
+pub const USER_AGENT: &str = "karitham-blog/0.1.0 (https://karitham.dev)";
+
+/// 3 attempts / 4s max: transient storms cost at most ~1.5s of backoff
+/// before we give up and (thanks to negative caching) don't repeat.
+pub const RETRY_POLICY: RetryPolicy = RetryPolicy {
+    max_attempts: 3,
+    base_delay: Duration::from_millis(500),
+    max_delay: Duration::from_secs(4),
+};
 
 /// How hard to try, and how long to wait between attempts.
 #[derive(Clone, Copy)]
@@ -81,6 +94,135 @@ pub fn retry_after(resp: &ureq::Response) -> Option<u64> {
         .and_then(|v| v.trim().parse().ok())
 }
 
+/// HTTP status codes worth retrying: rate limiting and server errors.
+pub fn is_retryable(code: u16) -> bool {
+    code == 429 || code == 500 || code == 503
+}
+
+/// Global rate limiter shared by workers: at most `rate_per_sec`
+/// acquisitions per second across all threads.
+pub struct Limiter {
+    min_interval: Duration,
+    last: Mutex<Instant>,
+}
+
+impl Limiter {
+    pub fn new(rate_per_sec: f64) -> Self {
+        Self {
+            min_interval: Duration::from_secs_f64(1.0 / rate_per_sec),
+            last: Mutex::new(Instant::now()),
+        }
+    }
+
+    pub fn acquire(&self) {
+        let mut last = self.last.lock().unwrap();
+        let since = Instant::now().duration_since(*last);
+        if since < self.min_interval {
+            std::thread::sleep(self.min_interval - since);
+        }
+        *last = Instant::now();
+    }
+}
+
+/// One agent, one policy, one user agent — the covers/images copies
+/// collapse here. Methods own their retry/backoff internally.
+pub struct HttpClient {
+    agent: ureq::Agent,
+    policy: RetryPolicy,
+}
+
+impl HttpClient {
+    pub fn new() -> Self {
+        Self {
+            agent: ureq::AgentBuilder::new()
+                .user_agent(USER_AGENT)
+                .timeout(Duration::from_secs(15))
+                .build(),
+            policy: RETRY_POLICY,
+        }
+    }
+
+    /// GET a JSON API with query params. A 200 that fails to parse is a
+    /// permanent miss — the endpoint answered, the shape just isn't
+    /// what we expected.
+    pub fn get_json(&self, url: &str, params: &[(&str, &str)]) -> Option<serde_json::Value> {
+        retry(&self.policy, || {
+            let mut req = self.agent.get(url);
+            for (key, value) in params {
+                req = req.query(key, value);
+            }
+            match req.call() {
+                Ok(resp) if resp.status() == 200 => match resp.into_string() {
+                    Ok(body) => match serde_json::from_str(&body) {
+                        Ok(value) => Attempt::Done(value),
+                        Err(_) => Attempt::Stop,
+                    },
+                    Err(_) => Attempt::Stop,
+                },
+                Ok(_) => Attempt::Stop,
+                Err(ureq::Error::Status(code, resp)) if is_retryable(code) => {
+                    Attempt::Again(retry_after(&resp))
+                }
+                // Non-retryable status (404, 400...) is a permanent
+                // miss — ureq surfaces it as `Error::Status`, and
+                // retrying it just burns backoff.
+                Err(ureq::Error::Status(_, _)) => Attempt::Stop,
+                // Transport-level failures (timeouts, resets, DNS) are
+                // transient — retry rather than dropping the link for
+                // this whole build.
+                Err(_) => Attempt::Again(None),
+            }
+        })
+    }
+
+    /// GET a body, capped at `max` bytes, returning (content-type,
+    /// body). Callers check the length — an oversized response must
+    /// not become a cached artifact.
+    pub fn get_bytes(&self, url: &str, max: usize) -> Option<(String, Vec<u8>)> {
+        retry(&self.policy, || match self.agent.get(url).call() {
+            Ok(resp) if resp.status() == 200 => {
+                let ct = resp
+                    .header("content-type")
+                    .map(str::to_string)
+                    .unwrap_or_default();
+                use std::io::Read;
+                let mut buf = Vec::new();
+                match resp
+                    .into_reader()
+                    .take(max as u64 + 1)
+                    .read_to_end(&mut buf)
+                {
+                    Ok(_) => Attempt::Done((ct, buf)),
+                    Err(_) => Attempt::Stop,
+                }
+            }
+            Ok(_) => Attempt::Stop,
+            Err(ureq::Error::Status(code, resp)) if is_retryable(code) => {
+                Attempt::Again(retry_after(&resp))
+            }
+            // Non-retryable status (404, 400...) is a permanent miss.
+            Err(ureq::Error::Status(_, _)) => Attempt::Stop,
+            Err(_) => Attempt::Again(None),
+        })
+    }
+
+    /// Probe a URL for a 200 (e.g. Cover Art Archive's front-500
+    /// endpoint). A non-2xx response (404 — no art) is a permanent
+    /// miss, not worth retrying.
+    pub fn check(&self, url: &str) -> bool {
+        retry(&self.policy, || match self.agent.get(url).call() {
+            Ok(resp) if resp.status() == 200 => Attempt::Done(true),
+            Ok(_) => Attempt::Stop,
+            Err(ureq::Error::Status(code, resp)) if is_retryable(code) => {
+                Attempt::Again(retry_after(&resp))
+            }
+            Err(ureq::Error::Status(_, _)) => Attempt::Stop,
+            Err(_) => Attempt::Again(None),
+        })
+        .unwrap_or(false)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -146,5 +288,14 @@ mod tests {
             assert!(j >= Duration::from_millis(1000));
             assert!(j < Duration::from_millis(1500));
         }
+    }
+
+    #[test]
+    fn retryable_status_classification() {
+        assert!(is_retryable(429));
+        assert!(is_retryable(500));
+        assert!(is_retryable(503));
+        assert!(!is_retryable(404));
+        assert!(!is_retryable(200));
     }
 }
