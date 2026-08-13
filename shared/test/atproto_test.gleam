@@ -1,6 +1,5 @@
-import atproto.{type DecodedRecord, DecodedRecord}
-import gen/repo.{type Repo}
-import gleam/option.{type Option, None, Some}
+import atproto
+import gleam/option.{Some}
 import gleeunit/should
 
 // --- rkey_from_uri ---

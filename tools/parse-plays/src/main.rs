@@ -30,6 +30,9 @@ mod resolve;
 mod sources;
 mod stats;
 
+#[cfg(test)]
+mod testutil;
+
 use serde_json::json;
 use std::time::SystemTime;
 
@@ -203,7 +206,7 @@ fn write_stats(
             .cloned()
             .collect();
         let download_map = images::download_many(
-            &sources.client,
+            sources.client.as_ref(),
             &sources.limits,
             &image_urls,
             std::path::Path::new(dir),

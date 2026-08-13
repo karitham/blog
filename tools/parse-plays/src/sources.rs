@@ -6,7 +6,7 @@
 //! endpoint round-trips are tested against a localhost stub server.
 
 use crate::model::{CommonsFilename, Href, MusicBrainzId, WikidataId};
-use crate::net::{HttpClient, Limiter};
+use crate::net::{HttpClient, HttpFetch, Limiter};
 use crate::resolve::{Query, ResolvePlan};
 use rayon::prelude::*;
 use serde_json::Value;
@@ -79,8 +79,11 @@ impl RateLimits {
 }
 
 /// The impure gather boundary. Owns no cache — returns raw outcomes.
+/// The HTTP client is behind the `HttpFetch` seam so tests substitute
+/// a canned fake (see `testutil`); the network never leaks into the
+/// decision logic.
 pub struct MusicSources {
-    pub(crate) client: HttpClient,
+    pub(crate) client: Box<dyn HttpFetch>,
     pub(crate) limits: RateLimits,
     bases: EndpointBases,
 }
@@ -88,20 +91,20 @@ pub struct MusicSources {
 impl MusicSources {
     pub fn new() -> Self {
         Self {
-            client: HttpClient::new(),
+            client: Box::new(HttpClient::new()),
             limits: RateLimits::production(),
             bases: EndpointBases::production(),
         }
     }
 
-    /// Tests only: all endpoints against one localhost stub, no rate
+    /// Tests only: all endpoints against one canned fake, no rate
     /// limiting.
     #[cfg(test)]
-    pub fn for_tests(port: u16) -> Self {
+    pub fn for_tests(client: Box<dyn HttpFetch>) -> Self {
         Self {
-            client: HttpClient::new(),
+            client,
             limits: RateLimits::unthrottled(),
-            bases: EndpointBases::localhost(port),
+            bases: EndpointBases::localhost(0),
         }
     }
 
@@ -350,11 +353,8 @@ fn percent_encode(s: &str) -> String {
 mod tests {
     use super::*;
     use crate::model::{AlbumKey, AlbumRef, ArtistKey, TrackKey, TrackRef};
+    use crate::testutil::{Response, StubClient};
     use serde_json::json;
-    use std::io::{Read, Write};
-    use std::net::TcpListener;
-    use std::sync::Arc;
-    use std::sync::atomic::{AtomicUsize, Ordering};
 
     // -------------------------------------------- pure parsers
 
@@ -411,72 +411,21 @@ mod tests {
         assert!(p18_filename_from_json(&json!({ "claims": { "P18": [] } })).is_none());
     }
 
-    // -------------------------------------------- stub server
-
-    /// Serve canned responses, recording request lines. One request
-    /// per test keeps ordering trivially correct; a sequence reuses
-    /// the last response when exhausted. The thread owns a cloned
-    /// listener; the struct keeps the original so the port stays bound
-    /// for the test's lifetime.
-    struct Stub {
-        _listener: TcpListener,
-        requests: Arc<AtomicUsize>,
-    }
-
-    impl Stub {
-        fn serve(response: Vec<u8>) -> (Self, u16) {
-            Self::serve_sequence(vec![response])
-        }
-
-        fn serve_sequence(responses: Vec<Vec<u8>>) -> (Self, u16) {
-            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-            let port = listener.local_addr().unwrap().port();
-            let thread_listener = listener.try_clone().unwrap();
-            let requests = Arc::new(AtomicUsize::new(0));
-            let reqs = requests.clone();
-            std::thread::spawn(move || {
-                for i in 0..16 {
-                    let Ok((mut stream, _)) = thread_listener.accept() else {
-                        return;
-                    };
-                    reqs.fetch_add(1, Ordering::SeqCst);
-                    let mut buf = [0u8; 4096];
-                    let _ = stream.read(&mut buf);
-                    let response = &responses[i.min(responses.len() - 1)];
-                    let _ = stream.write_all(response);
-                }
-            });
-            (
-                Stub {
-                    _listener: listener,
-                    requests,
-                },
-                port,
-            )
-        }
-
-        fn count(&self) -> usize {
-            self.requests.load(Ordering::SeqCst)
-        }
-    }
-
-    fn http_response(status: &str, content_type: &str, body: &'static [u8]) -> Vec<u8> {
-        let mut resp = format!(
-            "HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
-            body.len()
-        )
-        .into_bytes();
-        resp.extend_from_slice(body);
-        resp
-    }
-
-    const OK_JSON: &[u8] =
-        br#"{"releases":[{"id":"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee","title":"Flute"}]}"#;
+    // -------------------------------------------- endpoint round-trips
 
     #[test]
     fn roundtrip_release_search_and_cover_art() {
-        let (stub, port) = Stub::serve(http_response("200 OK", "application/json", OK_JSON));
-        let sources = MusicSources::for_tests(port);
+        let stub = StubClient::new()
+            .route(
+                "ws/2/release",
+                Response::Json(json!({"releases": [{
+                    "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+                    "title": "Flute"
+                }]})),
+            )
+            .route("front-500", Response::Status(200));
+        let req_log = stub.request_log();
+        let sources = MusicSources::for_tests(Box::new(stub));
         let plan = ResolvePlan {
             resolved: vec![],
             queries: vec![Query::AlbumCover {
@@ -491,18 +440,23 @@ mod tests {
             }],
         };
         let results = sources.run_queries(&plan);
-        assert_eq!(stub.count(), 2); // release search + cover art probe
         let url = results[0].1.as_ref().unwrap().as_ref();
         assert!(
             url.contains("/release/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/front-500"),
             "{url}"
         );
+        // release search, then cover-art probe
+        let urls = req_log.lock().unwrap();
+        assert_eq!(urls.len(), 2);
+        assert!(urls[0].contains("ws/2/release"), "{}", urls[0]);
+        assert!(urls[1].contains("front-500"), "{}", urls[1]);
     }
 
     #[test]
     fn roundtrip_cover_art_404_is_permanent_miss() {
-        let (stub, port) = Stub::serve(http_response("404 Not Found", "text/plain", b"nope"));
-        let sources = MusicSources::for_tests(port);
+        let stub = StubClient::new().route("front-500", Response::Status(404));
+        let req_log = stub.request_log();
+        let sources = MusicSources::for_tests(Box::new(stub));
         let plan = ResolvePlan {
             resolved: vec![],
             queries: vec![Query::AlbumCover {
@@ -520,22 +474,34 @@ mod tests {
         };
         let results = sources.run_queries(&plan);
         // Provided MBID → single cover-art probe, no search, no retries.
-        assert_eq!(stub.count(), 1);
         assert!(results[0].1.is_none());
+        assert_eq!(req_log.lock().unwrap().len(), 1);
     }
 
     #[test]
     fn roundtrip_artist_image_chain() {
-        let artist_json = br#"{"artists":[{"id":"bbbbbbbb-cccc-dddd-eeee-ffffffffffff"}]}"#;
-        let rels_json = br#"{"relations":[{"type":"wikidata","url":{"resource":"https://www.wikidata.org/wiki/Q130798"}}]}"#;
-        let claims_json =
-            br#"{"claims":{"P18":[{"mainsnak":{"datavalue":{"value":"Mac Miller 2017.jpg"}}}]}}"#;
-        let (stub, port) = Stub::serve_sequence(vec![
-            http_response("200 OK", "application/json", artist_json),
-            http_response("200 OK", "application/json", rels_json),
-            http_response("200 OK", "application/json", claims_json),
-        ]);
-        let sources = MusicSources::for_tests(port);
+        let stub = StubClient::new()
+            .route(
+                "ws/2/artist?",
+                Response::Json(json!({"artists": [{
+                    "id": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
+                }]})),
+            )
+            .route(
+                "inc=url-rels",
+                Response::Json(json!({"relations": [{
+                    "type": "wikidata",
+                    "url": { "resource": "https://www.wikidata.org/wiki/Q130798" }
+                }]})),
+            )
+            .route(
+                "w/api.php",
+                Response::Json(json!({"claims": {"P18": [{
+                    "mainsnak": { "datavalue": { "value": "Mac Miller 2017.jpg" } }
+                }]}})),
+            );
+        let req_log = stub.request_log();
+        let sources = MusicSources::for_tests(Box::new(stub));
         let plan = ResolvePlan {
             resolved: vec![],
             queries: vec![Query::ArtistImage {
@@ -544,23 +510,32 @@ mod tests {
             }],
         };
         let results = sources.run_queries(&plan);
-        assert_eq!(stub.count(), 3);
         let url = results[0].1.as_ref().unwrap().as_ref();
         assert!(
             url.contains("Special:FilePath/Mac%20Miller%202017.jpg?width=600"),
             "{url}"
         );
+        // artist search, url-rels lookup, wikidata claims
+        assert_eq!(req_log.lock().unwrap().len(), 3);
     }
 
     #[test]
     fn roundtrip_recording_and_artist_urls() {
-        let recording_json = br#"{"recordings":[{"id":"cccccccc-dddd-eeee-ffff-000000000000"}]}"#;
-        let artist_json = br#"{"artists":[{"id":"dddddddd-eeee-ffff-0000-111111111111"}]}"#;
-        let (stub, port) = Stub::serve_sequence(vec![
-            http_response("200 OK", "application/json", recording_json),
-            http_response("200 OK", "application/json", artist_json),
-        ]);
-        let sources = MusicSources::for_tests(port);
+        let stub = StubClient::new()
+            .route(
+                "ws/2/recording",
+                Response::Json(json!({"recordings": [{
+                    "id": "cccccccc-dddd-eeee-ffff-000000000000"
+                }]})),
+            )
+            .route(
+                "ws/2/artist",
+                Response::Json(json!({"artists": [{
+                    "id": "dddddddd-eeee-ffff-0000-111111111111"
+                }]})),
+            );
+        let req_log = stub.request_log();
+        let sources = MusicSources::for_tests(Box::new(stub));
         let plan = ResolvePlan {
             resolved: vec![],
             queries: vec![
@@ -579,7 +554,6 @@ mod tests {
             ],
         };
         let results = sources.run_queries(&plan);
-        assert_eq!(stub.count(), 2);
         assert!(
             results[0]
                 .1
@@ -596,5 +570,8 @@ mod tests {
                 .as_ref()
                 .contains("/artist/dddddddd-eeee-ffff-0000-111111111111")
         );
+        // Two parallel queries; the fake routes by URL, so accept order
+        // can't cross-wire the responses.
+        assert_eq!(req_log.lock().unwrap().len(), 2);
     }
 }

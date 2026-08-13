@@ -141,11 +141,32 @@ impl HttpClient {
             policy: RETRY_POLICY,
         }
     }
+}
 
+/// The HTTP boundary: callers get data, never sockets. Implemented by
+/// the real ureq client; tests substitute a canned fake. Mirrors the
+/// Gleam SSG's injected `HttpGet` seam — same shape, same reason:
+/// the decision logic is testable with plain values, and the network
+/// stays behind one boundary.
+pub trait HttpFetch: Send + Sync {
     /// GET a JSON API with query params. A 200 that fails to parse is a
     /// permanent miss — the endpoint answered, the shape just isn't
     /// what we expected.
-    pub fn get_json(&self, url: &str, params: &[(&str, &str)]) -> Option<serde_json::Value> {
+    fn get_json(&self, url: &str, params: &[(&str, &str)]) -> Option<serde_json::Value>;
+
+    /// GET a body, capped at `max` bytes, returning (content-type,
+    /// body). Callers check the length — an oversized response must
+    /// not become a cached artifact.
+    fn get_bytes(&self, url: &str, max: usize) -> Option<(String, Vec<u8>)>;
+
+    /// Probe a URL for a 200 (e.g. Cover Art Archive's front-500
+    /// endpoint). A non-2xx response (404 — no art) is a permanent
+    /// miss, not worth retrying.
+    fn check(&self, url: &str) -> bool;
+}
+
+impl HttpFetch for HttpClient {
+    fn get_json(&self, url: &str, params: &[(&str, &str)]) -> Option<serde_json::Value> {
         retry(&self.policy, || {
             let mut req = self.agent.get(url);
             for (key, value) in params {
@@ -175,10 +196,7 @@ impl HttpClient {
         })
     }
 
-    /// GET a body, capped at `max` bytes, returning (content-type,
-    /// body). Callers check the length — an oversized response must
-    /// not become a cached artifact.
-    pub fn get_bytes(&self, url: &str, max: usize) -> Option<(String, Vec<u8>)> {
+    fn get_bytes(&self, url: &str, max: usize) -> Option<(String, Vec<u8>)> {
         retry(&self.policy, || match self.agent.get(url).call() {
             Ok(resp) if resp.status() == 200 => {
                 let ct = resp
@@ -206,10 +224,7 @@ impl HttpClient {
         })
     }
 
-    /// Probe a URL for a 200 (e.g. Cover Art Archive's front-500
-    /// endpoint). A non-2xx response (404 — no art) is a permanent
-    /// miss, not worth retrying.
-    pub fn check(&self, url: &str) -> bool {
+    fn check(&self, url: &str) -> bool {
         retry(&self.policy, || match self.agent.get(url).call() {
             Ok(resp) if resp.status() == 200 => Attempt::Done(true),
             Ok(_) => Attempt::Stop,

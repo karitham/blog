@@ -11,7 +11,6 @@ import gen/actor/profile.{type ActorProfile}
 import gen/repo.{type Repo, Repo}
 import gleam/list
 import gleam/option.{Some, unwrap}
-import gleam/string
 
 /// Fill in a Tangled repo's `name` from the URI rkey when the
 /// original is missing or empty. Records without a real name usually

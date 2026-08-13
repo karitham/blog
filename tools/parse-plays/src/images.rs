@@ -11,7 +11,7 @@
 //! the JSON so the tile still renders.
 
 use crate::model::Href;
-use crate::net::HttpClient;
+use crate::net::{HttpClient, HttpFetch};
 use crate::sources::RateLimits;
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
@@ -73,7 +73,7 @@ fn scan_cache(dir: &Path) -> (HashMap<String, String>, Vec<std::path::PathBuf>) 
 /// bodies are dropped so a truncated copy never becomes the cached
 /// artifact; writes go through a temp file + rename so a crash
 /// mid-write can't leave a partial file behind.
-fn fetch_image(client: &HttpClient, dir: &Path, url: &Href) -> Option<String> {
+fn fetch_image(client: &dyn HttpFetch, dir: &Path, url: &Href) -> Option<String> {
     let hash = short_hash(url.as_ref());
     let (ct, buf) = client.get_bytes(url.as_ref(), MAX_IMAGE_BYTES as usize)?;
     if buf.is_empty() || buf.len() as u64 > MAX_IMAGE_BYTES {
@@ -91,7 +91,7 @@ fn fetch_image(client: &HttpClient, dir: &Path, url: &Href) -> Option<String> {
 /// per-host rate limiters; a failed download is simply absent from the
 /// map so the caller can keep the remote URL.
 pub fn download_many(
-    client: &HttpClient,
+    client: &dyn HttpFetch,
     limits: &RateLimits,
     urls: &[Href],
     dir: &Path,
@@ -160,10 +160,6 @@ pub fn apply_rewrites(value: &mut serde_json::Value, rewrites: &HashMap<Href, St
 mod tests {
     use super::*;
     use serde_json::json;
-    use std::io::{Read, Write};
-    use std::net::TcpListener;
-    use std::sync::Arc;
-    use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[test]
     fn short_hash_is_stable() {
@@ -217,61 +213,27 @@ mod tests {
 
     #[test]
     fn download_many_fetches_and_404s_are_permanent() {
-        // Serve a 200 PNG for the first request, 404 after (the cache
-        // makes a real second download unnecessary — we assert the
-        // 404 costs exactly one request, no retry storm).
         let png: &'static [u8] = b"\x89PNG\r\n\x1a\n fake png bytes";
-        let ok = {
-            let mut resp = format!(
-                "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
-                png.len()
-            )
-            .into_bytes();
-            resp.extend_from_slice(png);
-            resp
-        };
-        let not_found = b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
-        let responses: &'static [&'static [u8]] = Box::leak(
-            vec![
-                Box::leak(ok.into_boxed_slice()) as &[u8],
-                not_found as &[u8],
-            ]
-            .into_boxed_slice(),
-        );
-
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let port = listener.local_addr().unwrap().port();
-        let requests = Arc::new(AtomicUsize::new(0));
-        let reqs = requests.clone();
-        std::thread::spawn(move || {
-            for i in 0..4 {
-                let Ok((mut stream, _)) = listener.accept() else {
-                    return;
-                };
-                reqs.fetch_add(1, Ordering::SeqCst);
-                let mut buf = [0u8; 4096];
-                let _ = stream.read(&mut buf);
-                let _ = stream.write_all(responses[i.min(responses.len() - 1)]);
-            }
-        });
-
-        let client = HttpClient::new();
+        let stub = crate::testutil::StubClient::new()
+            .route("cover.png", crate::testutil::Response::Bytes(png, "image/png"))
+            .route("missing.png", crate::testutil::Response::Status(404));
+        let req_log = stub.request_log();
         let limits = RateLimits::unthrottled();
         let dir = std::env::temp_dir().join(format!("parse-plays-fetch-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
 
-        let good = Href::from_str(&format!("http://127.0.0.1:{port}/cover.png")).unwrap();
-        let map = download_many(&client, &limits, std::slice::from_ref(&good), &dir);
+        let good = Href::from_str("https://example.com/cover.png").unwrap();
+        let map = download_many(&stub, &limits, std::slice::from_ref(&good), &dir);
         let local = map.get(&good).unwrap();
         assert!(local.ends_with(".png"), "{local}");
         assert!(dir.join(local.trim_start_matches("/img/")).exists());
 
         // A 404 URL is a permanent miss: absent from the map, and the
         // download cost exactly one request (no retry).
-        let missing = Href::from_str(&format!("http://127.0.0.1:{port}/missing.png")).unwrap();
-        let map = download_many(&client, &limits, std::slice::from_ref(&missing), &dir);
+        let missing = Href::from_str("https://example.com/missing.png").unwrap();
+        let map = download_many(&stub, &limits, std::slice::from_ref(&missing), &dir);
         assert!(!map.contains_key(&missing));
-        assert_eq!(requests.load(Ordering::SeqCst), 2);
+        assert_eq!(req_log.lock().unwrap().len(), 2);
 
         std::fs::remove_dir_all(&dir).ok();
     }
