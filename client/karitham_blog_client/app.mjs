@@ -1,6 +1,8 @@
+import * as $int from "../gleam_stdlib/gleam/int.mjs";
 import * as $list from "../gleam_stdlib/gleam/list.mjs";
 import * as $string from "../gleam_stdlib/gleam/string.mjs";
 import * as $atproto from "../shared/atproto.mjs";
+import * as $tangled from "../shared/tangled.mjs";
 import * as $browser from "./browser.mjs";
 import * as $commit from "./commit.mjs";
 import { LocalizeDates, RemoveAttr, ReplaceHtml, RewriteRemoteImages, SetAttr } from "./commit.mjs";
@@ -43,7 +45,16 @@ function commit(commands) {
 function on_plays(text) {
   let $ = $atproto.decode_plays(text);
   if ($ instanceof Ok) {
-    let plays = $[0];
+    let plays = $[0][0];
+    let drops = $[0][1];
+    let $1 = drops > 0;
+    if ($1) {
+      $browser.log_error(
+        ("decode_plays: dropped " + $int.to_string(drops)) + " undecodable play record(s)",
+      );
+    } else {
+      undefined;
+    }
     return commit($pipeline.plan_plays(plays));
   } else {
     let reason = $[0];
@@ -64,7 +75,7 @@ function fetch_pinned_dids_and_repos() {
       let $ = $atproto.decode_actor_profiles(pinned_text);
       if ($ instanceof Ok) {
         let profiles = $[0];
-        let pinned_dids = $atproto.pinned_dids_from_profiles(profiles);
+        let pinned_dids = $tangled.pinned_dids_from_profiles(profiles);
         return $browser.fetch_text(
           $atproto.repos_url(),
           (repos_text) => {
@@ -73,8 +84,8 @@ function fetch_pinned_dids_and_repos() {
               let records = $1[0];
               let _block;
               let _pipe = records;
-              let _pipe$1 = $atproto.filter_repos_by_did(_pipe, pinned_dids);
-              let _pipe$2 = $list.map(_pipe$1, $atproto.resolve_repo_name);
+              let _pipe$1 = $tangled.filter_repos_by_did(_pipe, pinned_dids);
+              let _pipe$2 = $list.map(_pipe$1, $tangled.resolve_repo_name);
               _block = $list.map(_pipe$2, (record) => { return record.value; });
               let repos = _block;
               return commit($pipeline.plan_repos(repos));

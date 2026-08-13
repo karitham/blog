@@ -2,8 +2,6 @@ import * as $json from "../gleam_json/gleam/json.mjs";
 import * as $decode from "../gleam_stdlib/gleam/dynamic/decode.mjs";
 import * as $int from "../gleam_stdlib/gleam/int.mjs";
 import * as $list from "../gleam_stdlib/gleam/list.mjs";
-import * as $option from "../gleam_stdlib/gleam/option.mjs";
-import { Some } from "../gleam_stdlib/gleam/option.mjs";
 import * as $result from "../gleam_stdlib/gleam/result.mjs";
 import * as $string from "../gleam_stdlib/gleam/string.mjs";
 import * as $uri from "../gleam_stdlib/gleam/uri.mjs";
@@ -15,15 +13,10 @@ import { actor_profile_decoder } from "./gen/actor/profile.mjs";
 import * as $play from "./gen/feed/play.mjs";
 import { feed_play_decoder } from "./gen/feed/play.mjs";
 import * as $repo from "./gen/repo.mjs";
-import { Repo, repo_decoder } from "./gen/repo.mjs";
+import { repo_decoder } from "./gen/repo.mjs";
 import * as $list_records from "./gen/repo/list_records.mjs";
 import { record_decoder } from "./gen/repo/list_records.mjs";
-import {
-  Ok,
-  toList,
-  List$Empty$const as $List$Empty$const,
-  CustomType as $CustomType,
-} from "./gleam.mjs";
+import { Ok, toList, CustomType as $CustomType } from "./gleam.mjs";
 
 export class DecodedRecord extends $CustomType {
   constructor(uri, cid, value) {
@@ -101,16 +94,19 @@ function list_of_records_decoder() {
 }
 
 /**
- * Parse a listRecords JSON body and decode each record's value.
- * Records whose value fails to decode are silently dropped — keeps
- * us robust against schema drift in individual records.
+ * Like `decode_records`, but also reports how many records were
+ * dropped so callers can surface schema drift instead of watching
+ * data vanish silently.
+ * 
+ * @ignore
  */
-export function decode_records(body, decoder) {
+function decode_records_with_drops(body, decoder) {
   return $result.try$(
     $json.parse(body, list_of_records_decoder()),
     (records) => {
+      let _block;
       let _pipe = records;
-      let _pipe$1 = $list.filter_map(
+      _block = $list.filter_map(
         _pipe,
         (record) => {
           let _pipe$1 = $decode.run(record.value, decoder);
@@ -122,21 +118,43 @@ export function decode_records(body, decoder) {
           );
         },
       );
-      return new Ok(_pipe$1);
+      let decoded = _block;
+      return new Ok([decoded, $list.length(records) - $list.length(decoded)]);
     },
   );
 }
 
 /**
- * Decode a plays `listRecords` body. The wrapper is unwrapped
- * since the plays view doesn't need the URI.
+ * Decode a plays `listRecords` body, returning the plays plus the
+ * number of records that failed to decode. The wrapper is unwrapped
+ * since the plays view doesn't need the URI; the drop count makes
+ * schema drift visible to callers (a renamed play field would
+ * otherwise shrink the list silently).
  */
 export function decode_plays(body) {
-  let _pipe = decode_records(body, feed_play_decoder());
+  let _pipe = decode_records_with_drops(body, feed_play_decoder());
   return $result.map(
     _pipe,
-    (_capture) => {
-      return $list.map(_capture, (record) => { return record.value; });
+    (pair) => {
+      let records = pair[0];
+      let drops = pair[1];
+      return [$list.map(records, (record) => { return record.value; }), drops];
+    },
+  );
+}
+
+/**
+ * Parse a listRecords JSON body and decode each record's value.
+ * Records whose value fails to decode are silently dropped — keeps
+ * us robust against schema drift in individual records.
+ */
+export function decode_records(body, decoder) {
+  let _pipe = decode_records_with_drops(body, decoder);
+  return $result.map(
+    _pipe,
+    (pair) => {
+      let records = pair[0];
+      return records;
     },
   );
 }
@@ -151,7 +169,7 @@ export function decode_repos(body) {
 
 /**
  * Decode the actor profile `listRecords` body. Pinned DIDs are
- * extracted separately via `pinned_dids_from_profiles`.
+ * extracted separately via `tangled.pinned_dids_from_profiles`.
  */
 export function decode_actor_profiles(body) {
   return decode_records(body, actor_profile_decoder());
@@ -164,87 +182,4 @@ export function decode_actor_profiles(body) {
  */
 export function rkey_from_uri(uri) {
   return $list.last($string.split(uri, "/"));
-}
-
-/**
- * Fill in a Tangled repo's `name` from the URI rkey when the
- * original is missing or empty. Records without a real name usually
- * hold an auto-generated hash; the rkey is the slug Tangled uses
- * for the URL. Returns the wrapper unchanged if the URI can't be
- * parsed, so the caller can still pass it to hydration.
- */
-export function resolve_repo_name(record) {
-  let repo = record.value;
-  let $ = repo.name;
-  if ($ instanceof Some) {
-    let name = $[0];
-    if (name !== "") {
-      return record;
-    } else {
-      let $1 = rkey_from_uri(record.uri);
-      if ($1 instanceof Ok) {
-        let rkey = $1[0];
-        return new DecodedRecord(
-          record.uri,
-          record.cid,
-          new Repo(
-            repo.created_at,
-            repo.description,
-            new Some(rkey),
-            repo.repo_did,
-            repo.topics,
-            repo.website,
-          ),
-        );
-      } else {
-        return record;
-      }
-    }
-  } else {
-    let $1 = rkey_from_uri(record.uri);
-    if ($1 instanceof Ok) {
-      let rkey = $1[0];
-      return new DecodedRecord(
-        record.uri,
-        record.cid,
-        new Repo(
-          repo.created_at,
-          repo.description,
-          new Some(rkey),
-          repo.repo_did,
-          repo.topics,
-          repo.website,
-        ),
-      );
-    } else {
-      return record;
-    }
-  }
-}
-
-/**
- * Drop repo records whose `repo_did` isn't in the pinned list.
- */
-export function filter_repos_by_did(records, pinned_dids) {
-  return $list.filter(
-    records,
-    (record) => { return $list.contains(pinned_dids, record.value.repo_did); },
-  );
-}
-
-/**
- * Extract non-empty pinned DIDs from one or more actor profile
- * records. Tangled pads the list with empty rkeys as placeholders;
- * those are dropped.
- */
-export function pinned_dids_from_profiles(records) {
-  let _pipe = records;
-  return $list.flat_map(
-    _pipe,
-    (record) => {
-      let _pipe$1 = record.value.pinned_repositories;
-      let _pipe$2 = $option.unwrap(_pipe$1, $List$Empty$const);
-      return $list.filter(_pipe$2, (did) => { return did !== ""; });
-    },
-  );
 }

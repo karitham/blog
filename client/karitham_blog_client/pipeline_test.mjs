@@ -5,7 +5,7 @@ import * as $should from "../gleeunit/gleeunit/should.mjs";
 import * as $defs from "../shared/gen/actor/defs.mjs";
 import { ProfileViewDetailed } from "../shared/gen/actor/defs.mjs";
 import * as $play from "../shared/gen/feed/play.mjs";
-import { FeedPlay, ArtistView } from "../shared/gen/feed/play.mjs";
+import { ArtistView, FeedPlay } from "../shared/gen/feed/play.mjs";
 import * as $repo from "../shared/gen/repo.mjs";
 import { Repo } from "../shared/gen/repo.mjs";
 import * as $commit from "./commit.mjs";
