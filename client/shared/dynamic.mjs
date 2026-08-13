@@ -2,7 +2,7 @@ import * as $string from "../gleam_stdlib/gleam/string.mjs";
 import * as $element from "../lustre/lustre/element.mjs";
 import { fragment, to_string } from "../lustre/lustre/element.mjs";
 import * as $defs from "./gen/actor/defs.mjs";
-import * as $play from "./gen/alpha/feed/play.mjs";
+import * as $play from "./gen/feed/play.mjs";
 import * as $repo from "./gen/repo.mjs";
 import { toList } from "./gleam.mjs";
 import * as $plays from "./plays.mjs";

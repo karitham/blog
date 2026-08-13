@@ -2,8 +2,8 @@ import * as $json from "../gleam_json/gleam/json.mjs";
 import * as $atproto from "./atproto.mjs";
 import * as $defs from "./gen/actor/defs.mjs";
 import { profile_view_detailed_fields } from "./gen/actor/defs.mjs";
-import * as $play from "./gen/alpha/feed/play.mjs";
-import { alpha_feed_play_fields } from "./gen/alpha/feed/play.mjs";
+import * as $play from "./gen/feed/play.mjs";
+import { feed_play_fields } from "./gen/feed/play.mjs";
 import * as $repo from "./gen/repo.mjs";
 import { repo_fields } from "./gen/repo.mjs";
 import { toList } from "./gleam.mjs";
@@ -33,7 +33,7 @@ export function encode_hydration_model(data) {
         "plays",
         $json.array(
           data.plays,
-          (p) => { return $json.object(alpha_feed_play_fields(p)); },
+          (p) => { return $json.object(feed_play_fields(p)); },
         ),
       ],
       [

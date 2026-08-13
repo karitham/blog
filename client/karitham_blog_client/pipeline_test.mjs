@@ -4,8 +4,8 @@ import * as $string from "../gleam_stdlib/gleam/string.mjs";
 import * as $should from "../gleeunit/gleeunit/should.mjs";
 import * as $defs from "../shared/gen/actor/defs.mjs";
 import { ProfileViewDetailed } from "../shared/gen/actor/defs.mjs";
-import * as $play from "../shared/gen/alpha/feed/play.mjs";
-import { AlphaFeedPlay, ArtistView } from "../shared/gen/alpha/feed/play.mjs";
+import * as $play from "../shared/gen/feed/play.mjs";
+import { FeedPlay, ArtistView } from "../shared/gen/feed/play.mjs";
 import * as $repo from "../shared/gen/repo.mjs";
 import { Repo } from "../shared/gen/repo.mjs";
 import * as $commit from "./commit.mjs";
@@ -35,7 +35,7 @@ function sample_profile() {
 }
 
 function sample_play() {
-  return new AlphaFeedPlay(
+  return new FeedPlay(
     toList([new ArtistView(new Some(""), "Artist 1")]),
     new Some(180),
     new Some("https://example.com/a"),
@@ -72,10 +72,10 @@ export function plan_profile_replaces_section_and_rewrites_images_test() {
       "Pattern match failed, no pattern matched the value.",
       {
         value: $,
-        start: 1287,
-        end: 1402,
-        pattern_start: 1298,
-        pattern_end: 1356
+        start: 1261,
+        end: 1376,
+        pattern_start: 1272,
+        pattern_end: 1330
       }
     )
   } else {
@@ -90,10 +90,10 @@ export function plan_profile_replaces_section_and_rewrites_images_test() {
         "Pattern match failed, no pattern matched the value.",
         {
           value: $,
-          start: 1287,
-          end: 1402,
-          pattern_start: 1298,
-          pattern_end: 1356
+          start: 1261,
+          end: 1376,
+          pattern_start: 1272,
+          pattern_end: 1330
         }
       )
     } else {
@@ -115,10 +115,10 @@ export function plan_profile_replaces_section_and_rewrites_images_test() {
               "Pattern match failed, no pattern matched the value.",
               {
                 value: $,
-                start: 1287,
-                end: 1402,
-                pattern_start: 1298,
-                pattern_end: 1356
+                start: 1261,
+                end: 1376,
+                pattern_start: 1272,
+                pattern_end: 1330
               }
             )
           }
@@ -132,10 +132,10 @@ export function plan_profile_replaces_section_and_rewrites_images_test() {
             "Pattern match failed, no pattern matched the value.",
             {
               value: $,
-              start: 1287,
-              end: 1402,
-              pattern_start: 1298,
-              pattern_end: 1356
+              start: 1261,
+              end: 1376,
+              pattern_start: 1272,
+              pattern_end: 1330
             }
           )
         }
@@ -149,10 +149,10 @@ export function plan_profile_replaces_section_and_rewrites_images_test() {
           "Pattern match failed, no pattern matched the value.",
           {
             value: $,
-            start: 1287,
-            end: 1402,
-            pattern_start: 1298,
-            pattern_end: 1356
+            start: 1261,
+            end: 1376,
+            pattern_start: 1272,
+            pattern_end: 1330
           }
         )
       }
@@ -178,10 +178,10 @@ export function plan_repos_replaces_section_test() {
       "Pattern match failed, no pattern matched the value.",
       {
         value: $,
-        start: 1549,
-        end: 1632,
-        pattern_start: 1560,
-        pattern_end: 1590
+        start: 1523,
+        end: 1606,
+        pattern_start: 1534,
+        pattern_end: 1564
       }
     )
   } else {
@@ -201,10 +201,10 @@ export function plan_repos_replaces_section_test() {
           "Pattern match failed, no pattern matched the value.",
           {
             value: $,
-            start: 1549,
-            end: 1632,
-            pattern_start: 1560,
-            pattern_end: 1590
+            start: 1523,
+            end: 1606,
+            pattern_start: 1534,
+            pattern_end: 1564
           }
         )
       }
@@ -218,10 +218,10 @@ export function plan_repos_replaces_section_test() {
         "Pattern match failed, no pattern matched the value.",
         {
           value: $,
-          start: 1549,
-          end: 1632,
-          pattern_start: 1560,
-          pattern_end: 1590
+          start: 1523,
+          end: 1606,
+          pattern_start: 1534,
+          pattern_end: 1564
         }
       )
     }
@@ -248,10 +248,10 @@ export function plan_plays_renders_rows_then_localizes_and_clears_stale_test() {
       "Pattern match failed, no pattern matched the value.",
       {
         value: $,
-        start: 1796,
-        end: 1945,
-        pattern_start: 1807,
-        pattern_end: 1906
+        start: 1770,
+        end: 1919,
+        pattern_start: 1781,
+        pattern_end: 1880
       }
     )
   } else {
@@ -266,10 +266,10 @@ export function plan_plays_renders_rows_then_localizes_and_clears_stale_test() {
         "Pattern match failed, no pattern matched the value.",
         {
           value: $,
-          start: 1796,
-          end: 1945,
-          pattern_start: 1807,
-          pattern_end: 1906
+          start: 1770,
+          end: 1919,
+          pattern_start: 1781,
+          pattern_end: 1880
         }
       )
     } else {
@@ -284,10 +284,10 @@ export function plan_plays_renders_rows_then_localizes_and_clears_stale_test() {
           "Pattern match failed, no pattern matched the value.",
           {
             value: $,
-            start: 1796,
-            end: 1945,
-            pattern_start: 1807,
-            pattern_end: 1906
+            start: 1770,
+            end: 1919,
+            pattern_start: 1781,
+            pattern_end: 1880
           }
         )
       } else {
@@ -313,10 +313,10 @@ export function plan_plays_renders_rows_then_localizes_and_clears_stale_test() {
                   "Pattern match failed, no pattern matched the value.",
                   {
                     value: $,
-                    start: 1796,
-                    end: 1945,
-                    pattern_start: 1807,
-                    pattern_end: 1906
+                    start: 1770,
+                    end: 1919,
+                    pattern_start: 1781,
+                    pattern_end: 1880
                   }
                 )
               }
@@ -330,10 +330,10 @@ export function plan_plays_renders_rows_then_localizes_and_clears_stale_test() {
                 "Pattern match failed, no pattern matched the value.",
                 {
                   value: $,
-                  start: 1796,
-                  end: 1945,
-                  pattern_start: 1807,
-                  pattern_end: 1906
+                  start: 1770,
+                  end: 1919,
+                  pattern_start: 1781,
+                  pattern_end: 1880
                 }
               )
             }
@@ -347,10 +347,10 @@ export function plan_plays_renders_rows_then_localizes_and_clears_stale_test() {
               "Pattern match failed, no pattern matched the value.",
               {
                 value: $,
-                start: 1796,
-                end: 1945,
-                pattern_start: 1807,
-                pattern_end: 1906
+                start: 1770,
+                end: 1919,
+                pattern_start: 1781,
+                pattern_end: 1880
               }
             )
           }
@@ -364,10 +364,10 @@ export function plan_plays_renders_rows_then_localizes_and_clears_stale_test() {
             "Pattern match failed, no pattern matched the value.",
             {
               value: $,
-              start: 1796,
-              end: 1945,
-              pattern_start: 1807,
-              pattern_end: 1906
+              start: 1770,
+              end: 1919,
+              pattern_start: 1781,
+              pattern_end: 1880
             }
           )
         }

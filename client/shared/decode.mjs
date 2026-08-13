@@ -4,8 +4,8 @@ import * as $atproto from "./atproto.mjs";
 import { DecodedRecord } from "./atproto.mjs";
 import * as $defs from "./gen/actor/defs.mjs";
 import { profile_view_detailed_decoder } from "./gen/actor/defs.mjs";
-import * as $play from "./gen/alpha/feed/play.mjs";
-import { alpha_feed_play_decoder } from "./gen/alpha/feed/play.mjs";
+import * as $play from "./gen/feed/play.mjs";
+import { feed_play_decoder } from "./gen/feed/play.mjs";
 import * as $repo from "./gen/repo.mjs";
 import { repo_decoder } from "./gen/repo.mjs";
 import * as $hydration from "./hydration.mjs";
@@ -40,7 +40,7 @@ function hydration_model_decoder() {
     (profile) => {
       return $decode.field(
         "plays",
-        $decode.list(alpha_feed_play_decoder()),
+        $decode.list(feed_play_decoder()),
         (plays) => {
           return $decode.field(
             "repos",

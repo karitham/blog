@@ -1,6 +1,6 @@
 import * as $dynamic from "../shared/dynamic.mjs";
 import * as $defs from "../shared/gen/actor/defs.mjs";
-import * as $play from "../shared/gen/alpha/feed/play.mjs";
+import * as $play from "../shared/gen/feed/play.mjs";
 import * as $repo from "../shared/gen/repo.mjs";
 import * as $plays_view from "../shared/plays.mjs";
 import * as $profile_view from "../shared/profile.mjs";

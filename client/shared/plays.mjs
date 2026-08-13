@@ -26,7 +26,7 @@ import { fragment, none, text } from "../lustre/lustre/element.mjs";
 import * as $html from "../lustre/lustre/element/html.mjs";
 import { a, div, h2, h3, img, input, label, li, ol, span } from "../lustre/lustre/element/html.mjs";
 import * as $date from "./date.mjs";
-import * as $play from "./gen/alpha/feed/play.mjs";
+import * as $play from "./gen/feed/play.mjs";
 import {
   Ok,
   toList,
@@ -260,7 +260,7 @@ function render_play_row(play) {
   let _pipe$1 = $list.map(_pipe, (a) => { return a.artist_name; });
   _block = $string.join(_pipe$1, ", ");
   let artists_str = _block;
-  let origin_url = unwrap(play.origin_url, "");
+  let origin_url = unwrap(play.origin_uri, "");
   let release_name = unwrap(play.release_name, "");
   return div(
     toList([class$("play-row")]),

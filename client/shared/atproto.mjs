@@ -12,8 +12,8 @@ import * as $defs from "./gen/actor/defs.mjs";
 import { profile_view_detailed_decoder } from "./gen/actor/defs.mjs";
 import * as $profile from "./gen/actor/profile.mjs";
 import { actor_profile_decoder } from "./gen/actor/profile.mjs";
-import * as $play from "./gen/alpha/feed/play.mjs";
-import { alpha_feed_play_decoder } from "./gen/alpha/feed/play.mjs";
+import * as $play from "./gen/feed/play.mjs";
+import { feed_play_decoder } from "./gen/feed/play.mjs";
 import * as $repo from "./gen/repo.mjs";
 import { Repo, repo_decoder } from "./gen/repo.mjs";
 import * as $list_records from "./gen/repo/list_records.mjs";
@@ -51,10 +51,16 @@ export function profile_url() {
   );
 }
 
+/**
+ * `listRecords` URL for the current play collection. Teal's lexicons
+ * dropped the `alpha` namespace; the live list only reads the current
+ * one. Historical alpha plays still count toward stats (see
+ * tools/parse-plays), but aren't shown live.
+ */
 export function plays_url() {
   let params = toList([
     ["repo", $api.did],
-    ["collection", "fm.teal.alpha.feed.play"],
+    ["collection", "fm.teal.feed.play"],
     ["limit", $int.to_string($api.plays_limit)],
   ]);
   return ($api.pds_endpoint + "/xrpc/com.atproto.repo.listRecords?") + $uri.query_to_string(
@@ -122,11 +128,11 @@ export function decode_records(body, decoder) {
 }
 
 /**
- * Decode the plays `listRecords` body. The wrapper is unwrapped
+ * Decode a plays `listRecords` body. The wrapper is unwrapped
  * since the plays view doesn't need the URI.
  */
 export function decode_plays(body) {
-  let _pipe = decode_records(body, alpha_feed_play_decoder());
+  let _pipe = decode_records(body, feed_play_decoder());
   return $result.map(
     _pipe,
     (_capture) => {
