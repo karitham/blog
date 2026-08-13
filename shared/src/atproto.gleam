@@ -12,13 +12,12 @@ import api
 import gen/actor/defs.{type ProfileViewDetailed, profile_view_detailed_decoder}
 import gen/actor/profile.{type ActorProfile, actor_profile_decoder}
 import gen/feed/play.{type FeedPlay, feed_play_decoder}
-import gen/repo.{type Repo, Repo, repo_decoder}
+import gen/repo.{type Repo, repo_decoder}
 import gen/repo/list_records.{type Record, record_decoder}
 import gleam/dynamic/decode
 import gleam/int
 import gleam/json
 import gleam/list
-import gleam/option.{Some}
 import gleam/result
 import gleam/string
 import gleam/uri
@@ -77,13 +76,19 @@ pub fn decode_profile(
   json.parse(body, profile_view_detailed_decoder())
 }
 
-/// Decode a plays `listRecords` body. The wrapper is unwrapped
-/// since the plays view doesn't need the URI.
+/// Decode a plays `listRecords` body, returning the plays plus the
+/// number of records that failed to decode. The wrapper is unwrapped
+/// since the plays view doesn't need the URI; the drop count makes
+/// schema drift visible to callers (a renamed play field would
+/// otherwise shrink the list silently).
 pub fn decode_plays(
   body: String,
-) -> Result(List(FeedPlay), json.DecodeError) {
-  decode_records(body, feed_play_decoder())
-  |> result.map(list.map(_, fn(record) { record.value }))
+) -> Result(#(List(FeedPlay), Int), json.DecodeError) {
+  decode_records_with_drops(body, feed_play_decoder())
+  |> result.map(fn(pair) {
+    let #(records, drops) = pair
+    #(list.map(records, fn(record) { record.value }), drops)
+  })
 }
 
 /// Decode the repos `listRecords` body, keeping each record's URI so
@@ -95,7 +100,7 @@ pub fn decode_repos(
 }
 
 /// Decode the actor profile `listRecords` body. Pinned DIDs are
-/// extracted separately via `pinned_dids_from_profiles`.
+/// extracted separately via `tangled.pinned_dids_from_profiles`.
 pub fn decode_actor_profiles(
   body: String,
 ) -> Result(List(DecodedRecord(ActorProfile)), json.DecodeError) {
@@ -109,15 +114,30 @@ pub fn decode_records(
   body: String,
   decoder: decode.Decoder(a),
 ) -> Result(List(DecodedRecord(a)), json.DecodeError) {
-  use records <- result.try(json.parse(body, list_of_records_decoder()))
-  records
-  |> list.filter_map(fn(record) {
-    decode.run(record.value, decoder)
-    |> result.map(fn(value) {
-      DecodedRecord(uri: record.uri, cid: record.cid, value:)
-    })
+  decode_records_with_drops(body, decoder)
+  |> result.map(fn(pair) {
+    let #(records, _) = pair
+    records
   })
-  |> Ok
+}
+
+/// Like `decode_records`, but also reports how many records were
+/// dropped so callers can surface schema drift instead of watching
+/// data vanish silently.
+fn decode_records_with_drops(
+  body: String,
+  decoder: decode.Decoder(a),
+) -> Result(#(List(DecodedRecord(a)), Int), json.DecodeError) {
+  use records <- result.try(json.parse(body, list_of_records_decoder()))
+  let decoded =
+    records
+    |> list.filter_map(fn(record) {
+      decode.run(record.value, decoder)
+      |> result.map(fn(value) {
+        DecodedRecord(uri: record.uri, cid: record.cid, value:)
+      })
+    })
+  Ok(#(decoded, list.length(records) - list.length(decoded)))
 }
 
 fn list_of_records_decoder() -> decode.Decoder(List(Record)) {
@@ -130,46 +150,4 @@ fn list_of_records_decoder() -> decode.Decoder(List(Record)) {
 /// `Ok("blog")`, the repo's human-readable slug.
 pub fn rkey_from_uri(uri: String) -> Result(String, Nil) {
   list.last(string.split(uri, on: "/"))
-}
-
-/// Fill in a Tangled repo's `name` from the URI rkey when the
-/// original is missing or empty. Records without a real name usually
-/// hold an auto-generated hash; the rkey is the slug Tangled uses
-/// for the URL. Returns the wrapper unchanged if the URI can't be
-/// parsed, so the caller can still pass it to hydration.
-pub fn resolve_repo_name(record: DecodedRecord(Repo)) -> DecodedRecord(Repo) {
-  let repo = record.value
-  case repo.name {
-    Some(name) if name != "" -> record
-    _ ->
-      case rkey_from_uri(record.uri) {
-        Ok(rkey) ->
-          DecodedRecord(..record, value: Repo(..repo, name: Some(rkey)))
-        Error(_) -> record
-      }
-  }
-}
-
-/// Drop repo records whose `repo_did` isn't in the pinned list.
-pub fn filter_repos_by_did(
-  records: List(DecodedRecord(Repo)),
-  pinned_dids: List(String),
-) -> List(DecodedRecord(Repo)) {
-  list.filter(records, fn(record) {
-    list.contains(pinned_dids, record.value.repo_did)
-  })
-}
-
-/// Extract non-empty pinned DIDs from one or more actor profile
-/// records. Tangled pads the list with empty rkeys as placeholders;
-/// those are dropped.
-pub fn pinned_dids_from_profiles(
-  records: List(DecodedRecord(ActorProfile)),
-) -> List(String) {
-  records
-  |> list.flat_map(fn(record) {
-    record.value.pinned_repositories
-    |> option.unwrap(or: [])
-    |> list.filter(fn(did) { did != "" })
-  })
 }

@@ -31,12 +31,11 @@ pub type Meta {
 pub fn page(
   site_url: String,
   title: String,
-  model_json: String,
   content: Element(Nil),
   meta: Meta,
 ) -> Element(Nil) {
   html.html([attribute.lang("en")], [
-    html.head([], head_children(site_url, title, model_json, meta)),
+    html.head([], head_children(site_url, title, meta)),
     html.body([], [
       html.div([attribute.id("content")], [
         nav_bar(),
@@ -50,7 +49,6 @@ pub fn page(
 fn head_children(
   site_url: String,
   title: String,
-  model_json: String,
   meta: Meta,
 ) -> List(Element(Nil)) {
   let base = [
@@ -156,10 +154,6 @@ fn head_children(
       attribute.rel("manifest"),
       attribute.href("/site.webmanifest"),
     ]),
-    html.script(
-      [attribute.type_("application/json"), attribute.id("site-model")],
-      model_json,
-    ),
     // Vendored highlight.js (common bundle) — must load before the module below.
     // `defer` keeps the download off the critical path while ensuring the
     // script executes before any DOMContentLoaded listeners (including the

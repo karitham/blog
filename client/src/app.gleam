@@ -12,9 +12,11 @@ import commit.{
   type Command, LocalizeDates, RemoveAttr, ReplaceHtml, RewriteRemoteImages,
   SetAttr,
 }
+import gleam/int
 import gleam/list
 import gleam/string
 import pipeline
+import tangled
 
 /// Short enough that a new track shows up promptly, long enough that
 /// we're not hammering the PDS.
@@ -54,14 +56,14 @@ fn fetch_pinned_dids_and_repos() -> Nil {
   browser.fetch_text(atproto.pinned_dids_url(), fn(pinned_text) {
     case atproto.decode_actor_profiles(pinned_text) {
       Ok(profiles) -> {
-        let pinned_dids = atproto.pinned_dids_from_profiles(profiles)
+        let pinned_dids = tangled.pinned_dids_from_profiles(profiles)
         browser.fetch_text(atproto.repos_url(), fn(repos_text) {
           case atproto.decode_repos(repos_text) {
             Ok(records) -> {
               let repos =
                 records
-                |> atproto.filter_repos_by_did(pinned_dids)
-                |> list.map(atproto.resolve_repo_name)
+                |> tangled.filter_repos_by_did(pinned_dids)
+                |> list.map(tangled.resolve_repo_name)
                 |> list.map(fn(record) { record.value })
               commit(pipeline.plan_repos(repos))
             }
@@ -87,7 +89,18 @@ fn refresh_plays() -> Nil {
 
 fn on_plays(text: String) -> Nil {
   case atproto.decode_plays(text) {
-    Ok(plays) -> commit(pipeline.plan_plays(plays))
+    Ok(#(plays, drops)) -> {
+      case drops > 0 {
+        True ->
+          browser.log_error(
+            "decode_plays: dropped "
+            <> int.to_string(drops)
+            <> " undecodable play record(s)",
+          )
+        False -> Nil
+      }
+      commit(pipeline.plan_plays(plays))
+    }
     Error(reason) -> {
       browser.log_error("decode_plays failed: " <> string.inspect(reason))
       // Keep the previous rows, just stop showing the stale pulse.

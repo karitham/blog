@@ -1,5 +1,5 @@
 import date
-import gen/feed/play.{type FeedPlay, type ArtistView}
+import gen/feed/play.{type ArtistView, type FeedPlay}
 import gleam/int
 import gleam/list
 import gleam/option.{unwrap}
@@ -20,10 +20,7 @@ import stats.{type Range, type RangeStats, type StatsData, type StatsItem}
 /// 30s poll only replaces that subtree and the view tabs keep their
 /// state. Built manually (not via `section.section`) so the tabs can
 /// sit beside the h2 in a `.section-header` row.
-pub fn plays_section(
-  plays: List(FeedPlay),
-  data: StatsData,
-) -> Element(msg) {
+pub fn plays_section(plays: List(FeedPlay), data: StatsData) -> Element(msg) {
   case plays {
     [] -> none()
     _ ->
@@ -79,10 +76,7 @@ fn music_tabs(data: StatsData) -> List(Element(msg)) {
 /// The panels below the header. With stats, the `now playing` view is
 /// shown by default; `:has()` selectors in the CSS switch between the
 /// two based on the checked radio.
-fn music_panels(
-  plays: List(FeedPlay),
-  data: StatsData,
-) -> List(Element(msg)) {
+fn music_panels(plays: List(FeedPlay), data: StatsData) -> List(Element(msg)) {
   case stats.is_empty(data) {
     True -> [rows_container(plays)]
     False -> [

@@ -179,11 +179,13 @@ fn copy_favicons(cfg: config.SiteConfig) {
 }
 
 /// The top-level packages the compiled client bundle actually imports
-/// (traced from `karitham_blog_client/*.mjs` and their transitive
-/// imports). The full dev tree also contains test runners (gleeunit),
-/// Erlang artefacts, and unused packages (atproto_client, kryptos,
-/// gose, bigi, exception, houdini, gleam_otp, gleam_erlang,
-/// gleam_http, gleam_crypto, fingerprint) — copying those would bloat
+/// (traced from `karitham_blog_client/client.mjs` and their transitive
+/// imports). `houdini` is lustre's vdom HTML-escaping dependency —
+/// without it the browser 404s mid-module-graph and the whole client
+/// fails to boot. The full dev tree also contains test runners
+/// (gleeunit), Erlang artefacts, and unused packages (atproto_client,
+/// kryptos, gose, bigi, exception, gleam_otp, gleam_erlang, gleam_http,
+/// gleam_crypto, fingerprint) — copying those would bloat
 /// `dist/client` by ~12 MB for nothing.
 const client_keep = [
   "prelude.mjs",
@@ -193,6 +195,7 @@ const client_keep = [
   "gleam_json",
   "gleam_time",
   "lustre",
+  "houdini",
 ]
 
 fn copy_client_js(cfg: config.SiteConfig) {

@@ -9,7 +9,9 @@ import repos
 import stats.{type StatsData}
 
 /// Renders all three dynamic sections (profile, plays, repos)
-/// into a single fragment. Used by both server (SSG) and client (hydration).
+/// into a single fragment. Used by the SSG to server-render the
+/// sections; the client re-renders individual sections with fresh
+/// data via `plays_rows`/`profile`/`repos_section`.
 pub fn dynamic_sections(
   p: ProfileViewDetailed,
   pl: List(FeedPlay),

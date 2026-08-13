@@ -1,4 +1,5 @@
 import atproto
+import gleam/list
 import gleam/string
 import gleeunit/should
 import lustre/element.{to_string}
@@ -32,11 +33,26 @@ fn sample_play_body() -> String {
 }
 
 pub fn plays_rows_renders_rows_test() {
-  let assert Ok(decoded) = atproto.decode_plays(sample_play_body())
+  let assert Ok(#(decoded, _)) = atproto.decode_plays(sample_play_body())
   let html = plays.plays_rows(decoded) |> to_string
   string.contains(html, "plays-rows") |> should.be_true()
   string.contains(html, "Track A") |> should.be_true()
   string.contains(html, "Artist A") |> should.be_true()
+}
+
+pub fn decode_plays_counts_undecodable_records_test() {
+  let body =
+    "{\"records\":[
+      {\"cid\": \"bafy1\", \"uri\": \"at://x/y/a\", \"value\": {
+        \"artists\": [{\"artistName\": \"Artist A\"}],
+        \"playedTime\": \"2026-07-18T10:00:00Z\",
+        \"trackName\": \"Track A\"
+      }},
+      {\"cid\": \"bafy2\", \"uri\": \"at://x/y/b\", \"value\": \"not an object\"}
+    ]}"
+  let assert Ok(#(plays, drops)) = atproto.decode_plays(body)
+  plays |> list.length |> should.equal(1)
+  drops |> should.equal(1)
 }
 
 // --- stats view tiles ---
@@ -51,7 +67,7 @@ fn stats_with_tile(item: StatsItem) -> StatsData {
 }
 
 pub fn plays_section_tile_without_image_uses_placeholder_test() {
-  let assert Ok(decoded) = atproto.decode_plays(sample_play_body())
+  let assert Ok(#(decoded, _)) = atproto.decode_plays(sample_play_body())
   let data =
     stats_with_tile(StatsItem(
       name: "Alpha",
@@ -67,7 +83,7 @@ pub fn plays_section_tile_without_image_uses_placeholder_test() {
 }
 
 pub fn plays_section_tile_with_image_and_url_links_test() {
-  let assert Ok(decoded) = atproto.decode_plays(sample_play_body())
+  let assert Ok(#(decoded, _)) = atproto.decode_plays(sample_play_body())
   let data =
     stats_with_tile(StatsItem(
       name: "Alpha",

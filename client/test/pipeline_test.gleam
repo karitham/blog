@@ -1,6 +1,6 @@
 import commit
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
-import gen/feed/play.{type FeedPlay, FeedPlay, ArtistView}
+import gen/feed/play.{type FeedPlay, ArtistView, FeedPlay}
 import gen/repo.{type Repo, Repo}
 import gleam/option.{None, Some}
 import gleam/string

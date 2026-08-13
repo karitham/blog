@@ -7,13 +7,11 @@
 
 import data/model.{type Post, type SiteData}
 import dynamic
-import encode
 import gen/actor/defs.{type ProfileViewDetailed}
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some, map as option_map}
 import gleam/string
-import hydration.{HydrationModel}
 import lustre/attribute.{class, id, type_}
 import lustre/element.{type Element, fragment, text}
 import lustre/element/html.{div, h2, script}
@@ -38,13 +36,6 @@ pub fn index_page(
     Some(desc) -> desc
     None -> "Karitham's personal blog and project showcase"
   }
-
-  let model_json =
-    encode.encode_hydration_model(HydrationModel(
-      profile: data.profile,
-      plays: data.recent_plays,
-      repos: data.repos,
-    ))
 
   let dynamic_sections =
     div([id("dynamic-sections")], [
@@ -88,7 +79,7 @@ pub fn index_page(
       page_type: layout.Website,
     )
 
-  layout.page("~/kar", site_url, model_json, content, meta)
+  layout.page("~/kar", site_url, content, meta)
 }
 
 /// A single article page.
@@ -114,7 +105,6 @@ pub fn post_page(
   layout.page(
     post.title <> " - Kar",
     site_url,
-    "",
     post_view.render_single(post),
     meta,
   )

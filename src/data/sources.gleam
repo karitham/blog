@@ -12,6 +12,7 @@ import data/frontmatter
 import data/model.{type Post, type SiteData, SiteData}
 import gen/feed/play.{type FeedPlay}
 import gen/repo.{type Repo}
+import gleam/int
 import gleam/io
 import gleam/json
 import gleam/list
@@ -19,6 +20,7 @@ import gleam/order
 import gleam/string
 import simplifile
 import stats
+import tangled
 
 /// A GET request that returns the response body as a string. The SSG
 /// passes `transport.fetch_body`; tests pass canned stubs.
@@ -75,10 +77,23 @@ fn fetch_plays(http_get: HttpGet) -> List(FeedPlay) {
 }
 
 /// Pure: decode a plays `listRecords` body, falling back to the empty
-/// list when a record fails to decode.
+/// list when a record fails to decode. Records that fail to decode
+/// individually are dropped with a warning — a Teal schema change
+/// silently shrinking the play list should be visible at build time.
 pub fn plays_from_body(body: String) -> List(FeedPlay) {
   case atproto.decode_plays(body) {
-    Ok(plays) -> plays
+    Ok(#(plays, drops)) -> {
+      case drops > 0 {
+        True ->
+          io.println(
+            "Warning: dropped "
+            <> int.to_string(drops)
+            <> " play record(s) that failed to decode",
+          )
+        False -> Nil
+      }
+      plays
+    }
     Error(e) -> log_fail("plays", string.inspect(e), [])
   }
 }
@@ -94,8 +109,8 @@ fn fetch_repos(
       case atproto.decode_repos(body) {
         Ok(records) ->
           records
-          |> atproto.filter_repos_by_did(pinned_dids)
-          |> list.map(atproto.resolve_repo_name)
+          |> tangled.filter_repos_by_did(pinned_dids)
+          |> list.map(tangled.resolve_repo_name)
         Error(e) -> log_fail("repos", string.inspect(e), [])
       }
     Error(e) -> log_fail("repos", e, [])
@@ -108,7 +123,7 @@ fn fetch_pinned_dids(http_get: HttpGet) -> List(String) {
   case http_get(atproto.pinned_dids_url()) {
     Ok(body) ->
       case atproto.decode_actor_profiles(body) {
-        Ok(profiles) -> atproto.pinned_dids_from_profiles(profiles)
+        Ok(profiles) -> tangled.pinned_dids_from_profiles(profiles)
         Error(_) -> []
       }
     Error(_) -> []
@@ -116,6 +131,12 @@ fn fetch_pinned_dids(http_get: HttpGet) -> List(String) {
 }
 
 // --- posts (filesystem, not HTTP) ---
+
+// Deliberate seam asymmetry: HTTP is injected (`HttpGet`) so the
+// network path is testable with stubs; posts are read from the
+// local `priv/posts` tree with simplifile directly because the
+// frontmatter logic is tested separately and no test needs to stub
+// the filesystem.
 
 /// Read every post under `priv/posts/<slug>/index.md`. Includes
 /// drafts (caller filters them). Fails the build if any post has
