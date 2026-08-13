@@ -1,5 +1,5 @@
 import gen/actor/defs.{type ProfileViewDetailed}
-import gen/alpha/feed/play.{type AlphaFeedPlay}
+import gen/feed/play.{type FeedPlay}
 import gen/repo.{type Repo}
 import gleam/string
 import lustre/element.{type Element, fragment, to_string}
@@ -12,7 +12,7 @@ import stats.{type StatsData}
 /// into a single fragment. Used by both server (SSG) and client (hydration).
 pub fn dynamic_sections(
   p: ProfileViewDetailed,
-  pl: List(AlphaFeedPlay),
+  pl: List(FeedPlay),
   stats_data: StatsData,
   r: List(Repo),
 ) -> Element(msg) {

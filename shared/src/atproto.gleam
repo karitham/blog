@@ -11,7 +11,7 @@
 import api
 import gen/actor/defs.{type ProfileViewDetailed, profile_view_detailed_decoder}
 import gen/actor/profile.{type ActorProfile, actor_profile_decoder}
-import gen/alpha/feed/play.{type AlphaFeedPlay, alpha_feed_play_decoder}
+import gen/feed/play.{type FeedPlay, feed_play_decoder}
 import gen/repo.{type Repo, Repo, repo_decoder}
 import gen/repo/list_records.{type Record, record_decoder}
 import gleam/dynamic/decode
@@ -35,10 +35,14 @@ pub fn profile_url() -> String {
   <> uri.query_to_string(params)
 }
 
+/// `listRecords` URL for the current play collection. Teal's lexicons
+/// dropped the `alpha` namespace; the live list only reads the current
+/// one. Historical alpha plays still count toward stats (see
+/// tools/parse-plays), but aren't shown live.
 pub fn plays_url() -> String {
   let params = [
     #("repo", api.did),
-    #("collection", "fm.teal.alpha.feed.play"),
+    #("collection", "fm.teal.feed.play"),
     #("limit", int.to_string(api.plays_limit)),
   ]
   api.pds_endpoint
@@ -73,12 +77,12 @@ pub fn decode_profile(
   json.parse(body, profile_view_detailed_decoder())
 }
 
-/// Decode the plays `listRecords` body. The wrapper is unwrapped
+/// Decode a plays `listRecords` body. The wrapper is unwrapped
 /// since the plays view doesn't need the URI.
 pub fn decode_plays(
   body: String,
-) -> Result(List(AlphaFeedPlay), json.DecodeError) {
-  decode_records(body, alpha_feed_play_decoder())
+) -> Result(List(FeedPlay), json.DecodeError) {
+  decode_records(body, feed_play_decoder())
   |> result.map(list.map(_, fn(record) { record.value }))
 }
 

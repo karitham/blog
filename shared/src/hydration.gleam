@@ -1,12 +1,12 @@
 import atproto.{type DecodedRecord}
 import gen/actor/defs.{type ProfileViewDetailed}
-import gen/alpha/feed/play.{type AlphaFeedPlay}
+import gen/feed/play.{type FeedPlay}
 import gen/repo.{type Repo}
 
 pub type HydrationModel {
   HydrationModel(
     profile: ProfileViewDetailed,
-    plays: List(AlphaFeedPlay),
+    plays: List(FeedPlay),
     repos: List(DecodedRecord(Repo)),
   )
 }

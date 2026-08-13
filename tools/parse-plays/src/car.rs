@@ -3,7 +3,11 @@
 use repo_stream::{DiskBuilder, Driver, DriverBuilder};
 use serde_json::Value;
 
-const PLAY_COLLECTION: &str = "fm.teal.alpha.feed.play";
+/// Teal dropped the `alpha` namespace, but historical plays live in
+/// the old collection. Stats aggregate both — all-time grids must
+/// count the alpha era — while the site's live rows only read the
+/// current collection.
+const PLAY_COLLECTIONS: [&str; 2] = ["fm.teal.feed.play", "fm.teal.alpha.feed.play"];
 
 /// Cap on the buffered (play-filtered) blocks before repo-stream
 /// spills to disk. The current repo needs ~75 MiB; 256 MiB leaves
@@ -13,7 +17,10 @@ const MEM_LIMIT_MB: usize = 256;
 /// Whether a decoded record block is a play record. Extracted from the
 /// block processor so the filter is testable without a CAR fixture.
 pub(crate) fn is_play_record(record: &Value) -> bool {
-    record.get("$type").and_then(Value::as_str) == Some(PLAY_COLLECTION)
+    record
+        .get("$type")
+        .and_then(Value::as_str)
+        .is_some_and(|t| PLAY_COLLECTIONS.contains(&t))
 }
 
 /// Read every play record from a repository CAR file, decoded as
@@ -97,8 +104,13 @@ mod tests {
     #[test]
     fn is_play_record_filters_by_type() {
         assert!(is_play_record(&json!({
-            "$type": "fm.teal.alpha.feed.play",
+            "$type": "fm.teal.feed.play",
             "trackName": "Flute",
+        })));
+        // Historical alpha plays count toward stats too.
+        assert!(is_play_record(&json!({
+            "$type": "fm.teal.alpha.feed.play",
+            "trackName": "Old Flute",
         })));
         assert!(!is_play_record(&json!({
             "$type": "app.bsky.feed.post",

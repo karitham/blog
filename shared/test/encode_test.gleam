@@ -2,7 +2,7 @@ import atproto.{type DecodedRecord, DecodedRecord}
 import decode
 import encode
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
-import gen/alpha/feed/play.{type AlphaFeedPlay, AlphaFeedPlay, ArtistView}
+import gen/feed/play.{type FeedPlay, FeedPlay, ArtistView}
 import gen/repo.{type Repo, Repo}
 import gleam/option.{None, Some}
 import gleeunit/should
@@ -23,9 +23,9 @@ fn sample_profile() -> ProfileViewDetailed {
   )
 }
 
-fn sample_plays() -> List(AlphaFeedPlay) {
+fn sample_plays() -> List(FeedPlay) {
   [
-    AlphaFeedPlay(
+    FeedPlay(
       track_name: "Track A",
       artists: [
         ArtistView(artist_name: "Artist 1", artist_mb_id: Some("mbid-1")),
@@ -34,9 +34,9 @@ fn sample_plays() -> List(AlphaFeedPlay) {
       release_name: Some("Album A"),
       duration: Some(180),
       played_time: "2026-07-18T10:00:00Z",
-      origin_url: Some("https://example.com/a"),
+      origin_uri: Some("https://example.com/a"),
     ),
-    AlphaFeedPlay(
+    FeedPlay(
       track_name: "Track B",
       artists: [
         ArtistView(artist_name: "Solo", artist_mb_id: Some("mbid-solo")),
@@ -44,7 +44,7 @@ fn sample_plays() -> List(AlphaFeedPlay) {
       release_name: None,
       duration: None,
       played_time: "2026-07-18T11:00:00Z",
-      origin_url: None,
+      origin_uri: None,
     ),
   ]
 }

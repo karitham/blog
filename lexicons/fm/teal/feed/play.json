@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "fm.teal.alpha.feed.play",
+  "id": "fm.teal.feed.play",
   "description": "A Teal play record",
   "defs": {
     "main": {
@@ -18,7 +18,11 @@
           "releaseName": { "type": "string" },
           "duration": { "type": "integer" },
           "playedTime": { "type": "string", "format": "datetime" },
-          "originUrl": { "type": "string", "format": "uri" }
+          "originUri": {
+            "type": "string",
+            "format": "uri",
+            "description": "The exact URI where the listening event originated."
+          }
         }
       }
     },

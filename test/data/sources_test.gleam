@@ -10,7 +10,7 @@ fn profile_body() -> String {
 fn plays_body() -> String {
   "{\"records\":[{
     \"cid\": \"bafy1\",
-    \"uri\": \"at://did:plc:test/fm.teal.alpha.feed.play/abc\",
+    \"uri\": \"at://did:plc:test/fm.teal.feed.play/abc\",
     \"value\": {
       \"artists\": [{\"artistName\": \"Artist A\"}],
       \"playedTime\": \"2026-07-18T10:00:00Z\",

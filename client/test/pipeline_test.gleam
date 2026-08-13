@@ -1,6 +1,6 @@
 import commit
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
-import gen/alpha/feed/play.{type AlphaFeedPlay, AlphaFeedPlay, ArtistView}
+import gen/feed/play.{type FeedPlay, FeedPlay, ArtistView}
 import gen/repo.{type Repo, Repo}
 import gleam/option.{None, Some}
 import gleam/string
@@ -22,14 +22,14 @@ fn sample_profile() -> ProfileViewDetailed {
   )
 }
 
-fn sample_play() -> AlphaFeedPlay {
-  AlphaFeedPlay(
+fn sample_play() -> FeedPlay {
+  FeedPlay(
     track_name: "Track A",
     artists: [ArtistView(artist_name: "Artist 1", artist_mb_id: Some(""))],
     release_name: Some("Album A"),
     duration: Some(180),
     played_time: "2026-07-18T10:00:00Z",
-    origin_url: Some("https://example.com/a"),
+    origin_uri: Some("https://example.com/a"),
   )
 }
 

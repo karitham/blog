@@ -30,41 +30,41 @@ pub fn artist_view_decoder() -> decode.Decoder(ArtistView) {
   decode.success(ArtistView(artist_mb_id:, artist_name:))
 }
 
-pub const collection = "fm.teal.alpha.feed.play"
+pub const collection = "fm.teal.feed.play"
 
-pub type AlphaFeedPlay {
-  AlphaFeedPlay(
+pub type FeedPlay {
+  FeedPlay(
     artists: List(ArtistView),
     duration: Option(Int),
-    origin_url: Option(String),
+    origin_uri: Option(String),
     played_time: String,
     release_name: Option(String),
     track_name: String,
   )
 }
 
-pub fn alpha_feed_play_fields(value: AlphaFeedPlay) -> List(#(String, json.Json)) {
+pub fn feed_play_fields(value: FeedPlay) -> List(#(String, json.Json)) {
   list.flatten([
     [#("artists", fn(items) { json.array(items, encode_artist_view) }(value.artists)), #("playedTime", json.string(value.played_time)), #("trackName", json.string(value.track_name))],
     internal.opt("duration", value.duration, json.int),
-    internal.opt("originUrl", value.origin_url, json.string),
+    internal.opt("originUri", value.origin_uri, json.string),
     internal.opt("releaseName", value.release_name, json.string),
   ])
 }
 
-pub fn encode_alpha_feed_play(value: AlphaFeedPlay) -> json.Json {
+pub fn encode_feed_play(value: FeedPlay) -> json.Json {
   json.object([
-    #("$type", json.string("fm.teal.alpha.feed.play")),
-    ..alpha_feed_play_fields(value)
+    #("$type", json.string("fm.teal.feed.play")),
+    ..feed_play_fields(value)
   ])
 }
 
-pub fn alpha_feed_play_decoder() -> decode.Decoder(AlphaFeedPlay) {
+pub fn feed_play_decoder() -> decode.Decoder(FeedPlay) {
   use artists <- decode.field("artists", decode.list(artist_view_decoder()))
   use duration <- decode.optional_field("duration", option.None, decode.optional(decode.int))
-  use origin_url <- decode.optional_field("originUrl", option.None, decode.optional(decode.string))
+  use origin_uri <- decode.optional_field("originUri", option.None, decode.optional(decode.string))
   use played_time <- decode.field("playedTime", decode.string)
   use release_name <- decode.optional_field("releaseName", option.None, decode.optional(decode.string))
   use track_name <- decode.field("trackName", decode.string)
-  decode.success(AlphaFeedPlay(artists:, duration:, origin_url:, played_time:, release_name:, track_name:))
+  decode.success(FeedPlay(artists:, duration:, origin_uri:, played_time:, release_name:, track_name:))
 }

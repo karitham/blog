@@ -1,6 +1,6 @@
 import atproto.{type DecodedRecord}
 import gen/actor/defs.{profile_view_detailed_fields}
-import gen/alpha/feed/play.{alpha_feed_play_fields}
+import gen/feed/play.{feed_play_fields}
 import gen/repo.{type Repo, repo_fields}
 import gleam/json
 import hydration.{type HydrationModel}
@@ -15,7 +15,7 @@ pub fn encode_hydration_model(data: HydrationModel) -> String {
     #(
       "plays",
       json.array(from: data.plays, of: fn(p) {
-        json.object(alpha_feed_play_fields(p))
+        json.object(feed_play_fields(p))
       }),
     ),
     #(

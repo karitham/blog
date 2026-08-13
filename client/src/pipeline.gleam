@@ -11,7 +11,7 @@ import commit.{
 }
 import dynamic
 import gen/actor/defs.{type ProfileViewDetailed}
-import gen/alpha/feed/play.{type AlphaFeedPlay}
+import gen/feed/play.{type FeedPlay}
 import gen/repo.{type Repo}
 import plays as plays_view
 import profile as profile_view
@@ -36,7 +36,7 @@ pub fn plan_repos(repos: List(Repo)) -> List(Command) {
 /// One plays poll tick: render the fresh rows, re-localize their
 /// times, and clear the stale flag. An empty result (or an error
 /// handled by the caller) just clears the flag so the UI stays calm.
-pub fn plan_plays(plays: List(AlphaFeedPlay)) -> List(Command) {
+pub fn plan_plays(plays: List(FeedPlay)) -> List(Command) {
   case plays {
     [] -> [RemoveAttr("plays", "data-stale")]
     _ -> [

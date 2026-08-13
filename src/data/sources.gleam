@@ -10,7 +10,7 @@
 import atproto.{type DecodedRecord}
 import data/frontmatter
 import data/model.{type Post, type SiteData, SiteData}
-import gen/alpha/feed/play.{type AlphaFeedPlay}
+import gen/feed/play.{type FeedPlay}
 import gen/repo.{type Repo}
 import gleam/io
 import gleam/json
@@ -67,7 +67,7 @@ fn fetch_profile(http_get: HttpGet) {
 
 // --- plays ---
 
-fn fetch_plays(http_get: HttpGet) -> List(AlphaFeedPlay) {
+fn fetch_plays(http_get: HttpGet) -> List(FeedPlay) {
   case http_get(atproto.plays_url()) {
     Ok(body) -> plays_from_body(body)
     Error(reason) -> log_fail("plays", reason, [])
@@ -76,7 +76,7 @@ fn fetch_plays(http_get: HttpGet) -> List(AlphaFeedPlay) {
 
 /// Pure: decode a plays `listRecords` body, falling back to the empty
 /// list when a record fails to decode.
-pub fn plays_from_body(body: String) -> List(AlphaFeedPlay) {
+pub fn plays_from_body(body: String) -> List(FeedPlay) {
   case atproto.decode_plays(body) {
     Ok(plays) -> plays
     Error(e) -> log_fail("plays", string.inspect(e), [])

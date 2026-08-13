@@ -22,7 +22,7 @@ fn sample_play_body() -> String {
   // The minimal set of fields the play decoder requires.
   "{\"records\":[{
     \"cid\": \"bafy1\",
-    \"uri\": \"at://did:plc:test/fm.teal.alpha.feed.play/abc\",
+    \"uri\": \"at://did:plc:test/fm.teal.feed.play/abc\",
     \"value\": {
       \"artists\": [{\"artistName\": \"Artist A\"}],
       \"playedTime\": \"2026-07-18T10:00:00Z\",

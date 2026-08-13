@@ -1,5 +1,5 @@
 import date
-import gen/alpha/feed/play.{type AlphaFeedPlay, type ArtistView}
+import gen/feed/play.{type FeedPlay, type ArtistView}
 import gleam/int
 import gleam/list
 import gleam/option.{unwrap}
@@ -21,7 +21,7 @@ import stats.{type Range, type RangeStats, type StatsData, type StatsItem}
 /// state. Built manually (not via `section.section`) so the tabs can
 /// sit beside the h2 in a `.section-header` row.
 pub fn plays_section(
-  plays: List(AlphaFeedPlay),
+  plays: List(FeedPlay),
   data: StatsData,
 ) -> Element(msg) {
   case plays {
@@ -45,7 +45,7 @@ pub fn plays_section(
 }
 
 /// Just the live rows container, re-rendered by the client on poll.
-pub fn plays_rows(plays: List(AlphaFeedPlay)) -> Element(msg) {
+pub fn plays_rows(plays: List(FeedPlay)) -> Element(msg) {
   rows_container(plays)
 }
 
@@ -80,7 +80,7 @@ fn music_tabs(data: StatsData) -> List(Element(msg)) {
 /// shown by default; `:has()` selectors in the CSS switch between the
 /// two based on the checked radio.
 fn music_panels(
-  plays: List(AlphaFeedPlay),
+  plays: List(FeedPlay),
   data: StatsData,
 ) -> List(Element(msg)) {
   case stats.is_empty(data) {
@@ -96,11 +96,11 @@ fn music_panels(
   }
 }
 
-fn rows_container(plays: List(AlphaFeedPlay)) -> Element(msg) {
+fn rows_container(plays: List(FeedPlay)) -> Element(msg) {
   div([id("plays-rows")], list.map(plays, render_play_row))
 }
 
-fn render_play_row(play: AlphaFeedPlay) -> Element(msg) {
+fn render_play_row(play: FeedPlay) -> Element(msg) {
   let #(time, iso) = format_play_time(play.played_time)
 
   let artists_str =
@@ -108,7 +108,7 @@ fn render_play_row(play: AlphaFeedPlay) -> Element(msg) {
     |> list.map(fn(a: ArtistView) { a.artist_name })
     |> string.join(", ")
 
-  let origin_url = unwrap(play.origin_url, "")
+  let origin_url = unwrap(play.origin_uri, "")
   let release_name = unwrap(play.release_name, "")
 
   div([class("play-row")], [
