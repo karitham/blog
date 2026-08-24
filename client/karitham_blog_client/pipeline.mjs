@@ -10,8 +10,8 @@ import {
   RemoveAttr,
   ReplaceHtml,
   SetAttr,
-  Command$RewriteRemoteImages$const,
   Command$LocalizeDates$const,
+  Command$RewriteRemoteImages$const,
 } from "./commit.mjs";
 import { toList, Empty as $Empty } from "./gleam.mjs";
 
