@@ -384,7 +384,7 @@ footer {
    only) and toggled by the client as it fetches/polls. The dot
    sits inside the h2 after the title, so the prompt + title + dot
    read as one terminal-flavored unit. */
-.section[data-stale="true"] h2::after {
+.section:has([data-stale="true"]) h2::after {
   content: "•";
   color: var(--cursor);
   margin-left: 0.4em;
