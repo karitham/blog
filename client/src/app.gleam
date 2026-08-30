@@ -1,138 +1,65 @@
-//// Client-side orchestration — the impure interpreter.
+//// Client entry: decode the hydration payload and start the islands.
 ////
-//// Fetches fresh data via the browser FFI, decodes via shared,
-//// plans via `pipeline.gleam`, and applies the resulting commands
-//// with `browser.*` calls. Thin by design: every decision lives in
-//// the pure pipeline. Kept imperative (not Lustre MVU) on purpose —
-//// async `effect.from` dispatch is unreliable on the JS target.
+//// The SSG embeds the build-time data as `#site-model`; each island
+//// takes its slice as flags so its first render matches the server
+//// markup, then re-fetches fresh data through its own effects. Pages
+//// without dynamic sections (articles) start nothing.
 
-import atproto
 import browser
-import commit.{
-  type Command, LocalizeDates, RemoveAttr, ReplaceHtml, RewriteRemoteImages,
-  SetAttr,
-}
-import gleam/int
+import decode
 import gleam/list
+import gleam/option.{None, Some}
 import gleam/string
-import pipeline
-import tangled
+import plays as plays_view
+import plays_island
+import profile as profile_view
+import profile_island
+import repos as repos_view
+import repos_island
 
-/// Short enough that a new track shows up promptly, long enough that
-/// we're not hammering the PDS.
-const plays_poll_ms = 30_000
+const site_model_id = "site-model"
 
-/// Wires up initial fetches, periodic poll, and visibility listener.
 pub fn start() -> Nil {
-  // Guard: only run refresh logic on pages with dynamic sections.
-  case browser.has_element("profile-section") {
+  case browser.has_element(profile_view.profile_section_id) {
+    // Article pages have no dynamic sections — nothing to hydrate.
     False -> Nil
-    True -> {
-      refresh_all()
-      browser.localize_dates()
-      browser.set_interval(plays_poll_ms, poll_tick)
-      browser.on_visibility_change(on_visibility_change)
-    }
-  }
-}
-
-fn refresh_all() -> Nil {
-  fetch_profile()
-  fetch_pinned_dids_and_repos()
-  refresh_plays()
-}
-
-fn fetch_profile() -> Nil {
-  browser.fetch_text(atproto.profile_url(), fn(text) {
-    case atproto.decode_profile(text) {
-      Ok(profile) -> commit(pipeline.plan_profile(profile))
-      Error(reason) ->
-        browser.log_error("decode_profile failed: " <> string.inspect(reason))
-    }
-  })
-}
-
-fn fetch_pinned_dids_and_repos() -> Nil {
-  browser.fetch_text(atproto.pinned_dids_url(), fn(pinned_text) {
-    case atproto.decode_actor_profiles(pinned_text) {
-      Ok(profiles) -> {
-        let pinned_dids = tangled.pinned_dids_from_profiles(profiles)
-        browser.fetch_text(atproto.repos_url(), fn(repos_text) {
-          case atproto.decode_repos(repos_text) {
-            Ok(records) -> {
-              let repos =
-                records
-                |> tangled.filter_repos_by_did(pinned_dids)
-                |> list.map(tangled.resolve_repo_name)
-                |> list.map(fn(record) { record.value })
-              commit(pipeline.plan_repos(repos))
-            }
+    True ->
+      case browser.script_text(site_model_id) {
+        // The SSG always renders #site-model next to the sections it
+        // feeds; its absence means the markup drifted from here.
+        None ->
+          browser.log_error(
+            "missing #" <> site_model_id <> " — islands not started",
+          )
+        // No payload on this page; nothing to hydrate.
+        Some("") -> Nil
+        Some(payload) ->
+          case decode.decode_hydration_model(payload) {
             Error(reason) ->
               browser.log_error(
-                "decode_repos failed: " <> string.inspect(reason),
+                "hydration model decode failed: " <> string.inspect(reason),
               )
+            Ok(model) -> {
+              profile_island.start(profile_island.Flags(
+                rewrites: model.rewrites,
+                profile: model.profile,
+              ))
+              case browser.has_element(plays_view.plays_rows_id) {
+                True ->
+                  plays_island.start(plays_island.Flags(plays: model.plays))
+                False -> Nil
+              }
+              case browser.has_element(repos_view.repos_section_id) {
+                True ->
+                  repos_island.start(
+                    repos_island.Flags(
+                      repos: list.map(model.repos, fn(record) { record.value }),
+                    ),
+                  )
+                False -> Nil
+              }
+            }
           }
-        })
       }
-      Error(reason) ->
-        browser.log_error(
-          "decode_actor_profiles failed: " <> string.inspect(reason),
-        )
-    }
-  })
-}
-
-fn refresh_plays() -> Nil {
-  commit(pipeline.mark_plays_stale())
-  browser.fetch_text(atproto.plays_url(), on_plays)
-}
-
-fn on_plays(text: String) -> Nil {
-  case atproto.decode_plays(text) {
-    Ok(#(plays, drops)) -> {
-      case drops > 0 {
-        True ->
-          browser.log_error(
-            "decode_plays: dropped "
-            <> int.to_string(drops)
-            <> " undecodable play record(s)",
-          )
-        False -> Nil
-      }
-      commit(pipeline.plan_plays(plays))
-    }
-    Error(reason) -> {
-      browser.log_error("decode_plays failed: " <> string.inspect(reason))
-      // Keep the previous rows, just stop showing the stale pulse.
-      commit(pipeline.plan_plays([]))
-    }
-  }
-}
-
-fn commit(commands: List(Command)) -> Nil {
-  list.each(commands, interpret)
-}
-
-fn interpret(command: Command) -> Nil {
-  case command {
-    ReplaceHtml(id, html) -> browser.set_inner_html(id, html)
-    SetAttr(id, name, value) -> browser.set_attribute(id, name, value)
-    RemoveAttr(id, name) -> browser.remove_attribute(id, name)
-    LocalizeDates -> browser.localize_dates()
-    RewriteRemoteImages -> browser.rewrite_remote_images()
-  }
-}
-
-fn poll_tick() -> Nil {
-  case browser.is_visible() {
-    True -> refresh_plays()
-    False -> Nil
-  }
-}
-
-fn on_visibility_change(visible: Bool) -> Nil {
-  case visible {
-    True -> refresh_all()
-    False -> Nil
   }
 }

@@ -28,7 +28,6 @@ pub fn plays_section(plays: List(FeedPlay), data: StatsData) -> Element(msg) {
         [
           id("plays"),
           class("section"),
-          attribute("data-stale", "true"),
         ],
         [
           div([class("section-header")], [
@@ -41,9 +40,25 @@ pub fn plays_section(plays: List(FeedPlay), data: StatsData) -> Element(msg) {
   }
 }
 
-/// Just the live rows container, re-rendered by the client on poll.
-pub fn plays_rows(plays: List(FeedPlay)) -> Element(msg) {
-  rows_container(plays)
+/// The mount point the client's plays island attaches to: the live
+/// rows container inside the Music section. Kept here so the SSG
+/// markup and the client selector can't drift apart.
+pub const plays_rows_id = "plays-rows"
+
+/// The rows subtree inside `#plays-rows`: a wrapper carrying
+/// `data-stale` (the CSS pulse dot keys off any `[data-stale="true"]`
+/// inside the section via `:has()`) and one row per play. Rendered by
+/// the SSG at build time (`stale: True`) and by the client's plays
+/// island on every poll.
+pub fn plays_rows(plays: List(FeedPlay), stale: Bool) -> Element(msg) {
+  let stale_attr = case stale {
+    True -> [attribute("data-stale", "true")]
+    False -> []
+  }
+  div(
+    [class("plays-rows-inner"), ..stale_attr],
+    list.map(plays, render_play_row),
+  )
 }
 
 /// The `now playing` / `stats` pills for the header line. Hidden
@@ -91,7 +106,7 @@ fn music_panels(plays: List(FeedPlay), data: StatsData) -> List(Element(msg)) {
 }
 
 fn rows_container(plays: List(FeedPlay)) -> Element(msg) {
-  div([id("plays-rows")], list.map(plays, render_play_row))
+  div([id(plays_rows_id)], [plays_rows(plays, True)])
 }
 
 fn render_play_row(play: FeedPlay) -> Element(msg) {
@@ -102,7 +117,7 @@ fn render_play_row(play: FeedPlay) -> Element(msg) {
     |> list.map(fn(a: ArtistView) { a.artist_name })
     |> string.join(", ")
 
-  let origin_url = unwrap(play.origin_uri, "")
+  let origin_uri = unwrap(play.origin_uri, "")
   let release_name = unwrap(play.release_name, "")
 
   div([class("play-row")], [
@@ -120,7 +135,7 @@ fn render_play_row(play: FeedPlay) -> Element(msg) {
       [
         a(
           [
-            href(origin_url),
+            href(origin_uri),
             target("_blank"),
           ],
           [text(play.track_name)],

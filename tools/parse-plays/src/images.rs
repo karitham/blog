@@ -215,7 +215,10 @@ mod tests {
     fn download_many_fetches_and_404s_are_permanent() {
         let png: &'static [u8] = b"\x89PNG\r\n\x1a\n fake png bytes";
         let stub = crate::testutil::StubClient::new()
-            .route("cover.png", crate::testutil::Response::Bytes(png, "image/png"))
+            .route(
+                "cover.png",
+                crate::testutil::Response::Bytes(png, "image/png"),
+            )
             .route("missing.png", crate::testutil::Response::Status(404));
         let req_log = stub.request_log();
         let limits = RateLimits::unthrottled();

@@ -1,4 +1,5 @@
 import argv
+import build
 import cli
 import gleam/io
 import gleam/string
@@ -10,7 +11,7 @@ import gleam/string
 ///   gleam run help      → usage
 pub fn main() {
   case argv.load().arguments {
-    [] | ["build"] -> cli.build_site()
+    [] | ["build"] -> build.build()
     ["new", ..rest] -> cli.new_post(string.join(rest, " "))
     ["help"] | ["-h"] | ["--help"] -> cli.print_usage()
     other -> {

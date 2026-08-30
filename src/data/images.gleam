@@ -1,13 +1,14 @@
 //// Build-time mirroring of the profile's avatar/banner blobs.
 ////
-//// The browser re-fetches the profile on page load (client/app.gleam)
-//// and would otherwise pull the avatar/banner straight from the PDS on
-//// every visit. Instead the SSG downloads them once per build into
-//// `dist/img/profile/` and rewrites the profile data to point at the
-//// local copies; the remote→local rewrite map is embedded in the page
-//// (`#image-rewrites`) so the client can do the same for its fresh
-//// render. A failed download keeps the remote URL — the page still
-//// works, just with the extra PDS request.
+//// The browser re-fetches the profile on page load (the client's
+//// profile island) and would otherwise pull the avatar/banner
+//// straight from the PDS on every visit. Instead the SSG downloads
+//// them once per build into `dist/img/profile/`, rewrites the
+//// profile data to point at the local copies, and embeds the
+//// remote→local map in the hydration payload (`#site-model`) so the
+//// island can do the same for its fresh render. A failed download
+//// keeps the remote URL — the page still works, just with the extra
+//// PDS request.
 ////
 //// `fetch_image` and `write_bits` are injected so the mirroring logic
 //// is testable with stubs (no network, no real files).

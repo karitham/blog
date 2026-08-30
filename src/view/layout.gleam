@@ -27,19 +27,21 @@ pub type Meta {
 
 /// Render the full document shell. `site_url` is threaded in (not
 /// read from the environment) so the whole view layer is pure and
-/// testable with a fixed URL.
+/// testable with a fixed URL. `model_json` is the hydration payload
+/// embedded for the client (`""` on pages without dynamic sections).
 pub fn page(
   site_url: String,
   title: String,
-  content: Element(Nil),
+  model_json: String,
+  content: List(Element(Nil)),
   meta: Meta,
 ) -> Element(Nil) {
   html.html([attribute.lang("en")], [
-    html.head([], head_children(site_url, title, meta)),
+    html.head([], head_children(site_url, title, model_json, meta)),
     html.body([], [
       html.div([attribute.id("content")], [
         nav_bar(),
-        html.div([attribute.id("main")], [content]),
+        html.div([attribute.id("main")], content),
         footer_bar(),
       ]),
     ]),
@@ -49,6 +51,7 @@ pub fn page(
 fn head_children(
   site_url: String,
   title: String,
+  model_json: String,
   meta: Meta,
 ) -> List(Element(Nil)) {
   let base = [
@@ -154,6 +157,10 @@ fn head_children(
       attribute.rel("manifest"),
       attribute.href("/site.webmanifest"),
     ]),
+    html.script(
+      [attribute.type_("application/json"), attribute.id("site-model")],
+      model_json,
+    ),
     // Vendored highlight.js (common bundle) — must load before the module below.
     // `defer` keeps the download off the critical path while ensuring the
     // script executes before any DOMContentLoaded listeners (including the
@@ -167,9 +174,15 @@ fn head_children(
       [attribute.type_("module"), attribute.src("/highlight.mjs")],
       "",
     ),
+    // Client bundle: a single self-executing ES module produced by
+    // `lustre/dev build` (bun). It reads #site-model, mounts the
+    // islands, and stops there on pages without dynamic sections.
     html.script(
-      [attribute.type_("module")],
-      "import{main}from'/client/karitham_blog_client/client.mjs';main();",
+      [
+        attribute.type_("module"),
+        attribute.src("/client/karitham_blog_client.js"),
+      ],
+      "",
     ),
   ]
 

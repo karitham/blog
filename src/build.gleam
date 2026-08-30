@@ -10,7 +10,6 @@ import data/images
 import data/model.{type Post, SiteData}
 import data/sources
 import data/transport
-import dynamic
 import gen/actor/defs.{type ProfileViewDetailed}
 import gleam/io
 import gleam/list
@@ -20,7 +19,27 @@ import render/page
 import simplifile
 import view/layout
 
+const client_bundle_src = "client/dist/karitham_blog_client.js"
+
+/// The bundle path must exist before the (slow, network-bound) data
+/// fetches run — a site that silently builds without its client JS is
+/// worse than a failed build.
+fn ensure_client_bundle() {
+  case simplifile.is_file(client_bundle_src) {
+    Ok(True) -> Nil
+    _ -> {
+      io.println(
+        "Client bundle not found at "
+        <> client_bundle_src
+        <> ". Run `just client` (or `cd client && gleam run -m lustre/dev build --minify=true --no-html=true`) first.",
+      )
+      panic as "client bundle missing"
+    }
+  }
+}
+
 pub fn build() {
+  ensure_client_bundle()
   let cfg = config.read_env()
 
   io.println("Fetching data...")
@@ -68,7 +87,7 @@ pub fn build() {
   copy_post_assets(drafts, cfg)
   copy_favicons(cfg)
   copy_image_cache(cfg)
-  copy_client_js(cfg)
+  copy_client_bundle(cfg)
 
   io.println("Done! Site generated in " <> cfg.dist_dir)
 }
@@ -178,52 +197,19 @@ fn copy_favicons(cfg: config.SiteConfig) {
   })
 }
 
-/// The top-level packages the compiled client bundle actually imports
-/// (traced from `karitham_blog_client/client.mjs` and their transitive
-/// imports). `houdini` is lustre's vdom HTML-escaping dependency —
-/// without it the browser 404s mid-module-graph and the whole client
-/// fails to boot. The full dev tree also contains test runners
-/// (gleeunit), Erlang artefacts, and unused packages (atproto_client,
-/// kryptos, gose, bigi, exception, gleam_otp, gleam_erlang, gleam_http,
-/// gleam_crypto, fingerprint) — copying those would bloat
-/// `dist/client` by ~12 MB for nothing.
-const client_keep = [
-  "prelude.mjs",
-  "karitham_blog_client",
-  "shared",
-  "gleam_stdlib",
-  "gleam_json",
-  "gleam_time",
-  "lustre",
-  "houdini",
-]
-
-fn copy_client_js(cfg: config.SiteConfig) {
-  let src = "client/build/dev/javascript"
-  let dst = cfg.dist_dir <> "/client"
-
-  case simplifile.is_directory(src) {
-    Ok(True) -> {
-      // A previous build may have copied the full dev tree here;
-      // delete first so stale packages don't linger under the
-      // whitelist.
-      let _ = simplifile.delete(dst)
-      let _ = create_dir(dst)
-      list.each(client_keep, fn(entry) {
-        let src_path = src <> "/" <> entry
-        let dst_path = dst <> "/" <> entry
-        case simplifile.is_directory(src_path) {
-          Ok(True) -> copy_dir(src_path, dst_path)
-          _ -> copy_file_bits(src_path, dst_path)
-        }
-      })
-      io.println("  copied client JS")
-    }
-    _ ->
-      io.println(
-        "  client JS not built — skip 'cd client && gleam build' first",
-      )
-  }
+/// Copy the client bundle produced by `just client` (a single
+/// self-executing ES module) into the site. Existence is already
+/// enforced by `ensure_client_bundle` before the build starts.
+fn copy_client_bundle(cfg: config.SiteConfig) {
+  // Delete first so a whitelisted dev tree from an older build
+  // can't linger next to the bundle.
+  let _ = simplifile.delete(cfg.dist_dir <> "/client")
+  let _ = create_dir(cfg.dist_dir <> "/client")
+  copy_file_bits(
+    client_bundle_src,
+    cfg.dist_dir <> "/client/karitham_blog_client.js",
+  )
+  io.println("  copied client bundle")
 }
 
 /// Copy the mirrored cover/artist images from the refresh cache into
@@ -267,9 +253,7 @@ fn copy_dir(src: String, dst: String) -> Nil {
 // --- I/O helpers that log errors instead of silently swallowing them ---
 
 fn render_document(element: Element(Nil)) -> String {
-  element
-  |> to_document_string
-  |> dynamic.strip_fragment_comments
+  to_document_string(element)
 }
 
 fn write_text(path: String, contents: String) -> Nil {

@@ -1,6 +1,6 @@
 # karitham.dev
 
-Personal site. Gleam SSG that fetches from the AT Protocol (Bluesky PDS + Tangled) at build time, hydrates client-side with a Lustre component tree. Album covers, artist photos, and the profile avatar/banner are mirrored into the site at build time, so the visitor's browser never has to fetch from Cover Art Archive, Wikimedia, or the PDS directly — every image is served from `/img/...` on the site itself.
+Personal site. Gleam SSG that fetches from the AT Protocol (Bluesky PDS + Tangled) at build time, then three small Lustre islands (profile, music, repos) mounted on the server-rendered markup re-fetch fresh data and re-render client-side. Album covers, artist photos, and the profile avatar/banner are mirrored into the site at build time, so the visitor's browser never has to fetch from Cover Art Archive, Wikimedia, or the PDS directly — every image is served from `/img/...` on the site itself.
 
 ## Build
 
@@ -77,17 +77,17 @@ error if something's wrong.
 
 Four components:
 
-| Component               | Role                                                                                                                    |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **`shared/`**           | Model types, generated decoders, view components (compiled to both Erlang and JS)                                       |
-| **root**                | SSG — fetches data, mirrors images, renders, writes `dist/`                                                             |
-| **`client/`**           | Browser bundle — fetches fresh data on page load (profile images rewritten to the local mirrors), polls plays every 30s |
-| **`tools/parse-plays`** | Rust CLI — CAR → play stats, cover/artist resolution, image mirroring                                                   |
+| Component               | Role                                                                                                                                                                                           |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`shared/`**           | Model types, generated decoders, view components, DOM id constants (compiled to both Erlang and JS)                                                                                            |
+| **root**                | SSG — fetches data, mirrors images, renders, writes `dist/`                                                                                                                                    |
+| **`client/`**           | Three Lustre islands on the server-rendered markup — re-fetch on load and tab visibility, plays poll every 30s. `just client` builds one self-executing minified module via `lustre/dev build` |
+| **`tools/parse-plays`** | Rust CLI — CAR → play stats, cover/artist resolution, image mirroring                                                                                                                          |
 
 ## Tests
 
 ```sh
 just test
-# or:
-gleam test && cd shared && gleam test
+# or, per suite:
+gleam test && (cd shared && gleam test) && (cd client && gleam test)
 ```

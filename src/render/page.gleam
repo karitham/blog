@@ -6,21 +6,25 @@
 //// production and for `BLOG_URL=http://localhost:8000` previews.
 
 import data/model.{type Post, type SiteData}
-import dynamic
+import encode
 import gen/actor/defs.{type ProfileViewDetailed}
-import gleam/json
+import gleam/dict
 import gleam/list
 import gleam/option.{type Option, None, Some, map as option_map}
 import gleam/string
-import lustre/attribute.{class, id, type_}
-import lustre/element.{type Element, fragment, text}
-import lustre/element/html.{div, h2, script}
+import hydration.{HydrationModel}
+import lustre/attribute.{class, id}
+import lustre/element.{type Element, text}
+import lustre/element/html.{div, h2}
+import plays as plays_view
+import profile as profile_view
+import repos as repos_view
 import view/components/post_view
 import view/layout
 
 /// The home page: dynamic sections (profile, music, repos) plus the
 /// published article list. `rewrites` is the remote→local image map
-/// embedded for the client's hydration pass.
+/// embedded in the hydration payload for the client's islands.
 pub fn index_page(
   data: SiteData,
   site_url: String,
@@ -37,35 +41,32 @@ pub fn index_page(
     None -> "Karitham's personal blog and project showcase"
   }
 
+  let model_json =
+    encode.encode_hydration_model(HydrationModel(
+      profile: data.profile,
+      plays: data.recent_plays,
+      repos: data.repos,
+      rewrites: dict.from_list(rewrites),
+    ))
+
+  // The client mounts one island per dynamic section on the ids these
+  // render (`#profile-section`, `#plays-rows`, `#repos`) and adopts
+  // this markup as its first render.
   let dynamic_sections =
     div([id("dynamic-sections")], [
-      dynamic.dynamic_sections(
-        data.profile,
-        data.recent_plays,
-        data.plays_stats,
+      profile_view.profile(data.profile),
+      plays_view.plays_section(data.recent_plays, data.plays_stats),
+      repos_view.repos_section(
         list.map(data.repos, fn(record) { record.value }),
       ),
     ])
 
-  // The client re-fetches the profile on page load and re-renders it
-  // with the PDS's remote avatar/banner URLs; this map lets it point
-  // those at the local mirrors instead.
-  let rewrites_script =
-    script(
-      [type_("application/json"), id("image-rewrites")],
-      encode_rewrites(rewrites),
-    )
-
-  let content =
-    fragment([
-      rewrites_script,
-      dynamic_sections,
-      div([class("section")], [
-        div([class("section-header")], [
-          h2([], [text("Articles")]),
-        ]),
-        post_view.render_list(data.posts),
+  let articles =
+    div([class("section")], [
+      div([class("section-header")], [
+        h2([], [text("Articles")]),
       ]),
+      post_view.render_list(data.posts),
     ])
 
   let meta =
@@ -79,7 +80,7 @@ pub fn index_page(
       page_type: layout.Website,
     )
 
-  layout.page("~/kar", site_url, content, meta)
+  layout.page("~/kar", site_url, model_json, [dynamic_sections, articles], meta)
 }
 
 /// A single article page.
@@ -105,7 +106,8 @@ pub fn post_page(
   layout.page(
     post.title <> " - Kar",
     site_url,
-    post_view.render_single(post),
+    "",
+    [post_view.render_single(post)],
     meta,
   )
 }
@@ -129,16 +131,4 @@ fn og_image_for_post(slug: String, img: String, site_url: String) -> String {
     True -> site_url <> path
     False -> path
   }
-}
-
-/// The remote→local rewrite map as a JSON object, embedded in
-/// `#image-rewrites` for the client (client/browser_ffi.mjs).
-fn encode_rewrites(rewrites: List(#(String, String))) -> String {
-  rewrites
-  |> list.map(fn(pair) {
-    let #(remote, local) = pair
-    #(remote, json.string(local))
-  })
-  |> json.object
-  |> json.to_string
 }

@@ -16,7 +16,7 @@ pub fn page_uses_site_url_for_og_site_name_test() {
       page_type: layout.Website,
     )
   let html =
-    layout.page("https://karitham.dev", "Title", div([], []), meta)
+    layout.page("https://karitham.dev", "Title", "{}", [div([], [])], meta)
     |> to_string
   string.contains(html, "og:site_name") |> should.be_true()
   string.contains(html, "karitham.dev") |> should.be_true()
@@ -32,7 +32,7 @@ pub fn page_uses_local_site_url_in_preview_test() {
       page_type: layout.Website,
     )
   let html =
-    layout.page("http://localhost:8000", "Title", div([], []), meta)
+    layout.page("http://localhost:8000", "Title", "{}", [div([], [])], meta)
     |> to_string
   // The site name strips the scheme, whatever it is — the preview URL
   // must end up in og:site_name. (The nav brand is hardcoded to the

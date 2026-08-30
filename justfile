@@ -12,9 +12,10 @@ build: codegen client ssg
 codegen:
 	gleam run -m atproto_codegen -- ./lexicons ./shared/src/gen gen app.bsky.,com.atproto.,sh.tangled.,fm.teal.
 
-# Build the JS bundle.
+# Build the JS bundle: one minified, self-executing ES module in
+# client/dist/, copied into dist/client/ by the SSG step.
 client:
-	cd client && gleam build --target javascript
+	cd client && gleam run -m lustre/dev build --minify=true --no-html=true
 
 # Build the static site (codegen + client must exist first).
 ssg:
@@ -48,4 +49,4 @@ refresh:
 
 # Wipe build artifacts.
 clean:
-	rm -rf dist build client/build _build priv/cache
+	rm -rf dist build client/build client/dist client/.lustre priv/cache

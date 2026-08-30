@@ -2,4 +2,5 @@ build/
 dist/
 priv/cache/
 tools/*/target/
+client/.lustre/
 result

@@ -1,4 +1,4 @@
-//// CLI subcommands for working with the blog — the impure shell.
+//// Post scaffolding and usage text.
 ////
 //// Usage:
 ////   gleam run                 Build the static site (default)
@@ -6,38 +6,15 @@
 ////   gleam run new <slug>      Scaffold a new post at priv/posts/<slug>/
 ////   gleam run help            Print usage
 ////
-//// The pure helpers (slugify, template) live in `cli/slug` and
+//// The build subcommand dispatches straight to `build.build()`. The
+//// pure helpers (slugify, template) live in `cli/slug` and
 //// `cli/template`; this module does the filesystem work and panics.
-//// The SSG and the client build are separate `gleam run` commands
-//// because shelling out from Gleam on the BEAM is fragile (the
-//// `os:cmd/1` FFI in this OTP version rejects our binary form).
-//// For a one-command build, use `make build` which chains them.
 
-import build
 import cli/slug
 import cli/template
 import gleam/io
 import gleam/string
 import simplifile
-
-/// Build the static site. Assumes the client JS bundle is already
-/// present at `client/build/dev/javascript/karitham_blog_client/`.
-/// Use `make build` to produce that first.
-pub fn build_site() {
-  let bundle = "client/build/dev/javascript/karitham_blog_client/client.mjs"
-  case simplifile.is_file(bundle) {
-    Ok(True) -> Nil
-    _ -> {
-      io.println(
-        "Client bundle not found at "
-        <> bundle
-        <> ". Run `make build` (or `cd client && gleam build --target javascript`) first.",
-      )
-      panic as "client bundle missing"
-    }
-  }
-  build.build()
-}
 
 /// Scaffold a new post at `priv/posts/<slug>/index.md` from a
 /// template. The input is slugified (lowercased, non-alphanumerics
@@ -94,7 +71,7 @@ pub fn print_usage() {
   gleam run help            Show this message
 
 The site is written to ./dist/. The client and SSG are built
-separately; for a one-shot build use `make build`.",
+separately; for a one-shot build use `just build`.",
   )
 }
 

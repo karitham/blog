@@ -100,9 +100,7 @@ impl HttpFetch for StubClient {
         self.record(url);
         matches!(
             self.route_for(url),
-            Some(Response::Status(200))
-                | Some(Response::Json(_))
-                | Some(Response::Bytes(_, _))
+            Some(Response::Status(200)) | Some(Response::Json(_)) | Some(Response::Bytes(_, _))
         )
     }
 }

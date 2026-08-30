@@ -54,13 +54,16 @@ pub fn index_page_renders_articles_and_post_test() {
   string.contains(html, "og:site_name") |> should.be_true()
 }
 
-pub fn index_page_embeds_rewrites_script_test() {
+pub fn index_page_embeds_rewrites_in_hydration_model_test() {
   let html =
     page.index_page(sample_data(), "https://karitham.dev", [
       #("https://remote/avatar.jpg", "/img/profile/avatar.jpg"),
     ])
     |> to_string
-  string.contains(html, "image-rewrites") |> should.be_true()
+  // The rewrite map travels inside the #site-model hydration payload
+  // now, not in its own script tag.
+  string.contains(html, "site-model") |> should.be_true()
+  string.contains(html, "\"rewrites\"") |> should.be_true()
   string.contains(html, "https://remote/avatar.jpg") |> should.be_true()
 }
 

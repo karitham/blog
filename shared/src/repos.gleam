@@ -7,10 +7,14 @@ import gleam/order
 import gleam/string
 import gleam/time/timestamp
 import lustre/attribute.{class, id}
-import lustre/element.{type Element, none, text}
+import lustre/element.{type Element, fragment, none, text}
 import lustre/element/html.{div, h2}
 
 const max_repos = 5
+
+/// The mount point the client's repos island attaches to. Kept here
+/// so the SSG markup and the client selector can't drift apart.
+pub const repos_section_id = "repos"
 
 /// Dedupe by repo_did, sort newest first, take the top N. Sorting
 /// uses the parsed timestamp so different source offsets compare
@@ -35,21 +39,24 @@ fn compare_repos_newest_first(a: Repo, b: Repo) -> order.Order {
 }
 
 pub fn repos_section(repos: List(Repo)) -> Element(msg) {
-  case select_top_repos(repos) {
+  case top_items(repos) {
     [] -> none()
-    top -> section("Projects", "repos", list.map(top, render_repo_card))
+    items -> div([id(repos_section_id), class("section")], items)
   }
 }
 
-/// The section frame used by the repos list: a titled container with
-/// `data-stale` support for the client's refresh cycle (the CSS keys
-/// off `.section[data-stale="true"]` for a pulsing dot in the header).
-fn section(
-  title: String,
-  id_str: String,
-  items: List(Element(msg)),
-) -> Element(msg) {
-  div([id(id_str), class("section")], [h2([], [text(title)]), ..items])
+/// The repos section's content (heading + cards) without the outer
+/// `#repos` container. The client's repos island mounts on the
+/// server-rendered container and re-renders exactly this.
+pub fn repos_inner(repos: List(Repo)) -> Element(msg) {
+  fragment(top_items(repos))
+}
+
+fn top_items(repos: List(Repo)) -> List(Element(msg)) {
+  case select_top_repos(repos) {
+    [] -> []
+    top -> [h2([], [text("Projects")]), ..list.map(top, render_repo_card)]
+  }
 }
 
 fn dedup_by_did(repos: List(Repo)) -> List(Repo) {
