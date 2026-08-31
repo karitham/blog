@@ -1,7 +1,10 @@
+//// Page shell: document `<head>`, header, footer, and RSS.
+//// Pure — `site_url` is threaded in so previews use the same code.
+
 import data/model.{type Post}
 import date
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{type Option}
 import gleam/string
 import lustre/attribute
 import lustre/element.{type Element, none, text}
@@ -29,12 +32,13 @@ pub type Meta {
 /// read from the environment) so the whole view layer is pure and
 /// testable with a fixed URL. `model_json` is the hydration payload
 /// embedded for the client (`""` on pages without dynamic sections).
+/// Labels disambiguate the three `String` params.
 pub fn page(
-  site_url: String,
-  title: String,
-  model_json: String,
-  content: List(Element(Nil)),
-  meta: Meta,
+  site_url site_url: String,
+  title title: String,
+  model_json model_json: String,
+  content content: List(Element(Nil)),
+  meta meta: Meta,
 ) -> Element(Nil) {
   html.html([attribute.lang("en")], [
     html.head([], head_children(site_url, title, model_json, meta)),
@@ -89,12 +93,12 @@ fn head_children(
       attribute.content(meta.description),
     ]),
     case meta.image {
-      Some(img) ->
+      option.Some(img) ->
         html.meta([
           attribute.attribute("property", "og:image"),
           attribute.content(img),
         ])
-      None -> none()
+      option.None -> none()
     },
     // Twitter card
     html.meta([
@@ -118,21 +122,21 @@ fn head_children(
       attribute.content(meta.description),
     ]),
     case meta.image {
-      Some(img) ->
+      option.Some(img) ->
         html.meta([
           attribute.attribute("name", "twitter:image"),
           attribute.content(img),
         ])
-      None -> none()
+      option.None -> none()
     },
     // Brand logo (used by some platforms in addition to og:image)
     case meta.logo {
-      Some(logo) ->
+      option.Some(logo) ->
         html.meta([
           attribute.attribute("property", "og:logo"),
           attribute.content(logo),
         ])
-      None -> none()
+      option.None -> none()
     },
     // Styles, icons, scripts
     html.link([attribute.rel("stylesheet"), attribute.href("/style.css")]),
@@ -368,12 +372,16 @@ fn icon_email() -> Element(Nil) {
 /// Render the RSS feed. `site_url` is threaded in so absolute links
 /// are correct in local previews (`BLOG_URL=http://localhost:8000`).
 pub fn rss_feed(posts: List(Post), site_url: String) -> String {
-  let items = list.map(posts, fn(post) { "  <item>
+  let items =
+    list.map(posts, fn(post) {
+      let slug = model.slug_to_string(post.slug)
+      "  <item>
     <title>" <> post.title <> "</title>
     <description>" <> post.description <> "</description>
-    <link>" <> site_url <> "/posts/" <> post.slug <> "/</link>
+    <link>" <> site_url <> "/posts/" <> slug <> "/</link>
     <pubDate>" <> date.to_rfc822(post.date) <> "</pubDate>
-  </item>" })
+  </item>"
+    })
 
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">

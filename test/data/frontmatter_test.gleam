@@ -1,6 +1,7 @@
 import data/frontmatter
 import data/model
 import gleam/list
+import gleam/option as gleam_option
 import gleam/string
 import gleeunit/should
 
@@ -15,11 +16,11 @@ pub fn parse_full_post_test() {
     <> "\n"
     <> "Body in **markdown**."
 
-  let result = frontmatter.parse("my-post", content)
+  let result = frontmatter.parse(slug: "my-post", content: content)
   let assert Ok(post) = result
   post.title |> should.equal("My Post")
   post.description |> should.equal("short summary")
-  post.slug |> should.equal("my-post")
+  model.slug_to_string(post.slug) |> should.equal("my-post")
   post.date |> should.equal("2026-07-18")
   post.tags |> should.equal(["gleam", "atproto"])
   post.draft |> should.equal(False)
@@ -39,7 +40,7 @@ pub fn parse_draft_post_test() {
     <> "---\n\n"
     <> "Not ready yet."
 
-  let assert Ok(post) = frontmatter.parse("wip", content)
+  let assert Ok(post) = frontmatter.parse(slug: "wip", content: content)
   post.draft |> should.equal(True)
 }
 
@@ -49,7 +50,7 @@ pub fn parse_draft_various_truthy_values_test() {
   |> list.each(fn(v) {
     let content =
       "---\ntitle: T\ndate: 2026-07-18\ndraft: " <> v <> "\n---\n\nbody"
-    let assert Ok(post) = frontmatter.parse("p", content)
+    let assert Ok(post) = frontmatter.parse(slug: "p", content: content)
     post.draft |> should.equal(True)
   })
 }
@@ -65,7 +66,7 @@ pub fn parse_malformed_date_fails_test() {
   ]
   list.each(cases, fn(bad) {
     let content = "---\ntitle: T\ndate: " <> bad <> "\n---\n\nbody"
-    let result = frontmatter.parse("p", content)
+    let result = frontmatter.parse(slug: "p", content: content)
     result |> should.be_error()
     case result {
       Error(frontmatter.InvalidDate(slug: _, value: v)) ->
@@ -87,7 +88,7 @@ pub fn parse_headings_get_anchor_links_test() {
     <> "\n"
     <> "More text.\n"
 
-  let assert Ok(post) = frontmatter.parse("t", content)
+  let assert Ok(post) = frontmatter.parse(slug: "t", content: content)
 
   // Each heading gets wrapped in an anchor link (text becomes the link)
   string.contains(
@@ -111,8 +112,8 @@ pub fn parse_valid_iso_date_test() {
   list.each(cases, fn(good) {
     let post =
       frontmatter.parse(
-        "valid-date",
-        "---\ntitle: t\ndate: " <> good <> "\n---\nbody",
+        slug: "valid-date",
+        content: "---\ntitle: t\ndate: " <> good <> "\n---\nbody",
       )
     post |> should.be_ok()
   })
@@ -131,8 +132,8 @@ pub fn parse_invalid_iso_date_test() {
   list.each(cases, fn(bad) {
     let post =
       frontmatter.parse(
-        "invalid-date",
-        "---\ntitle: t\ndate: " <> bad <> "\n---\nbody",
+        slug: "invalid-date",
+        content: "---\ntitle: t\ndate: " <> bad <> "\n---\nbody",
       )
     post |> should.be_error()
   })
@@ -143,40 +144,40 @@ pub fn parse_no_frontmatter_fails_test() {
   // silent fallback. Build fails loudly so the user knows the
   // post is broken.
   let content = "Just body, no frontmatter."
-  let result = frontmatter.parse("lonely", content)
+  let result = frontmatter.parse(slug: "lonely", content: content)
   result |> should.be_error()
 }
 
 pub fn parse_empty_tags_test() {
   let content = "---\ntitle: T\ndate: 2026-07-18\ntags: []\n---\n\nBody."
-  let assert Ok(post) = frontmatter.parse("t", content)
+  let assert Ok(post) = frontmatter.parse(slug: "t", content: content)
   post.tags |> should.equal([])
 }
 
 pub fn parse_missing_tags_test() {
   // No `tags:` line — defaults to `[]`, parsed as empty list.
   let content = "---\ntitle: T\ndate: 2026-07-18\n---\n\nBody."
-  let assert Ok(post) = frontmatter.parse("t", content)
+  let assert Ok(post) = frontmatter.parse(slug: "t", content: content)
   post.tags |> should.equal([])
 }
 
 pub fn parse_single_tag_test() {
   let content = "---\ntitle: T\ndate: 2026-07-18\ntags: [gleam]\n---\n\nBody."
-  let assert Ok(post) = frontmatter.parse("t", content)
+  let assert Ok(post) = frontmatter.parse(slug: "t", content: content)
   post.tags |> should.equal(["gleam"])
 }
 
 pub fn parse_multiple_tags_test() {
   let content =
     "---\ntitle: T\ndate: 2026-07-18\ntags: [gleam, testing, nix]\n---\n\nBody."
-  let assert Ok(post) = frontmatter.parse("t", content)
+  let assert Ok(post) = frontmatter.parse(slug: "t", content: content)
   post.tags |> should.equal(["gleam", "testing", "nix"])
 }
 
 pub fn parse_tags_extra_spaces_test() {
   let content =
     "---\ntitle: T\ndate: 2026-07-18\ntags: [  gleam ,   testing  ]\n---\n\nBody."
-  let assert Ok(post) = frontmatter.parse("t", content)
+  let assert Ok(post) = frontmatter.parse(slug: "t", content: content)
   post.tags |> should.equal(["gleam", "testing"])
 }
 
@@ -184,14 +185,17 @@ pub fn parse_preserves_slug_test() {
   // The slug is taken from the path, never from the file. The
   // directory name is authoritative.
   let content = "---\ntitle: T\ndate: 2026-07-18\n---\n\nbody"
-  let assert Ok(post) = frontmatter.parse("from-path", content)
-  post.slug |> should.equal("from-path")
+  let assert Ok(post) = frontmatter.parse(slug: "from-path", content: content)
+  model.slug_to_string(post.slug) |> should.equal("from-path")
 }
 
 pub fn parse_returns_post_type_test() {
   // Compile-time check: parse returns a Post.
   let assert Ok(post) =
-    frontmatter.parse("slug", "---\ntitle: T\ndate: 2026-07-18\n---\n\nbody")
+    frontmatter.parse(
+      slug: "slug",
+      content: "---\ntitle: T\ndate: 2026-07-18\n---\n\nbody",
+    )
   let _: model.Post = post
   Nil |> should.equal(Nil)
 }
@@ -215,4 +219,16 @@ pub fn valid_slug_rejects_test() {
     "with?query",
   ]
   list.each(bad, fn(s) { frontmatter.is_valid_slug(s) |> should.equal(False) })
+}
+
+pub fn parse_image_absent_is_none_test() {
+  let content = "---\ntitle: T\ndate: 2026-07-18\n---\n\nBody."
+  let assert Ok(post) = frontmatter.parse(slug: "t", content: content)
+  post.image |> should.equal(gleam_option.None)
+}
+
+pub fn parse_image_present_is_some_test() {
+  let content = "---\ntitle: T\ndate: 2026-07-18\nimage: hero.png\n---\n\nBody."
+  let assert Ok(post) = frontmatter.parse(slug: "t", content: content)
+  post.image |> should.equal(gleam_option.Some("hero.png"))
 }

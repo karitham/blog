@@ -9,7 +9,7 @@
 
 import gleam/json
 import gleam/list
-import gleam/result
+import gleam/option
 import gleeunit/should
 import simplifile
 import stats.{type RangeStats}
@@ -25,9 +25,9 @@ pub fn fixture_decodes_to_expected_stats_test() {
   let assert [artist_a] = one_month.artists
   artist_a.name |> should.equal("Artist A")
   artist_a.plays |> should.equal(1)
-  artist_a.image |> should.equal("")
+  artist_a.image |> should.equal(option.None)
   let assert [album_a] = one_month.albums
-  album_a.artist |> should.equal("Artist A")
+  album_a.artist |> should.equal(option.Some("Artist A"))
   album_a.name |> should.equal("Album A")
 
   // All-time has both, Artist B first (more ms_played).
@@ -36,17 +36,17 @@ pub fn fixture_decodes_to_expected_stats_test() {
   artist_b.name |> should.equal("Artist B")
   let assert [track_beta, _track_alpha] = all_time.tracks
   track_beta.name |> should.equal("Beta")
-  track_beta.artist |> should.equal("Artist B")
+  track_beta.artist |> should.equal(option.Some("Artist B"))
 }
 
 fn range_for(
   data: stats.StatsData,
   wanted: stats.Range,
 ) -> #(stats.Range, RangeStats) {
-  let found =
+  let assert Ok(found) =
     list.find(data.ranges, fn(pair) {
       let #(range, _) = pair
       range == wanted
     })
-  result.unwrap(found, #(wanted, stats.empty_range_stats()))
+  found
 }

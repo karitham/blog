@@ -7,14 +7,15 @@
 
 import config
 import data/images
-import data/model.{type Post, SiteData}
+import data/model.{type Post, type SiteData, SiteData}
 import data/sources
 import data/transport
 import gen/actor/defs.{type ProfileViewDetailed}
 import gleam/io
 import gleam/list
+import gleam/result
 import gleam/string
-import lustre/element.{type Element, to_document_string}
+import lustre/element.{type Element}
 import render/page
 import simplifile
 import view/layout
@@ -24,27 +25,49 @@ const client_bundle_src = "client/dist/karitham_blog_client.js"
 /// The bundle path must exist before the (slow, network-bound) data
 /// fetches run — a site that silently builds without its client JS is
 /// worse than a failed build.
-fn ensure_client_bundle() {
+fn ensure_client_bundle() -> Result(Nil, String) {
   case simplifile.is_file(client_bundle_src) {
-    Ok(True) -> Nil
+    Ok(True) -> Ok(Nil)
     _ -> {
-      io.println(
+      let msg =
         "Client bundle not found at "
         <> client_bundle_src
-        <> ". Run `just client` (or `cd client && gleam run -m lustre/dev build --minify=true --no-html=true`) first.",
-      )
-      panic as "client bundle missing"
+        <> ". Run `just client` (or `cd client && gleam run -m lustre/dev build --minify=true --no-html=true`) first."
+      io.println(msg)
+      Error("client bundle missing: " <> client_bundle_src)
     }
   }
 }
 
-pub fn build() {
-  ensure_client_bundle()
-  let cfg = config.read_env()
+pub fn build() -> Result(Nil, String) {
+  case ensure_client_bundle() {
+    Error(e) -> Error(e)
+    Ok(Nil) -> {
+      let cfg = config.read_env()
 
-  io.println("Fetching data...")
-  let site_data = sources.fetch_all(transport.fetch_body)
+      io.println("Fetching data...")
+      case sources.fetch_all(transport.fetch_body) {
+        Error(e) -> {
+          io.println("Build failed: " <> e)
+          Error(e)
+        }
+        Ok(site_data) ->
+          case do_build(site_data, cfg) {
+            Ok(Nil) -> Ok(Nil)
+            Error(e) -> {
+              io.println("Build failed: " <> e)
+              Error(e)
+            }
+          }
+      }
+    }
+  }
+}
 
+fn do_build(
+  site_data: SiteData,
+  cfg: config.SiteConfig,
+) -> Result(Nil, String) {
   // Mirror the profile's avatar/banner blobs into the site so the
   // browser never hits the PDS for them; the returned profile points
   // at the local copies and `rewrites` lets the client do the same.
@@ -65,35 +88,43 @@ pub fn build() {
   list.each(drafts, log_draft)
 
   io.println("Generating site...")
-  let _ = create_dir(cfg.dist_dir)
+  use _ <- result.try(
+    create_dir(cfg.dist_dir)
+    |> result.map_error(fn(e) {
+      "mkdir " <> cfg.dist_dir <> ": " <> string.inspect(e)
+    }),
+  )
 
   let published_data = SiteData(..site_data, posts: published)
 
   let index_html =
     page.index_page(published_data, cfg.site_url, profile_images.rewrites)
     |> render_document
-  write_text(cfg.dist_dir <> "/index.html", index_html)
+  write_text(path: cfg.dist_dir <> "/index.html", contents: index_html)
 
-  write_posts(published, published_data.profile, cfg)
-  write_posts(drafts, published_data.profile, cfg)
+  use _ <- result.try(write_posts(published, published_data.profile, cfg))
+  use _ <- result.try(write_posts(drafts, published_data.profile, cfg))
 
   write_style(cfg)
   write_highlight(cfg)
 
   let rss = layout.rss_feed(published, cfg.site_url)
-  write_text(cfg.dist_dir <> "/rss.xml", rss)
+  write_text(path: cfg.dist_dir <> "/rss.xml", contents: rss)
 
   copy_post_assets(published, cfg)
   copy_post_assets(drafts, cfg)
   copy_favicons(cfg)
-  copy_image_cache(cfg)
-  copy_client_bundle(cfg)
+  use _ <- result.try(copy_image_cache(cfg))
+  use _ <- result.try(copy_client_bundle(cfg))
 
   io.println("Done! Site generated in " <> cfg.dist_dir)
+  Ok(Nil)
 }
 
 fn log_draft(post: Post) -> Nil {
-  io.println("  [draft] " <> post.slug <> " — " <> post.title)
+  io.println(
+    "  [draft] " <> model.slug_to_string(post.slug) <> " — " <> post.title,
+  )
 }
 
 /// simplifile's write_bits has labeled arguments; this unlabeled
@@ -109,15 +140,21 @@ fn write_posts(
   posts: List(Post),
   profile: ProfileViewDetailed,
   cfg: config.SiteConfig,
-) {
-  list.each(posts, fn(post) {
-    let dir = cfg.dist_dir <> "/posts/" <> post.slug
-    let _ = create_dir(dir)
+) -> Result(Nil, String) {
+  list.try_map(posts, fn(post) {
+    let slug = model.slug_to_string(post.slug)
+    let dir = cfg.dist_dir <> "/posts/" <> slug
+    use _ <- result.try(
+      create_dir(dir)
+      |> result.map_error(fn(e) { "mkdir " <> dir <> ": " <> string.inspect(e) }),
+    )
     let html = page.post_page(post, profile, cfg.site_url) |> render_document
     let path = dir <> "/index.html"
-    write_text(path, html)
+    write_text(path: path, contents: html)
     io.println("  wrote " <> path)
+    Ok(Nil)
   })
+  |> result.map(fn(_) { Nil })
 }
 
 fn write_style(cfg: config.SiteConfig) {
@@ -126,7 +163,7 @@ fn write_style(cfg: config.SiteConfig) {
   case simplifile.read("priv/static/style.css") {
     Ok(contents) -> {
       let path = cfg.dist_dir <> "/style.css"
-      write_text(path, contents)
+      write_text(path: path, contents: contents)
       io.println("  wrote " <> path)
     }
     Error(_) -> io.println("  priv/static/style.css missing — skipping")
@@ -144,10 +181,10 @@ fn write_highlight(cfg: config.SiteConfig) {
     let #(src, dst) = pair
     case simplifile.read(src) {
       Ok(contents) -> {
-        write_text(dst, contents)
+        write_text(path: dst, contents: contents)
         io.println("  wrote " <> dst)
       }
-      Error(_) -> Nil
+      Error(e) -> log_io_error(op: "read", path: src, error: e)
     }
   })
 }
@@ -158,14 +195,15 @@ fn write_highlight(cfg: config.SiteConfig) {
 /// skipped; only flat assets are deployed.
 fn copy_post_assets(posts: List(Post), cfg: config.SiteConfig) {
   list.each(posts, fn(post) {
+    let slug = model.slug_to_string(post.slug)
     copy_post_files(
-      "priv/posts/" <> post.slug,
-      cfg.dist_dir <> "/posts/" <> post.slug,
+      src_dir: "priv/posts/" <> slug,
+      dst_dir: cfg.dist_dir <> "/posts/" <> slug,
     )
   })
 }
 
-fn copy_post_files(src_dir: String, dst_dir: String) -> Nil {
+fn copy_post_files(src_dir src_dir: String, dst_dir dst_dir: String) -> Nil {
   case simplifile.read_directory(src_dir) {
     Ok(entries) ->
       list.each(entries, fn(entry) {
@@ -174,10 +212,10 @@ fn copy_post_files(src_dir: String, dst_dir: String) -> Nil {
         case entry, simplifile.is_directory(src) {
           "index.md", _ -> Nil
           _, Ok(True) -> Nil
-          _, _ -> copy_file_bits(src, dst)
+          _, _ -> copy_file_bits(src: src, dst: dst)
         }
       })
-    Error(_) -> Nil
+    Error(e) -> log_io_error(op: "read", path: src_dir, error: e)
   }
 }
 
@@ -193,84 +231,110 @@ fn copy_favicons(cfg: config.SiteConfig) {
   list.each(favicons, fn(name) {
     let src = "priv/static/icons/" <> name
     let dst = cfg.dist_dir <> "/" <> name
-    copy_file_bits(src, dst)
+    copy_file_bits(src: src, dst: dst)
   })
 }
 
 /// Copy the client bundle produced by `just client` (a single
 /// self-executing ES module) into the site. Existence is already
 /// enforced by `ensure_client_bundle` before the build starts.
-fn copy_client_bundle(cfg: config.SiteConfig) {
+fn copy_client_bundle(cfg: config.SiteConfig) -> Result(Nil, String) {
   // Delete first so a whitelisted dev tree from an older build
   // can't linger next to the bundle.
   let _ = simplifile.delete(cfg.dist_dir <> "/client")
-  let _ = create_dir(cfg.dist_dir <> "/client")
+  use _ <- result.try(
+    create_dir(cfg.dist_dir <> "/client")
+    |> result.map_error(fn(e) {
+      "mkdir " <> cfg.dist_dir <> "/client: " <> string.inspect(e)
+    }),
+  )
   copy_file_bits(
-    client_bundle_src,
-    cfg.dist_dir <> "/client/karitham_blog_client.js",
+    src: client_bundle_src,
+    dst: cfg.dist_dir <> "/client/karitham_blog_client.js",
   )
   io.println("  copied client bundle")
+  Ok(Nil)
 }
 
 /// Copy the mirrored cover/artist images from the refresh cache into
 /// the site so the browser serves them locally instead of hitting
 /// Cover Art Archive / Wikimedia at page load. No-op without a cache.
-fn copy_image_cache(cfg: config.SiteConfig) {
+/// Logs `is_directory` errors for diagnostics but does not fail the build.
+fn copy_image_cache(cfg: config.SiteConfig) -> Result(Nil, String) {
   case simplifile.is_directory("priv/cache/img") {
-    Ok(True) -> copy_dir("priv/cache/img", cfg.dist_dir <> "/img")
-    _ -> Nil
+    Ok(True) -> copy_dir(src: "priv/cache/img", dst: cfg.dist_dir <> "/img")
+    Ok(False) -> Ok(Nil)
+    Error(e) -> {
+      log_io_error(op: "is_dir", path: "priv/cache/img", error: e)
+      Ok(Nil)
+    }
   }
 }
 
-fn copy_dir(src: String, dst: String) -> Nil {
-  let _ = create_dir(dst)
+fn copy_dir(src src: String, dst dst: String) -> Result(Nil, String) {
+  use _ <- result.try(
+    create_dir(dst)
+    |> result.map_error(fn(e) { "mkdir " <> dst <> ": " <> string.inspect(e) }),
+  )
   case simplifile.read_directory(src) {
-    Ok(entries) ->
-      list.each(entries, fn(entry) {
-        // `.erl` files and `_gleam_artefacts` are Erlang-target build
-        // leftovers that leak into the JS dev tree; the browser never
-        // imports them, so skip them.
-        case entry {
-          "_gleam_artefacts" -> Nil
-          e ->
-            case string.ends_with(e, ".erl") {
-              True -> Nil
-              False -> {
-                let src_path = src <> "/" <> e
-                let dst_path = dst <> "/" <> e
-                case simplifile.is_directory(src_path) {
-                  Ok(True) -> copy_dir(src_path, dst_path)
-                  _ -> copy_file_bits(src_path, dst_path)
+    Ok(entries) -> {
+      case
+        list.try_map(entries, fn(entry) {
+          // `.erl` files and `_gleam_artefacts` are Erlang-target build
+          // leftovers that leak into the JS dev tree; the browser never
+          // imports them, so skip them.
+          case entry {
+            "_gleam_artefacts" -> Ok(Nil)
+            e ->
+              case string.ends_with(e, ".erl") {
+                True -> Ok(Nil)
+                False -> {
+                  let src_path = src <> "/" <> e
+                  let dst_path = dst <> "/" <> e
+                  case simplifile.is_directory(src_path) {
+                    Ok(True) -> copy_dir(src: src_path, dst: dst_path)
+                    _ -> {
+                      copy_file_bits(src: src_path, dst: dst_path)
+                      Ok(Nil)
+                    }
+                  }
                 }
               }
-            }
-        }
-      })
-    Error(_) -> Nil
+          }
+        })
+      {
+        Ok(_) -> Ok(Nil)
+        Error(e) -> Error(e)
+      }
+    }
+    Error(e) -> {
+      log_io_error(op: "read", path: src, error: e)
+      Error("read " <> src <> ": " <> string.inspect(e))
+    }
   }
 }
 
 // --- I/O helpers that log errors instead of silently swallowing them ---
 
 fn render_document(element: Element(Nil)) -> String {
-  to_document_string(element)
+  element.to_document_string(element)
 }
 
-fn write_text(path: String, contents: String) -> Nil {
+fn write_text(path path: String, contents contents: String) -> Nil {
   case simplifile.write(to: path, contents: contents) {
     Ok(Nil) -> Nil
-    Error(e) -> log_io_error("write", path, e)
+    Error(e) -> log_io_error(op: "write", path: path, error: e)
   }
 }
 
-fn copy_file_bits(src: String, dst: String) -> Nil {
+fn copy_file_bits(src src: String, dst dst: String) -> Nil {
   case simplifile.read_bits(src) {
     Ok(contents) ->
       case simplifile.write_bits(to: dst, bits: contents) {
         Ok(Nil) -> Nil
-        Error(e) -> log_io_error("write", dst, e)
+        Error(e) -> log_io_error(op: "write", path: dst, error: e)
       }
-    Error(_) -> Nil
+    Error(e) -> log_io_error(op: "read", path: src, error: e)
   }
 }
 
@@ -278,12 +342,18 @@ fn create_dir(path: String) -> Result(Nil, simplifile.FileError) {
   case simplifile.create_directory_all(path) {
     Ok(_) -> Ok(Nil)
     Error(e) -> {
-      log_io_error("mkdir", path, e)
+      log_io_error(op: "mkdir", path: path, error: e)
       Error(e)
     }
   }
 }
 
-fn log_io_error(op: String, path: String, e: simplifile.FileError) -> Nil {
-  io.println("  " <> op <> " failed for " <> path <> ": " <> string.inspect(e))
+fn log_io_error(
+  op op: String,
+  path path: String,
+  error error: simplifile.FileError,
+) -> Nil {
+  io.println(
+    "  " <> op <> " failed for " <> path <> ": " <> string.inspect(error),
+  )
 }

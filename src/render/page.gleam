@@ -10,7 +10,7 @@ import encode
 import gen/actor/defs.{type ProfileViewDetailed}
 import gleam/dict
 import gleam/list
-import gleam/option.{type Option, None, Some, map as option_map}
+import gleam/option.{type Option}
 import gleam/string
 import hydration.{HydrationModel}
 import lustre/attribute.{class, id}
@@ -31,14 +31,17 @@ pub fn index_page(
   rewrites: List(#(String, String)),
 ) -> Element(Nil) {
   let og_image: Option(String) = case data.profile.banner {
-    Some(img) -> Some(absolutize_img(img, site_url))
-    None ->
-      option_map(data.profile.avatar, fn(img) { absolutize_img(img, site_url) })
+    option.Some(img) ->
+      option.Some(absolutize_img(img: img, site_url: site_url))
+    option.None ->
+      option.map(data.profile.avatar, fn(img) {
+        absolutize_img(img: img, site_url: site_url)
+      })
   }
 
   let description = case data.profile.description {
-    Some(desc) -> desc
-    None -> "Karitham's personal blog and project showcase"
+    option.Some(desc) -> desc
+    option.None -> "Karitham's personal blog and project showcase"
   }
 
   let model_json =
@@ -74,13 +77,19 @@ pub fn index_page(
       description: description,
       image: og_image,
       url: site_url <> "/",
-      logo: option_map(data.profile.avatar, fn(img) {
-        absolutize_img(img, site_url)
+      logo: option.map(data.profile.avatar, fn(img) {
+        absolutize_img(img: img, site_url: site_url)
       }),
       page_type: layout.Website,
     )
 
-  layout.page("~/kar", site_url, model_json, [dynamic_sections, articles], meta)
+  layout.page(
+    site_url: site_url,
+    title: "~/kar",
+    model_json: model_json,
+    content: [dynamic_sections, articles],
+    meta: meta,
+  )
 }
 
 /// A single article page.
@@ -89,34 +98,40 @@ pub fn post_page(
   profile: ProfileViewDetailed,
   site_url: String,
 ) -> Element(Nil) {
+  let slug = model.slug_to_string(post.slug)
   let og_image: Option(String) = case post.image {
-    "" -> option_map(profile.avatar, fn(img) { absolutize_img(img, site_url) })
-    img -> Some(og_image_for_post(post.slug, img, site_url))
+    option.None ->
+      option.map(profile.avatar, fn(img) {
+        absolutize_img(img: img, site_url: site_url)
+      })
+    option.Some(img) ->
+      option.Some(og_image_for_post(slug: slug, img: img, site_url: site_url))
   }
 
   let meta =
     layout.Meta(
       description: post.description,
       image: og_image,
-      url: site_url <> "/posts/" <> post.slug <> "/",
+      url: site_url <> "/posts/" <> slug <> "/",
       logo: profile.avatar,
       page_type: layout.Article(published_time: post.date, tags: post.tags),
     )
 
   layout.page(
-    post.title <> " - Kar",
-    site_url,
-    "",
-    [post_view.render_single(post)],
-    meta,
+    site_url: site_url,
+    title: post.title <> " - Kar",
+    model_json: "",
+    content: [post_view.render_single(post)],
+    meta: meta,
   )
 }
 
 // --- helpers ---
 
 /// OG/Twitter image tags must be absolute URLs for crawlers; the
-/// mirrored images are root-relative paths.
-fn absolutize_img(img: String, site_url: String) -> String {
+/// mirrored images are root-relative paths. Labels disambiguate the two
+/// `String` params.
+fn absolutize_img(img img: String, site_url site_url: String) -> String {
   case string.starts_with(img, "/") {
     True -> site_url <> img
     False -> img
@@ -124,9 +139,14 @@ fn absolutize_img(img: String, site_url: String) -> String {
 }
 
 /// Resolve a post's `image:` frontmatter value to an absolute URL for
-/// OG meta. Reuses the same path logic as the article `<img>`.
-fn og_image_for_post(slug: String, img: String, site_url: String) -> String {
-  let path = post_view.resolve_image_url(slug, img)
+/// OG meta. Reuses the same path logic as the article `<img>`. Labels
+/// disambiguate the three `String` params.
+fn og_image_for_post(
+  slug slug: String,
+  img img: String,
+  site_url site_url: String,
+) -> String {
+  let path = post_view.resolve_image_url(slug: slug, img: img)
   case string.starts_with(path, "/") {
     True -> site_url <> path
     False -> path

@@ -1,8 +1,11 @@
+//// Shared music views: live play rows and top-N stat grids.
+//// Pure lustre elements — used by SSG (`render/page`) and client islands.
+
 import date
 import gen/feed/play.{type ArtistView, type FeedPlay}
 import gleam/int
 import gleam/list
-import gleam/option.{unwrap}
+import gleam/option
 import gleam/string
 import gleam/time/calendar
 import gleam/time/timestamp
@@ -117,8 +120,8 @@ fn render_play_row(play: FeedPlay) -> Element(msg) {
     |> list.map(fn(a: ArtistView) { a.artist_name })
     |> string.join(", ")
 
-  let origin_uri = unwrap(play.origin_uri, "")
-  let release_name = unwrap(play.release_name, "")
+  let origin_uri = option.unwrap(play.origin_uri, "")
+  let release_name = option.unwrap(play.release_name, "")
 
   div([class("play-row")], [
     span(
@@ -233,7 +236,7 @@ fn grid(title: String, items: List(StatsItem)) -> Element(msg) {
 /// otherwise it's a plain tile. No rank badge — a proper 3x3 mosaic.
 fn tile(item: StatsItem, category: String) -> Element(msg) {
   let cover = case item.image {
-    "" ->
+    option.None ->
       div(
         [
           classes([
@@ -244,7 +247,7 @@ fn tile(item: StatsItem, category: String) -> Element(msg) {
         ],
         [span([class("tile-initial")], [text(initial(item.name))])],
       )
-    url ->
+    option.Some(url) ->
       img([
         class("tile-cover"),
         src(url),
@@ -256,15 +259,15 @@ fn tile(item: StatsItem, category: String) -> Element(msg) {
     div([class("tile-tooltip")], [
       span([class("tile-name")], [text(item.name)]),
       case item.artist {
-        "" -> none()
-        artist -> span([class("tile-artist")], [text(artist)])
+        option.None -> none()
+        option.Some(artist) -> span([class("tile-artist")], [text(artist)])
       },
       span([class("tile-plays")], [text(plays_label(item.plays))]),
     ])
   let tile_body = [div([class("tile-cover-wrap")], [cover]), popup]
   case item.url {
-    "" -> li([class("tile")], tile_body)
-    url ->
+    option.None -> li([class("tile")], tile_body)
+    option.Some(url) ->
       li([class("tile")], [
         a(
           [
@@ -290,8 +293,8 @@ fn initial(name: String) -> String {
 
 fn tile_label(item: StatsItem) -> String {
   let artist_part = case item.artist {
-    "" -> ""
-    artist -> " — " <> artist
+    option.None -> ""
+    option.Some(artist) -> " — " <> artist
   }
   item.name <> artist_part <> ", " <> plays_label(item.plays)
 }

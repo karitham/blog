@@ -8,7 +8,7 @@
 import browser
 import decode
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option
 import gleam/string
 import plays as plays_view
 import plays_island
@@ -27,13 +27,13 @@ pub fn start() -> Nil {
       case browser.script_text(site_model_id) {
         // The SSG always renders #site-model next to the sections it
         // feeds; its absence means the markup drifted from here.
-        None ->
+        option.None ->
           browser.log_error(
             "missing #" <> site_model_id <> " — islands not started",
           )
         // No payload on this page; nothing to hydrate.
-        Some("") -> Nil
-        Some(payload) ->
+        option.Some("") -> Nil
+        option.Some(payload) ->
           case decode.decode_hydration_model(payload) {
             Error(reason) ->
               browser.log_error(

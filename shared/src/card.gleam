@@ -6,7 +6,7 @@
 //// can't drift in markup.
 
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{type Option}
 import lustre/attribute.{class, href, target}
 import lustre/element.{type Element, none, text}
 import lustre/element/html.{a, div, span}
@@ -24,8 +24,8 @@ pub fn card(
   topics topics: List(String),
 ) -> Element(msg) {
   let title_attrs = case title_target {
-    Some(t) -> [href(url), target(t), class("card-title")]
-    None -> [href(url), class("card-title")]
+    option.Some(t) -> [href(url), target(t), class("card-title")]
+    option.None -> [href(url), class("card-title")]
   }
   let desc = case description {
     "" -> none()

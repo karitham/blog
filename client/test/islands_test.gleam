@@ -58,7 +58,7 @@ fn sample_repo() -> Repo {
 pub fn profile_init_takes_flags_test() {
   let flags =
     profile_island.Flags(rewrites: dict.new(), profile: sample_profile())
-  let assert #(model, _) = profile_island.init(flags)
+  let #(model, _) = profile_island.init(flags)
   model.profile |> should.equal(sample_profile())
 }
 
@@ -74,7 +74,7 @@ pub fn profile_fetch_localizes_images_test() {
       ..sample_profile(),
       avatar: Some("https://cdn.bsky.app/avatar.jpeg"),
     )
-  let assert #(model, _) =
+  let #(model, _) =
     profile_island.update(model, profile_island.ProfileFetched(Ok(fresh)))
   model.profile.avatar
   |> should.equal(Some("/img/profile/avatar.jpeg"))
@@ -83,7 +83,7 @@ pub fn profile_fetch_localizes_images_test() {
 pub fn profile_fetch_error_keeps_model_test() {
   let model =
     profile_island.Model(rewrites: dict.new(), profile: sample_profile())
-  let assert #(model, _) =
+  let #(model, _) =
     profile_island.update(
       model,
       profile_island.ProfileFetched(Error(json_decode_error())),
@@ -94,14 +94,14 @@ pub fn profile_fetch_error_keeps_model_test() {
 // --- plays island ---
 
 pub fn plays_init_starts_stale_with_build_rows_test() {
-  let assert #(model, _) = plays_island.init(plays_island.Flags(plays: []))
+  let #(model, _) = plays_island.init(plays_island.Flags(plays: []))
   model.stale |> should.be_true()
   model.plays |> should.equal([])
 }
 
 pub fn plays_poll_tick_flags_stale_test() {
   let model = plays_island.Model(plays: [sample_play()], stale: False)
-  let assert #(model, _) = plays_island.update(model, plays_island.PollTick)
+  let #(model, _) = plays_island.update(model, plays_island.PollTick)
   model.stale |> should.be_true()
   // Rows are kept until the fetch lands, so nothing flashes.
   model.plays |> should.equal([sample_play()])
@@ -109,7 +109,7 @@ pub fn plays_poll_tick_flags_stale_test() {
 
 pub fn plays_fetch_replaces_rows_and_clears_stale_test() {
   let model = plays_island.Model(plays: [], stale: True)
-  let assert #(model, _) =
+  let #(model, _) =
     plays_island.update(model, plays_island.PlaysFetched(Ok([sample_play()])))
   model.plays |> should.equal([sample_play()])
   model.stale |> should.be_false()
@@ -117,7 +117,7 @@ pub fn plays_fetch_replaces_rows_and_clears_stale_test() {
 
 pub fn plays_empty_fetch_keeps_rows_clears_stale_test() {
   let model = plays_island.Model(plays: [sample_play()], stale: True)
-  let assert #(model, _) =
+  let #(model, _) =
     plays_island.update(model, plays_island.PlaysFetched(Ok([])))
   model.plays |> should.equal([sample_play()])
   model.stale |> should.be_false()
@@ -125,7 +125,7 @@ pub fn plays_empty_fetch_keeps_rows_clears_stale_test() {
 
 pub fn plays_error_keeps_rows_clears_stale_test() {
   let model = plays_island.Model(plays: [sample_play()], stale: True)
-  let assert #(model, _) =
+  let #(model, _) =
     plays_island.update(
       model,
       plays_island.PlaysFetched(Error(json_decode_error())),
@@ -136,11 +136,11 @@ pub fn plays_error_keeps_rows_clears_stale_test() {
 
 pub fn plays_visibility_triggers_refresh_test() {
   let model = plays_island.Model(plays: [sample_play()], stale: False)
-  let assert #(model, _) =
+  let #(model, _) =
     plays_island.update(model, plays_island.VisibilityChanged(True))
   model.stale |> should.be_true()
   // Hiding the tab changes nothing; the pulse clears when the fetch lands.
-  let assert #(model, _) =
+  let #(model, _) =
     plays_island.update(model, plays_island.VisibilityChanged(False))
   model.stale |> should.be_true()
 }
@@ -162,13 +162,13 @@ pub fn plays_view_renders_rows_and_stale_flag_test() {
 // --- repos island ---
 
 pub fn repos_init_takes_flags_test() {
-  let assert #(model, _) = repos_island.init(repos_island.Flags(repos: []))
+  let #(model, _) = repos_island.init(repos_island.Flags(repos: []))
   model.repos |> should.equal([])
 }
 
 pub fn repos_fetch_replaces_test() {
   let model = repos_island.Model(repos: [])
-  let assert #(model, _) =
+  let #(model, _) =
     repos_island.update(model, repos_island.ReposFetched([sample_repo()]))
   model.repos |> should.equal([sample_repo()])
 }

@@ -1,4 +1,5 @@
 import atproto
+import gleam/option
 import gleam/string
 import gleeunit/should
 import lustre/element.{to_string}
@@ -70,11 +71,11 @@ pub fn plays_section_tile_without_image_uses_placeholder_test() {
   let data =
     stats_with_tile(StatsItem(
       name: "Alpha",
-      artist: "",
+      artist: option.None,
       plays: 5,
       ms_played: 0,
-      image: "",
-      url: "",
+      image: option.None,
+      url: option.None,
     ))
   let html = plays.plays_section(decoded, data) |> to_string
   string.contains(html, "tile-cover--none") |> should.be_true()
@@ -86,11 +87,11 @@ pub fn plays_section_tile_with_image_and_url_links_test() {
   let data =
     stats_with_tile(StatsItem(
       name: "Alpha",
-      artist: "Artist A",
+      artist: option.Some("Artist A"),
       plays: 5,
       ms_played: 0,
-      image: "/img/alpha.jpg",
-      url: "https://musicbrainz.org/artist/a",
+      image: option.Some("/img/alpha.jpg"),
+      url: option.Some("https://musicbrainz.org/artist/a"),
     ))
   let html = plays.plays_section(decoded, data) |> to_string
   string.contains(html, "/img/alpha.jpg") |> should.be_true()

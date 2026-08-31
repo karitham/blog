@@ -48,9 +48,23 @@ pub fn to_rfc822(date_str: String) -> String {
 }
 
 /// Derive the three-letter weekday name from Unix epoch seconds.
-/// 1970-01-01 (unix epoch) is a Thursday (index 4).
+/// 1970-01-01 (unix epoch) is a Thursday (index 4). Uses floor
+/// division and Euclidean modulo so pre-epoch dates (external
+/// frontmatter input) map to the correct weekday.
 fn weekday_name(unix_seconds: Int) -> String {
-  let w = { 4 + unix_seconds / 86_400 } % 7
+  // Floor division for negative unix_seconds: Gleam's `/` truncates
+  // toward zero, so -1 / 86400 = 0 but we need -1. Adjust.
+  let days = case unix_seconds < 0 {
+    True -> { unix_seconds - 86_399 } / 86_400
+    False -> unix_seconds / 86_400
+  }
+  let raw = { 4 + days } % 7
+  // Euclidean remainder for still-negative raw (should not happen
+  // after floor, but keep for safety).
+  let w = case raw < 0 {
+    True -> raw + 7
+    False -> raw
+  }
   case w {
     0 -> "Sun"
     1 -> "Mon"

@@ -10,7 +10,7 @@ import atproto.{type DecodedRecord, DecodedRecord}
 import gen/actor/profile.{type ActorProfile}
 import gen/repo.{type Repo, Repo}
 import gleam/list
-import gleam/option.{Some, unwrap}
+import gleam/option
 
 /// Fill in a Tangled repo's `name` from the URI rkey when the
 /// original is missing or empty. Records without a real name usually
@@ -20,11 +20,11 @@ import gleam/option.{Some, unwrap}
 pub fn resolve_repo_name(record: DecodedRecord(Repo)) -> DecodedRecord(Repo) {
   let repo = record.value
   case repo.name {
-    Some(name) if name != "" -> record
+    option.Some(name) if name != "" -> record
     _ ->
       case atproto.rkey_from_uri(record.uri) {
         Ok(rkey) ->
-          DecodedRecord(..record, value: Repo(..repo, name: Some(rkey)))
+          DecodedRecord(..record, value: Repo(..repo, name: option.Some(rkey)))
         Error(_) -> record
       }
   }
@@ -49,7 +49,7 @@ pub fn pinned_dids_from_profiles(
   records
   |> list.flat_map(fn(record) {
     record.value.pinned_repositories
-    |> unwrap(or: [])
+    |> option.unwrap(or: [])
     |> list.filter(fn(did) { did != "" })
   })
 }

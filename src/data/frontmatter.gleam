@@ -18,7 +18,7 @@
 import data/model.{type Post, Post}
 import gleam/dynamic/decode
 import gleam/list
-import gleam/result
+import gleam/option
 import gleam/string
 import gleam/time/timestamp
 import mork
@@ -29,22 +29,49 @@ pub type ParseError {
   MissingField(slug: String, field: String)
   InvalidDate(slug: String, value: String)
   InvalidYaml(slug: String, error: String)
+  InvalidSlug(slug: String, reason: String)
 }
 
 /// Parse raw markdown content (frontmatter + body) into a Post.
 /// Returns an error if a required field is missing, the date is
-/// malformed, or the YAML is invalid.
-pub fn parse(slug: String, content: String) -> Result(Post, ParseError) {
-  case string.split(content, on: "\n---\n") {
-    [frontmatter, body] -> parse_with_frontmatter(slug, frontmatter, body)
-    _ -> Error(MissingField(slug, "frontmatter delimiter (---)"))
+/// malformed, the slug is invalid, or the YAML is invalid.
+/// Labels disambiguate the two `String` params at the call site.
+pub fn parse(
+  slug slug: String,
+  content content: String,
+) -> Result(Post, ParseError) {
+  case model.parse_slug(slug) {
+    Error(reason) -> Error(InvalidSlug(slug, string.inspect(reason)))
+    Ok(valid_slug) -> {
+      // Normalize CRLF to LF so Windows-authored files work, then
+      // accept both "\n---\n" and bare trailing "\n---".
+      let normalized = string.replace(content, "\r\n", "\n")
+      case string.split_once(normalized, on: "\n---\n") {
+        Ok(#(frontmatter, body)) ->
+          parse_with_frontmatter(
+            slug: valid_slug,
+            frontmatter: frontmatter,
+            body: body,
+          )
+        Error(_) ->
+          case string.split_once(normalized, on: "\n---") {
+            Ok(#(frontmatter, body)) ->
+              parse_with_frontmatter(
+                slug: valid_slug,
+                frontmatter: frontmatter,
+                body: body,
+              )
+            Error(_) -> Error(MissingField(slug, "frontmatter delimiter (---)"))
+          }
+      }
+    }
   }
 }
 
 fn parse_with_frontmatter(
-  slug: String,
-  frontmatter: String,
-  body: String,
+  slug slug: model.Slug,
+  frontmatter frontmatter: String,
+  body body: String,
 ) -> Result(Post, ParseError) {
   let decoder = {
     use title <- decode.field("title", decode.string)
@@ -52,16 +79,26 @@ fn parse_with_frontmatter(
     use date <- decode.field("date", decode.string)
     use tags <- decode.optional_field("tags", [], decode.list(decode.string))
     use draft <- decode.optional_field("draft", False, decode.bool)
-    use image <- decode.optional_field("image", "", decode.string)
+    use image_opt <- decode.optional_field(
+      "image",
+      option.None,
+      decode.optional(decode.string),
+    )
+    // Normalize explicit `image: ""` to `None` — same contract as
+    // stats' `empty_to_none`; an empty string is not a valid image.
+    let image = case image_opt {
+      option.Some("") -> option.None
+      _ -> image_opt
+    }
     decode.success(Post(
       title:,
       description:,
-      slug:,
+      slug: slug,
       date:,
       content: "",
       tags:,
       draft:,
-      image:,
+      image: image,
     ))
   }
 
@@ -79,10 +116,11 @@ fn parse_with_frontmatter(
             |> inject_heading_anchors
           Ok(Post(..post, content: html_body))
         }
-        Error(_) -> Error(InvalidDate(slug, post.date))
+        Error(_) -> Error(InvalidDate(model.slug_to_string(slug), post.date))
       }
     }
-    Error(err) -> Error(InvalidYaml(slug, error.to_string(err)))
+    Error(err) ->
+      Error(InvalidYaml(model.slug_to_string(slug), error.to_string(err)))
   }
 }
 
@@ -142,22 +180,13 @@ fn inject_rec(html: String, tag: String, level: String) -> String {
   }
 }
 
-const slug_chars = "abcdefghijklmnopqrstuvwxyz0123456789-"
-
-const slug_start_chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-
 /// Validates that a string is a usable post slug: starts with a
 /// lowercase letter or digit, contains only lowercase letters,
 /// digits, and hyphens. Must not be empty.
+/// Delegates to `model.parse_slug` so the two checks cannot drift.
 pub fn is_valid_slug(slug: String) -> Bool {
-  case slug {
-    "" -> False
-    _ -> {
-      let first = string.first(slug) |> result.unwrap("")
-      string.contains(slug_start_chars, first)
-      && list.all(string.to_graphemes(slug), fn(c) {
-        string.contains(slug_chars, c)
-      })
-    }
+  case model.parse_slug(slug) {
+    Ok(_) -> True
+    Error(_) -> False
   }
 }

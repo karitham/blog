@@ -4,13 +4,12 @@ import gleam/dynamic/decode
 import gleam/json
 
 pub type RepoStrongRef {
-  RepoStrongRef(
-    cid: String,
-    uri: String,
-  )
+  RepoStrongRef(cid: String, uri: String)
 }
 
-pub fn repo_strong_ref_fields(value: RepoStrongRef) -> List(#(String, json.Json)) {
+pub fn repo_strong_ref_fields(
+  value: RepoStrongRef,
+) -> List(#(String, json.Json)) {
   [#("cid", json.string(value.cid)), #("uri", json.string(value.uri))]
 }
 

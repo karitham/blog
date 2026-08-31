@@ -1,5 +1,6 @@
 import gleam/json
 import gleam/list
+import gleam/option
 import gleeunit/should
 import stats
 
@@ -39,11 +40,11 @@ pub fn decoder_omits_optional_fields_test() {
   let assert [first, ..] = data.ranges
   let #(_, range_stats) = first
   let assert [artist] = range_stats.artists
-  artist.artist |> should.equal("")
-  artist.url |> should.equal("https://musicbrainz.org/artist/a")
+  artist.artist |> should.equal(option.None)
+  artist.url |> should.equal(option.Some("https://musicbrainz.org/artist/a"))
   let assert [album] = range_stats.albums
-  album.artist |> should.equal("Alpha")
-  album.image |> should.equal("")
+  album.artist |> should.equal(option.Some("Alpha"))
+  album.image |> should.equal(option.None)
 }
 
 pub fn decoder_defaults_missing_ranges_to_empty_test() {
@@ -77,4 +78,18 @@ pub fn encode_empty_stats_test() {
   let json_string = stats.encode_stats(stats.empty_stats())
   let assert Ok(decoded) = json.parse(json_string, stats.stats_data_decoder())
   stats.is_empty(decoded) |> should.be_true()
+}
+
+pub fn decoder_rejects_malformed_range_test() {
+  // A present but wrong-typed range must fail, not silently default to empty.
+  let body =
+    "{\"ranges\": {\"1m\": {\"artists\": \"not-a-list\", \"albums\": [], \"tracks\": []}}}"
+  json.parse(body, stats.stats_data_decoder()) |> should.be_error()
+}
+
+pub fn decoder_rejects_invalid_stats_item_test() {
+  // Missing required field `name` inside an artist should fail the whole file.
+  let body =
+    "{\"ranges\": {\"1m\": {\"artists\": [{\"plays\": 1, \"ms_played\": 2}], \"albums\": [], \"tracks\": []}}}"
+  json.parse(body, stats.stats_data_decoder()) |> should.be_error()
 }

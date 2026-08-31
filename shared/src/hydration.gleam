@@ -12,7 +12,6 @@ import gen/feed/play.{type FeedPlay}
 import gen/repo.{type Repo}
 import gleam/dict.{type Dict}
 import gleam/option
-import gleam/result
 
 /// The hydration payload: build-time data for the dynamic sections,
 /// plus the remote→local image mirror map. Embedded by the SSG in
@@ -43,6 +42,8 @@ pub fn localize_profile(
 }
 
 fn localize_url(url: String, rewrites: Dict(String, String)) -> String {
-  dict.get(rewrites, url)
-  |> result.unwrap(url)
+  case dict.get(rewrites, url) {
+    Ok(local) -> local
+    Error(_) -> url
+  }
 }

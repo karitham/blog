@@ -1,6 +1,6 @@
 import data/model.{type Post, type SiteData, Post, SiteData}
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
-import gleam/option.{None}
+import gleam/option
 import gleam/string
 import gleeunit/should
 import lustre/element.{to_string}
@@ -11,14 +11,14 @@ fn sample_profile() -> ProfileViewDetailed {
   ProfileViewDetailed(
     did: "did:plc:test",
     handle: "test.bsky.social",
-    display_name: None,
-    description: None,
-    avatar: None,
-    banner: None,
-    followers_count: None,
-    follows_count: None,
-    posts_count: None,
-    pronouns: None,
+    display_name: option.None,
+    description: option.None,
+    avatar: option.None,
+    banner: option.None,
+    followers_count: option.None,
+    follows_count: option.None,
+    posts_count: option.None,
+    pronouns: option.None,
   )
 }
 
@@ -26,12 +26,12 @@ fn sample_post() -> Post {
   Post(
     title: "My Post",
     description: "A short summary",
-    slug: "my-post",
+    slug: model.must_slug("my-post"),
     date: "2026-07-18",
     content: "<p>hello</p>",
     tags: ["gleam"],
     draft: False,
-    image: "",
+    image: option.None,
   )
 }
 
@@ -76,7 +76,7 @@ pub fn post_page_uses_site_url_for_og_url_test() {
 }
 
 pub fn post_page_absolutizes_post_image_for_og_test() {
-  let post = Post(..sample_post(), image: "hero.png")
+  let post = Post(..sample_post(), image: option.Some("hero.png"))
   let html =
     page.post_page(post, sample_profile(), "https://karitham.dev")
     |> to_string

@@ -21,39 +21,47 @@ import simplifile
 /// become hyphens, runs of hyphens collapsed) so users can pass
 /// whatever feels natural — `just new My new post!` becomes
 /// `priv/posts/my-new-post/`. Defaults to `draft: true` so
-/// half-written posts don't go live.
-pub fn new_post(input: String) {
+/// half-written posts don't go live. Returns `Error` on bad input
+/// or filesystem failure; the CLI entry point logs and exits.
+pub fn new_post(input: String) -> Result(Nil, String) {
   let slug = slug.slugify(input)
   case slug {
     "" -> {
-      io.println(
+      let msg =
         "Error: \""
         <> input
-        <> "\" doesn't contain any valid slug characters (letters, digits, hyphens).",
-      )
-      panic as "empty slug"
+        <> "\" doesn't contain any valid slug characters (letters, digits, hyphens)."
+      io.println(msg)
+      Error("empty slug from: " <> input)
     }
     _ -> {
       let dir = "priv/posts/" <> slug
       let path = dir <> "/index.md"
       case simplifile.is_directory(dir) {
         Ok(True) -> {
-          io.println("Error: " <> dir <> " already exists.")
-          panic as "post already exists"
+          let msg = "Error: " <> dir <> " already exists."
+          io.println(msg)
+          Error("post already exists: " <> dir)
         }
         _ -> {
-          let _ = simplifile.create_directory_all(dir)
+          case simplifile.create_directory_all(dir) {
+            Ok(_) -> Nil
+            Error(e) -> {
+              let msg = "Failed to mkdir " <> dir <> ": " <> string.inspect(e)
+              io.println(msg)
+            }
+          }
           let content = template.template(slug, today())
           case simplifile.write(to: path, contents: content) {
             Ok(_) -> {
               io.println("Created " <> path)
               io.println("Edit the post, then remove `draft: true` to publish.")
+              Ok(Nil)
             }
             Error(e) -> {
-              io.println(
-                "Failed to write " <> path <> ": " <> string.inspect(e),
-              )
-              panic as "post write failed"
+              let msg = "Failed to write " <> path <> ": " <> string.inspect(e)
+              io.println(msg)
+              Error(msg)
             }
           }
         }

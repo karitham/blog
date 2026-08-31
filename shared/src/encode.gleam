@@ -1,3 +1,6 @@
+//// Hydration payload encoder. Mirrors `decode` — writes JSON the
+//// client decodes as island flags. Escapes `<`/`>` for safe `<script>` embed.
+
 import atproto.{type DecodedRecord}
 import gen/actor/defs.{profile_view_detailed_fields}
 import gen/feed/play.{feed_play_fields}

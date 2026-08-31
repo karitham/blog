@@ -1,8 +1,11 @@
+//// Shared repos view: deduped, newest-first, capped project cards.
+//// Pure lustre elements — SSG and client island share the same mount point.
+
 import card
 import date
 import gen/repo.{type Repo}
 import gleam/list
-import gleam/option.{Some, unwrap}
+import gleam/option
 import gleam/order
 import gleam/string
 import gleam/time/timestamp
@@ -71,13 +74,13 @@ fn dedup_by_did(repos: List(Repo)) -> List(Repo) {
 fn render_repo_card(repo: Repo) -> Element(msg) {
   card.card(
     title_href: "https://tangled.org/" <> repo.repo_did,
-    title_text: unwrap(repo.name, ""),
-    title_target: Some("_blank"),
+    title_text: option.unwrap(repo.name, ""),
+    title_target: option.Some("_blank"),
     date: case timestamp.parse_rfc3339(repo.created_at) {
       Ok(ts) -> date.format_month_day_year(ts)
       Error(_) -> repo.created_at
     },
-    description: unwrap(repo.description, ""),
-    topics: unwrap(repo.topics, []),
+    description: option.unwrap(repo.description, ""),
+    topics: option.unwrap(repo.topics, []),
   )
 }

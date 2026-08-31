@@ -1,3 +1,6 @@
+//// Hydration payload decoder. Mirrors `encode` — the SSG writes JSON,
+//// the client reads it as island flags.
+
 import atproto.{type DecodedRecord, DecodedRecord}
 import gen/actor/defs.{profile_view_detailed_decoder}
 import gen/feed/play.{feed_play_decoder}

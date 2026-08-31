@@ -10,13 +10,16 @@
 import atproto.{type DecodedRecord}
 import data/frontmatter
 import data/model.{type Post, type SiteData, SiteData}
+import gen/actor/defs.{type ProfileViewDetailed}
 import gen/feed/play.{type FeedPlay}
 import gen/repo.{type Repo}
 import gleam/int
 import gleam/io
 import gleam/json
 import gleam/list
+import gleam/option
 import gleam/order
+import gleam/result
 import gleam/string
 import simplifile
 import stats
@@ -27,14 +30,18 @@ import tangled
 pub type HttpGet =
   fn(String) -> Result(String, String)
 
-pub fn fetch_all(http_get: HttpGet) -> SiteData {
+/// Gather all site data. Profile and posts are required — a failure
+/// there fails the whole build so the caller can surface the reason.
+/// Other sections (plays, repos, pinned DIDs) degrade to empty with a
+/// logged warning.
+pub fn fetch_all(http_get: HttpGet) -> Result(SiteData, String) {
+  use profile <- result.try(fetch_profile(http_get))
   let pinned_dids = fetch_pinned_dids(http_get)
-  let profile = fetch_profile(http_get)
   let recent_plays = fetch_plays(http_get)
   let plays_stats = fetch_plays_stats()
   let repos = fetch_repos(http_get, pinned_dids)
-
-  SiteData(profile:, recent_plays:, plays_stats:, repos:, posts: read_posts())
+  use posts <- result.try(read_posts())
+  Ok(SiteData(profile:, recent_plays:, plays_stats:, repos:, posts:))
 }
 
 // --- plays stats (derived cache from tools/parse-plays, not live) ---
@@ -48,22 +55,38 @@ fn fetch_plays_stats() -> stats.StatsData {
       case json.parse(body, stats.stats_data_decoder()) {
         Ok(data) -> data
         Error(e) ->
-          log_fail("plays-stats", string.inspect(e), stats.empty_stats())
+          log_fail(
+            what: "plays-stats",
+            reason: string.inspect(e),
+            fallback: stats.empty_stats(),
+          )
       }
-    Error(e) -> log_fail("plays-stats", string.inspect(e), stats.empty_stats())
+    Error(e) ->
+      log_fail(
+        what: "plays-stats",
+        reason: string.inspect(e),
+        fallback: stats.empty_stats(),
+      )
   }
 }
 
 // --- profile ---
 
-fn fetch_profile(http_get: HttpGet) {
+fn fetch_profile(http_get: HttpGet) -> Result(ProfileViewDetailed, String) {
   case http_get(atproto.profile_url()) {
     Ok(body) ->
       case atproto.decode_profile(body) {
-        Ok(profile) -> profile
-        Error(e) -> log_fail_and_panic("profile", string.inspect(e))
+        Ok(profile) -> Ok(profile)
+        Error(e) -> {
+          let reason = string.inspect(e)
+          io.println("Failed to fetch profile: " <> reason)
+          Error("profile decode failed: " <> reason)
+        }
       }
-    Error(e) -> log_fail_and_panic("profile", e)
+    Error(e) -> {
+      io.println("Failed to fetch profile: " <> e)
+      Error("profile fetch failed: " <> e)
+    }
   }
 }
 
@@ -72,7 +95,7 @@ fn fetch_profile(http_get: HttpGet) {
 fn fetch_plays(http_get: HttpGet) -> List(FeedPlay) {
   case http_get(atproto.plays_url()) {
     Ok(body) -> plays_from_body(body)
-    Error(reason) -> log_fail("plays", reason, [])
+    Error(reason) -> log_fail(what: "plays", reason: reason, fallback: [])
   }
 }
 
@@ -94,7 +117,7 @@ pub fn plays_from_body(body: String) -> List(FeedPlay) {
       }
       plays
     }
-    Error(e) -> log_fail("plays", string.inspect(e), [])
+    Error(e) -> log_fail(what: "plays", reason: string.inspect(e), fallback: [])
   }
 }
 
@@ -111,9 +134,10 @@ fn fetch_repos(
           records
           |> tangled.filter_repos_by_did(pinned_dids)
           |> list.map(tangled.resolve_repo_name)
-        Error(e) -> log_fail("repos", string.inspect(e), [])
+        Error(e) ->
+          log_fail(what: "repos", reason: string.inspect(e), fallback: [])
       }
-    Error(e) -> log_fail("repos", e, [])
+    Error(e) -> log_fail(what: "repos", reason: e, fallback: [])
   }
 }
 
@@ -124,67 +148,100 @@ fn fetch_pinned_dids(http_get: HttpGet) -> List(String) {
     Ok(body) ->
       case atproto.decode_actor_profiles(body) {
         Ok(profiles) -> tangled.pinned_dids_from_profiles(profiles)
-        Error(_) -> []
+        Error(e) ->
+          log_fail(what: "pinned_dids", reason: string.inspect(e), fallback: [])
       }
-    Error(_) -> []
+    Error(e) -> log_fail(what: "pinned_dids", reason: e, fallback: [])
   }
 }
 
 // --- posts (filesystem, not HTTP) ---
 
-// Deliberate seam asymmetry: HTTP is injected (`HttpGet`) so the
-// network path is testable with stubs; posts are read from the
-// local `priv/posts` tree with simplifile directly because the
-// frontmatter logic is tested separately and no test needs to stub
-// the filesystem.
+/// Injected filesystem seam for posts. Mirrors `HttpGet` for the
+/// network: the SSG passes real `simplifile` functions, tests pass
+/// stubs. Keeps the I/O shell thin and the frontmatter logic pure.
+pub type ReadDir =
+  fn(String) -> Result(List(String), simplifile.FileError)
+
+pub type IsDir =
+  fn(String) -> Result(Bool, simplifile.FileError)
+
+pub type ReadFile =
+  fn(String) -> Result(String, simplifile.FileError)
 
 /// Read every post under `priv/posts/<slug>/index.md`. Includes
-/// drafts (caller filters them). Fails the build if any post has
-/// an invalid slug or frontmatter — see `data/frontmatter.gleam`
-/// for what counts as invalid.
-pub fn read_posts() -> List(Post) {
-  case simplifile.read_directory("priv/posts") {
-    Ok(entries) ->
-      entries
-      |> list.filter(fn(entry) {
-        case simplifile.is_directory("priv/posts/" <> entry) {
-          Ok(True) -> True
-          _ -> False
+/// drafts (caller filters them). Returns `Error` if any post has an
+/// invalid slug or frontmatter — the build fails loudly rather than
+/// shipping a half-broken site. Uses the real filesystem.
+pub fn read_posts() -> Result(List(Post), String) {
+  read_posts_with(
+    read_dir: simplifile.read_directory,
+    is_dir: simplifile.is_directory,
+    read_file: simplifile.read,
+  )
+}
+
+/// Same as `read_posts` but with injected filesystem functions so
+/// tests can stub the `priv/posts` tree without touching disk.
+pub fn read_posts_with(
+  read_dir read_dir: ReadDir,
+  is_dir is_dir: IsDir,
+  read_file read_file: ReadFile,
+) -> Result(List(Post), String) {
+  case read_dir("priv/posts") {
+    Ok(entries) -> {
+      case
+        list.try_map(entries, fn(entry) {
+          case is_dir("priv/posts/" <> entry) {
+            Ok(True) -> Ok(option.Some(entry))
+            Ok(False) -> Ok(option.None)
+            Error(e) ->
+              Error(
+                "is_directory failed for " <> entry <> ": " <> string.inspect(e),
+              )
+          }
+        })
+      {
+        Error(e) -> Error(e)
+        Ok(maybe_dirs) -> {
+          let dirs =
+            list.filter_map(maybe_dirs, fn(x) {
+              case x {
+                option.Some(v) -> Ok(v)
+                option.None -> Error(Nil)
+              }
+            })
+          case
+            list.try_map(dirs, fn(slug) { read_post_with(slug, read_file) })
+          {
+            Ok(posts) -> Ok(list.sort(posts, by: compare_posts_desc))
+            Error(e) -> Error(e)
+          }
         }
-      })
-      |> list.map(read_post)
-      |> list.sort(by: compare_posts_desc)
-    Error(_) -> []
+      }
+    }
+    Error(e) -> Error("read_directory priv/posts failed: " <> string.inspect(e))
   }
 }
 
-fn read_post(slug: String) -> Post {
+fn read_post_with(slug: String, read_file: ReadFile) -> Result(Post, String) {
   case frontmatter.is_valid_slug(slug) {
-    False -> {
-      io.println(
-        "Error: post directory \""
+    False ->
+      Error(
+        "post directory \""
         <> slug
-        <> "\" is not a valid slug (lowercase letters, digits, and hyphens only).",
+        <> "\" is not a valid slug (lowercase letters, digits, and hyphens only)",
       )
-      panic as "invalid slug"
-    }
     True -> {
       let path = "priv/posts/" <> slug <> "/index.md"
-      case simplifile.read(path) {
+      case read_file(path) {
+        Error(e) ->
+          Error("failed to read post " <> slug <> ": " <> string.inspect(e))
         Ok(content) ->
-          case frontmatter.parse(slug, content) {
-            Ok(post) -> post
-            Error(e) -> {
-              io.println("Error: " <> format_parse_error(slug, e))
-              panic as "post parse failed"
-            }
+          case frontmatter.parse(slug: slug, content: content) {
+            Ok(post) -> Ok(post)
+            Error(e) -> Error(format_parse_error(slug, e))
           }
-        Error(e) -> {
-          io.println(
-            "Failed to read post " <> slug <> ": " <> string.inspect(e),
-          )
-          panic as "post read failed"
-        }
       }
     }
   }
@@ -202,6 +259,8 @@ fn format_parse_error(slug: String, e: frontmatter.ParseError) -> String {
       <> "\" (expected YYYY-MM-DD)"
     frontmatter.InvalidYaml(_, error) ->
       "post \"" <> slug <> "\" has invalid frontmatter: " <> error
+    frontmatter.InvalidSlug(_, reason) ->
+      "post \"" <> slug <> "\" has invalid slug: " <> reason
   }
 }
 
@@ -211,12 +270,11 @@ fn compare_posts_desc(a: Post, b: Post) -> order.Order {
 
 // --- logging ---
 
-fn log_fail_and_panic(what: String, reason: String) -> a {
-  io.println("Failed to fetch " <> what <> ": " <> reason)
-  panic as "required fetch failed"
-}
-
-fn log_fail(what: String, reason: String, fallback: a) -> a {
+fn log_fail(
+  what what: String,
+  reason reason: String,
+  fallback fallback: a,
+) -> a {
   io.println("Failed to fetch " <> what <> ": " <> reason)
   fallback
 }

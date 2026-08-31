@@ -11,14 +11,21 @@ import gleam/string
 ///   gleam run help      → usage
 pub fn main() {
   case argv.load().arguments {
-    [] | ["build"] -> build.build()
-    ["new", ..rest] -> cli.new_post(string.join(rest, " "))
+    [] | ["build"] ->
+      case build.build() {
+        Ok(Nil) -> Nil
+        Error(e) -> io.println("Build failed: " <> e)
+      }
+    ["new", ..rest] ->
+      case cli.new_post(string.join(rest, " ")) {
+        Ok(Nil) -> Nil
+        Error(e) -> io.println("new: " <> e)
+      }
     ["help"] | ["-h"] | ["--help"] -> cli.print_usage()
     other -> {
       cli.print_usage()
       io.println("")
       io.println("Unknown command: " <> string.join(other, " "))
-      panic as "unknown subcommand"
     }
   }
 }

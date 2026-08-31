@@ -15,8 +15,10 @@
 
 import data/image_ext
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
+import gleam/io
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{type Option}
+import gleam/string
 import simplifile
 
 pub type FetchImage =
@@ -38,7 +40,11 @@ pub fn mirror_profile_images(
   fetch_image: FetchImage,
   write_bits: WriteBits,
 ) -> ProfileImages {
-  let _ = simplifile.create_directory_all(img_dir)
+  case simplifile.create_directory_all(img_dir) {
+    Ok(_) -> Nil
+    Error(e) ->
+      io.println("  mkdir failed for " <> img_dir <> ": " <> string.inspect(e))
+  }
   let avatar = mirror_one("avatar", profile.avatar, fetch_image, write_bits)
   let banner = mirror_one("banner", profile.banner, fetch_image, write_bits)
   ProfileImages(
@@ -62,8 +68,8 @@ fn mirror_one(
   write_bits: WriteBits,
 ) -> MirrorResult {
   case remote {
-    None -> MirrorResult(local_url: None, rewrites: [])
-    Some(url) -> {
+    option.None -> MirrorResult(local_url: option.None, rewrites: [])
+    option.Some(url) -> {
       let fallback = MirrorResult(local_url: remote, rewrites: [])
       case fetch_image(url) {
         Error(_) -> fallback
@@ -73,7 +79,9 @@ fn mirror_one(
           let path = "/img/profile/" <> filename
           case write_bits(img_dir <> "/" <> filename, bits) {
             Ok(Nil) ->
-              MirrorResult(local_url: Some(path), rewrites: [#(url, path)])
+              MirrorResult(local_url: option.Some(path), rewrites: [
+                #(url, path),
+              ])
             Error(_) -> fallback
           }
         }

@@ -60,15 +60,15 @@ fn retry_from(
 }
 
 fn fetch_body_once(url: String) -> Result(String, HttpError) {
-  use req <- result.try(
+  let req_result =
     request.to(url)
     |> result.replace_error("invalid url: " <> url)
-    |> result.map_error(fn(e) { core.Permanent(e) }),
-  )
-  use resp <- result.try(
+    |> result.map_error(fn(e) { core.Permanent(e) })
+  use req <- result.try(req_result)
+  let resp_result =
     httpc.send(req)
-    |> result.map_error(fn(e) { core.Transient(string.inspect(e)) }),
-  )
+    |> result.map_error(fn(e) { core.Transient(string.inspect(e)) })
+  use resp <- result.try(resp_result)
   case resp.status >= 200 && resp.status < 300 {
     True -> Ok(resp.body)
     False -> {
@@ -79,22 +79,25 @@ fn fetch_body_once(url: String) -> Result(String, HttpError) {
 }
 
 fn fetch_image_once(url: String) -> Result(#(BitArray, String), HttpError) {
-  use req <- result.try(
+  let req_result =
     request.to(url)
     |> result.map(fn(req) { request.set_body(req, <<>>) })
     |> result.replace_error("invalid url: " <> url)
-    |> result.map_error(fn(e) { core.Permanent(e) }),
-  )
-  use resp <- result.try(
+    |> result.map_error(fn(e) { core.Permanent(e) })
+  use req <- result.try(req_result)
+  let resp_result =
     httpc.send_bits(req)
-    |> result.map_error(fn(e) { core.Transient(string.inspect(e)) }),
-  )
+    |> result.map_error(fn(e) { core.Transient(string.inspect(e)) })
+  use resp <- result.try(resp_result)
   case resp.status >= 200 && resp.status < 300 {
     False ->
       core.classify_status(resp.status, "HTTP " <> int.to_string(resp.status))
     True -> {
-      let content_type = response.get_header(resp, "content-type")
-      Ok(#(resp.body, result.unwrap(content_type, "")))
+      let content_type = case response.get_header(resp, "content-type") {
+        Ok(ct) -> ct
+        Error(_) -> ""
+      }
+      Ok(#(resp.body, content_type))
     }
   }
 }

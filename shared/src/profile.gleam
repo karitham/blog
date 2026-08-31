@@ -1,5 +1,9 @@
+//// Shared profile view: banner, avatar, handle, description.
+//// Pure lustre elements — SSG renders the outer container, client
+//// island re-renders the inner card.
+
 import gen/actor/defs.{type ProfileViewDetailed}
-import gleam/option.{None, Some, unwrap}
+import gleam/option
 import lustre/attribute.{alt, class, href, id, src, target}
 import lustre/element.{type Element, fragment, none, text}
 import lustre/element/html.{a, div, h1, img, p, span}
@@ -21,12 +25,12 @@ pub fn profile(profile: ProfileViewDetailed) -> Element(msg) {
 pub fn profile_inner(profile: ProfileViewDetailed) -> Element(msg) {
   let bsky_url = "https://bsky.app/profile/" <> profile.handle
 
-  let avatar = case unwrap(profile.avatar, "") {
+  let avatar = case option.unwrap(profile.avatar, "") {
     "" -> none()
     url -> img([class("avatar"), src(url), alt("avatar")])
   }
 
-  let banner = case unwrap(profile.banner, "") {
+  let banner = case option.unwrap(profile.banner, "") {
     "" -> none()
     url ->
       div([id("banner")], [
@@ -35,8 +39,9 @@ pub fn profile_inner(profile: ProfileViewDetailed) -> Element(msg) {
   }
 
   let pronouns_el = case profile.pronouns {
-    Some(pronouns) -> span([class("pronouns")], [text("(" <> pronouns <> ")")])
-    None -> none()
+    option.Some(pronouns) ->
+      span([class("pronouns")], [text("(" <> pronouns <> ")")])
+    option.None -> none()
   }
 
   fragment([
@@ -46,7 +51,7 @@ pub fn profile_inner(profile: ProfileViewDetailed) -> Element(msg) {
         avatar,
         div([class("profile-info")], [
           h1([class("profile-name")], [
-            text(unwrap(profile.display_name, profile.handle)),
+            text(option.unwrap(profile.display_name, profile.handle)),
           ]),
           p([class("handle")], [
             a([href(bsky_url), target("_blank")], [
@@ -56,7 +61,7 @@ pub fn profile_inner(profile: ProfileViewDetailed) -> Element(msg) {
           ]),
         ]),
       ]),
-      p([class("description")], [text(unwrap(profile.description, ""))]),
+      p([class("description")], [text(option.unwrap(profile.description, ""))]),
     ]),
   ])
 }
