@@ -40,9 +40,6 @@ cache:
     fallback: true
     paths:
       - tools/parse-plays/target
-  - key: cargo-registry
-    paths:
-      - /home/spindle-workflow/.cargo/registry
   # Append-only: keep the mirrored covers and profile images between runs.
   - key: cover-cache
     paths:

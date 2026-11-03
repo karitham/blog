@@ -34,7 +34,7 @@ BLOG_URL="http://localhost:8000" just build
 - The workflow runs weekly as well as on every push to `main`.
 - GitHub is a push mirror. It does not build or deploy.
 
-The deploy uses Wisp's SPA fallback (`index.html`), matching the previous Cloudflare Pages behavior. Wisp serves the site from `https://sites.wisp.place/karitham.dev/site` until the custom domain is verified.
+The deploy uses Wisp's SPA fallback (`index.html`), matching the previous Cloudflare Pages behavior. The same site is also served from `https://sites.wisp.place/karitham.dev/site`.
 
 ## Refreshing listening data
 
