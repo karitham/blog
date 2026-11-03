@@ -59,7 +59,7 @@ pub fn repos_section_formats_appview_timestamps_test() {
       ),
     ])
     |> to_string
-  html |> string.contains("August 8, 2026") |> should.be_true()
+  html |> string.contains("2026-08-08") |> should.be_true()
 }
 
 pub fn repos_section_links_to_owner_and_lowercase_slug_test() {

@@ -69,10 +69,7 @@ fn render_repo_card(repo: RepoManifest) -> Element(msg) {
       <> string.lowercase(declaration.name),
     title_text: declaration.name,
     title_target: option.Some("_blank"),
-    date: case timestamp.parse_rfc3339(repo.created_at) {
-      Ok(ts) -> date.format_month_day_year(ts)
-      Error(_) -> repo.created_at
-    },
+    date: date.format_iso_day(repo.created_at),
     description: option.unwrap(repo.description, ""),
     topics: option.unwrap(repo.topics, []),
   )

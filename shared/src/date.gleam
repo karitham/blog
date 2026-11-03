@@ -2,6 +2,7 @@
 
 import gleam/float
 import gleam/int
+import gleam/string
 import gleam/time/calendar
 import gleam/time/timestamp
 
@@ -20,6 +21,27 @@ pub fn format_month_day_year(ts: timestamp.Timestamp) -> String {
 pub fn format_ymd(date_str: String) -> String {
   case timestamp.parse_rfc3339(date_str <> "T00:00:00Z") {
     Ok(ts) -> format_month_day_year(ts)
+    Error(_) -> date_str
+  }
+}
+
+/// Format a date or RFC 3339 timestamp as `YYYY-MM-DD` in UTC.
+/// Date-only strings pass through unchanged; invalid input returns the
+/// original string so a malformed record still renders something.
+pub fn format_iso_day(date_str: String) -> String {
+  let input = case string.length(date_str) {
+    10 -> date_str <> "T00:00:00Z"
+    _ -> date_str
+  }
+  case timestamp.parse_rfc3339(input) {
+    Ok(ts) -> {
+      let #(date, _) = timestamp.to_calendar(ts, calendar.utc_offset)
+      int.to_string(date.year)
+      <> "-"
+      <> pad2(month_number(date.month))
+      <> "-"
+      <> pad2(date.day)
+    }
     Error(_) -> date_str
   }
 }
@@ -74,6 +96,23 @@ fn weekday_name(unix_seconds: Int) -> String {
     5 -> "Fri"
     6 -> "Sat"
     _ -> "Thu"
+  }
+}
+
+fn month_number(month: calendar.Month) -> Int {
+  case month {
+    calendar.January -> 1
+    calendar.February -> 2
+    calendar.March -> 3
+    calendar.April -> 4
+    calendar.May -> 5
+    calendar.June -> 6
+    calendar.July -> 7
+    calendar.August -> 8
+    calendar.September -> 9
+    calendar.October -> 10
+    calendar.November -> 11
+    calendar.December -> 12
   }
 }
 

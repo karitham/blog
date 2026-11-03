@@ -26,7 +26,7 @@ fn render_article_card(post: Post) -> Element(Nil) {
     title_href: "/posts/" <> slug <> "/",
     title_text: post.title,
     title_target: option.None,
-    date: date.format_ymd(post.date),
+    date: date.format_iso_day(post.date),
     description: post.description,
     topics: post.tags,
   )
@@ -49,8 +49,8 @@ pub fn render_single(post: Post) -> Element(Nil) {
     [] -> none()
     ts ->
       div(
-        [class("tags")],
-        list.map(ts, fn(t) { span([class("emph")], [text(t)]) }),
+        [class("tags post-tags")],
+        list.map(ts, fn(t) { span([class("post-tag")], [text("#" <> t)]) }),
       )
   }
 
@@ -58,10 +58,7 @@ pub fn render_single(post: Post) -> Element(Nil) {
     hero_image,
     h1([], [text(post.title)]),
     div([class("post-meta")], [
-      span([], [
-        text("Written "),
-        span([class("emph")], [text(date.format_ymd(post.date))]),
-      ]),
+      span([class("post-date")], [text(date.format_iso_day(post.date))]),
       tags,
     ]),
     div([class("post-content")], [unsafe_raw_html("", "div", [], post.content)]),

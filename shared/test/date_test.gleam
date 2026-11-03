@@ -89,6 +89,27 @@ pub fn format_ymd_invalid_returns_original_test() {
   date.format_ymd("2024/01/01") |> should.equal("2024/01/01")
 }
 
+// --- format_iso_day ---
+
+pub fn format_iso_day_date_only_test() {
+  date.format_iso_day("2026-07-18") |> should.equal("2026-07-18")
+}
+
+pub fn format_iso_day_rfc3339_test() {
+  date.format_iso_day("2026-08-08T00:21:30.000000Z")
+  |> should.equal("2026-08-08")
+}
+
+pub fn format_iso_day_converts_offset_to_utc_test() {
+  date.format_iso_day("2026-07-03T22:00:00-02:00")
+  |> should.equal("2026-07-04")
+}
+
+pub fn format_iso_day_invalid_returns_original_test() {
+  date.format_iso_day("garbage") |> should.equal("garbage")
+  date.format_iso_day("") |> should.equal("")
+}
+
 // --- to_rfc822 ---
 
 pub fn to_rfc822_basic_test() {

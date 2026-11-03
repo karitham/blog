@@ -21,7 +21,8 @@ fn sample_post() -> Post {
 pub fn render_single_includes_title_test() {
   let html = post_view.render_single(sample_post()) |> to_string
   string.contains(html, "My Post") |> should.be_true()
-  string.contains(html, "Written") |> should.be_true()
+  string.contains(html, "2026-07-18") |> should.be_true()
+  string.contains(html, "#gleam") |> should.be_true()
 }
 
 pub fn render_list_empty_test() {

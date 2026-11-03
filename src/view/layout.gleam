@@ -43,9 +43,10 @@ pub fn page(
   html.html([attribute.lang("en")], [
     html.head([], head_children(site_url, title, model_json, meta)),
     html.body([], [
+      skip_link(),
+      nav_bar(),
       html.div([attribute.id("content")], [
-        nav_bar(),
-        html.div([attribute.id("main")], content),
+        html.main([attribute.id("main")], content),
         footer_bar(),
       ]),
     ]),
@@ -63,6 +64,10 @@ fn head_children(
     html.meta([
       attribute.attribute("name", "viewport"),
       attribute.content("width=device-width, initial-scale=1"),
+    ]),
+    html.meta([
+      attribute.attribute("name", "theme-color"),
+      attribute.content("#181926"),
     ]),
     // Description
     html.meta([
@@ -140,6 +145,12 @@ fn head_children(
     },
     // Styles, icons, scripts
     html.link([attribute.rel("stylesheet"), attribute.href("/style.css")]),
+    html.link([
+      attribute.rel("alternate"),
+      attribute.type_("application/rss+xml"),
+      attribute.attribute("title", "Karitham's Thoughts"),
+      attribute.href("/rss.xml"),
+    ]),
     html.link([
       attribute.rel("icon"),
       attribute.type_("image/png"),
@@ -221,9 +232,36 @@ fn article_meta_tags(page_type: PageType) -> List(Element(Nil)) {
   }
 }
 
+fn skip_link() -> Element(Nil) {
+  html.a([attribute.href("#main"), attribute.class("skip")], [
+    text("skip to content"),
+  ])
+}
+
 fn nav_bar() -> Element(Nil) {
-  html.nav([attribute.id("nav")], [
-    html.a([attribute.href("/")], [text("~/karitham.dev")]),
+  html.nav([attribute.id("nav"), attribute.attribute("aria-label", "Site")], [
+    html.div([attribute.class("nav-inner")], [
+      html.a([attribute.href("/"), attribute.class("nav-brand")], [
+        html.span([attribute.class("nav-tilde")], [text("~")]),
+        text("/karitham.dev"),
+      ]),
+      html.div([attribute.class("nav-links")], [
+        nav_link("/#articles", "articles", "nav-section"),
+        nav_link("/#repos", "projects", "nav-section"),
+        nav_link("/#plays", "music", "nav-section"),
+        nav_link("/rss.xml", "rss", "nav-rss"),
+      ]),
+    ]),
+  ])
+}
+
+fn nav_link(
+  href href: String,
+  label label: String,
+  extra_class extra: String,
+) -> Element(Nil) {
+  html.a([attribute.href(href), attribute.class("nav-link " <> extra)], [
+    text(label),
   ])
 }
 
@@ -247,7 +285,12 @@ fn footer_bar() -> Element(Nil) {
 
 fn icon_github() -> Element(Nil) {
   html.a(
-    [attribute.href("https://github.com/Karitham"), attribute.target("_blank")],
+    [
+      attribute.href("https://github.com/Karitham"),
+      attribute.target("_blank"),
+      attribute.attribute("rel", "noopener"),
+      attribute.attribute("aria-label", "GitHub"),
+    ],
     [
       svg.svg(
         [
@@ -273,6 +316,8 @@ fn icon_linkedin() -> Element(Nil) {
     [
       attribute.href("https://linkedin.com/in/pl-pery"),
       attribute.target("_blank"),
+      attribute.attribute("rel", "noopener"),
+      attribute.attribute("aria-label", "LinkedIn"),
     ],
     [
       svg.svg(
@@ -299,6 +344,8 @@ fn icon_discord() -> Element(Nil) {
     [
       attribute.href("https://discord.com/users/206794847581896705"),
       attribute.target("_blank"),
+      attribute.attribute("rel", "noopener"),
+      attribute.attribute("aria-label", "Discord"),
     ],
     [
       svg.svg(
@@ -325,6 +372,8 @@ fn icon_bluesky() -> Element(Nil) {
     [
       attribute.href("https://bsky.app/profile/karitham.dev"),
       attribute.target("_blank"),
+      attribute.attribute("rel", "noopener"),
+      attribute.attribute("aria-label", "Bluesky"),
     ],
     [
       svg.svg(
@@ -348,7 +397,12 @@ fn icon_bluesky() -> Element(Nil) {
 
 fn icon_email() -> Element(Nil) {
   html.a(
-    [attribute.href("mailto:pl@karitham.dev"), attribute.target("_blank")],
+    [
+      attribute.href("mailto:pl@karitham.dev"),
+      attribute.target("_blank"),
+      attribute.attribute("rel", "noopener"),
+      attribute.attribute("aria-label", "Email"),
+    ],
     [
       svg.svg(
         [

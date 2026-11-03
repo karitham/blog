@@ -65,7 +65,7 @@ pub fn index_page(
     ])
 
   let articles =
-    div([class("section")], [
+    div([class("section"), id("articles")], [
       div([class("section-header")], [
         h2([], [text("Articles")]),
       ]),

@@ -233,11 +233,11 @@ fn grid(title: String, items: List(StatsItem)) -> Element(msg) {
   }
 }
 
-/// A chart tile: cover (or a monogram placeholder), then rank, name,
-/// artist, and plays/listened time below it. The metadata is visible
-/// at rest rather than hidden in a hover popup, so touch devices and
-/// keyboard users get the same labels. Links to the entity's
-/// MusicBrainz page when one resolved; otherwise it's a plain tile.
+/// A chart row: rank, cover (or a monogram placeholder), then name,
+/// artist, and plays/listened time. Metadata is visible at rest rather
+/// than hidden in a hover popup, so touch devices and keyboard users
+/// get the same labels. Links to the entity's MusicBrainz page when one
+/// resolved; otherwise it's a plain row.
 fn tile(item: StatsItem, category: String, rank: Int) -> Element(msg) {
   let cover = case item.image {
     option.None ->
@@ -259,19 +259,18 @@ fn tile(item: StatsItem, category: String, rank: Int) -> Element(msg) {
         loading("lazy"),
       ])
   }
-  let meta =
-    div([class("tile-meta")], [
-      span([class("tile-rank")], [text(date.pad2(rank))]),
-      div([class("tile-text")], [
-        span([class("tile-name")], [text(item.name)]),
-        case item.artist {
-          option.None -> none()
-          option.Some(artist) -> span([class("tile-artist")], [text(artist)])
-        },
-        span([class("tile-plays")], [text(plays_label(item))]),
-      ]),
-    ])
-  let tile_body = [div([class("tile-cover-wrap")], [cover]), meta]
+  let tile_body = [
+    span([class("tile-rank")], [text(date.pad2(rank))]),
+    div([class("tile-cover-wrap")], [cover]),
+    div([class("tile-text")], [
+      span([class("tile-name")], [text(item.name)]),
+      case item.artist {
+        option.None -> none()
+        option.Some(artist) -> span([class("tile-artist")], [text(artist)])
+      },
+      span([class("tile-plays")], [text(plays_label(item))]),
+    ]),
+  ]
   case item.url {
     option.None -> li([class("tile")], [div([class("tile-body")], tile_body)])
     option.Some(url) ->
