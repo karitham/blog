@@ -1,18 +1,22 @@
 //! Pure resolution core: decide what the cache can't satisfy, and turn
 //! raw query outcomes into resolutions + cache writes. No I/O — time
 //! is passed in as data so TTL decisions are deterministic.
+//!
+//! Queries are per entity, not per output field: one album query can
+//! fill both its cover and its MusicBrainz link, and one artist query
+//! can fill both its image and its link. That avoids the duplicate
+//! MusicBrainz search the old per-field plan performed.
 
 use crate::cache::{Cache, CacheKey, CacheValue};
 use crate::model::{AlbumRef, ArtistKey, Href, MusicBrainzId, ResolvedStats, TrackRef};
 use crate::stats::Needs;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// A lookup the cache cannot satisfy from a fresh entry. Carries the
-/// display names queries are built from and (for albums) the MBID from
-/// the play records, which skips the MusicBrainz search.
+/// A lookup the cache cannot satisfy. Carries the display names queries
+/// are built from and the MBID from the play records when one exists.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Query {
-    AlbumCover {
+    Album {
         album: AlbumRef,
         artist_display: String,
         album_display: String,
@@ -21,24 +25,36 @@ pub enum Query {
         /// retry once with a name search (the fallback round).
         provided: bool,
     },
-    AlbumUrl {
-        album: AlbumRef,
+    Artist {
+        artist: ArtistKey,
         artist_display: String,
-        album_display: String,
         mbid: Option<MusicBrainzId>,
     },
-    ArtistImage {
-        artist: ArtistKey,
-        artist_display: String,
-    },
-    ArtistUrl {
-        artist: ArtistKey,
-        artist_display: String,
-    },
-    TrackUrl {
+    Track {
         track: TrackRef,
         artist_display: String,
         track_display: String,
+        mbid: Option<MusicBrainzId>,
+    },
+}
+
+/// One entity's raw query result. A query can resolve multiple cache
+/// entries; field-level resolutions are split out by finalize.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Outcome {
+    Album {
+        mbid: Option<MusicBrainzId>,
+        cover: Option<Href>,
+        url: Option<Href>,
+    },
+    Artist {
+        mbid: Option<MusicBrainzId>,
+        image: Option<Href>,
+        url: Option<Href>,
+    },
+    Track {
+        mbid: Option<MusicBrainzId>,
+        url: Option<Href>,
     },
 }
 
@@ -67,78 +83,103 @@ pub struct Finalized {
     pub pending: Vec<Query>,
 }
 
-/// Decide what to fetch: cache hits become resolutions, fresh negative
-/// entries are skipped, everything else becomes a query.
+enum Cached {
+    Found(Href),
+    FreshMiss,
+    NeedsQuery,
+}
+
+fn cached(cache: &Cache, key: &CacheKey, now: SystemTime) -> Cached {
+    match cache.lookup(key) {
+        Some(CacheValue::Found(url)) => Cached::Found(url.clone()),
+        Some(value) if value.is_fresh_miss(now) => Cached::FreshMiss,
+        _ => Cached::NeedsQuery,
+    }
+}
+
+/// Decide what to fetch: cached values become resolutions, fresh misses
+/// are skipped, and an entity is queried only when at least one of its
+/// outputs still needs a lookup.
 pub fn plan(needs: &Needs, cache: &Cache, now: SystemTime) -> ResolvePlan {
     let mut resolved = Vec::new();
     let mut queries = Vec::new();
 
     for need in &needs.albums {
-        match cache.lookup(&CacheKey::AlbumCover(need.album.clone())) {
-            Some(CacheValue::Found(url)) => resolved.push(Resolution::AlbumCover {
+        let cover = cached(cache, &CacheKey::AlbumCover(need.album.clone()), now);
+        let url = cached(cache, &CacheKey::AlbumUrl(need.album.clone()), now);
+        let mut needs_query = false;
+
+        match cover {
+            Cached::Found(url) => resolved.push(Resolution::AlbumCover {
                 album: need.album.clone(),
-                url: url.clone(),
+                url,
             }),
-            Some(value) if value.is_fresh_miss(now) => {}
-            _ => queries.push(Query::AlbumCover {
+            Cached::FreshMiss => {}
+            Cached::NeedsQuery => needs_query = true,
+        }
+        match url {
+            Cached::Found(url) => resolved.push(Resolution::AlbumUrl {
+                album: need.album.clone(),
+                url,
+            }),
+            Cached::FreshMiss => {}
+            Cached::NeedsQuery => needs_query = true,
+        }
+
+        if needs_query {
+            queries.push(Query::Album {
                 album: need.album.clone(),
                 artist_display: need.artist_display.clone(),
                 album_display: need.album_display.clone(),
                 mbid: need.mbid.clone(),
                 provided: need.mbid.is_some(),
-            }),
-        }
-        match cache.lookup(&CacheKey::AlbumUrl(need.album.clone())) {
-            Some(CacheValue::Found(url)) => resolved.push(Resolution::AlbumUrl {
-                album: need.album.clone(),
-                url: url.clone(),
-            }),
-            Some(value) if value.is_fresh_miss(now) => {}
-            _ => queries.push(Query::AlbumUrl {
-                album: need.album.clone(),
-                artist_display: need.artist_display.clone(),
-                album_display: need.album_display.clone(),
-                mbid: need.mbid.clone(),
-            }),
+            });
         }
     }
 
     for need in &needs.artists {
-        match cache.lookup(&CacheKey::ArtistImage(need.key.clone())) {
-            Some(CacheValue::Found(url)) => resolved.push(Resolution::ArtistImage {
+        let image = cached(cache, &CacheKey::ArtistImage(need.key.clone()), now);
+        let url = cached(cache, &CacheKey::ArtistUrl(need.key.clone()), now);
+        let mut needs_query = false;
+
+        match image {
+            Cached::Found(url) => resolved.push(Resolution::ArtistImage {
                 artist: need.key.clone(),
-                url: url.clone(),
+                url,
             }),
-            Some(value) if value.is_fresh_miss(now) => {}
-            _ => queries.push(Query::ArtistImage {
-                artist: need.key.clone(),
-                artist_display: need.display.clone(),
-            }),
+            Cached::FreshMiss => {}
+            Cached::NeedsQuery => needs_query = true,
         }
-        match cache.lookup(&CacheKey::ArtistUrl(need.key.clone())) {
-            Some(CacheValue::Found(url)) => resolved.push(Resolution::ArtistUrl {
+        match url {
+            Cached::Found(url) => resolved.push(Resolution::ArtistUrl {
                 artist: need.key.clone(),
-                url: url.clone(),
+                url,
             }),
-            Some(value) if value.is_fresh_miss(now) => {}
-            _ => queries.push(Query::ArtistUrl {
+            Cached::FreshMiss => {}
+            Cached::NeedsQuery => needs_query = true,
+        }
+
+        if needs_query {
+            queries.push(Query::Artist {
                 artist: need.key.clone(),
                 artist_display: need.display.clone(),
-            }),
+                mbid: need.mbid.clone(),
+            });
         }
     }
 
     for need in &needs.tracks {
-        match cache.lookup(&CacheKey::TrackUrl(need.track.clone())) {
-            Some(CacheValue::Found(url)) => resolved.push(Resolution::TrackUrl {
+        match cached(cache, &CacheKey::TrackUrl(need.track.clone()), now) {
+            Cached::Found(url) => resolved.push(Resolution::TrackUrl {
                 track: need.track.clone(),
-                url: url.clone(),
+                url,
             }),
-            Some(value) if value.is_fresh_miss(now) => {}
-            _ => queries.push(Query::TrackUrl {
+            Cached::FreshMiss => {}
+            Cached::NeedsQuery => queries.push(Query::Track {
                 track: need.track.clone(),
                 artist_display: need.artist_display.clone(),
                 track_display: need.track_display.clone(),
+                mbid: need.mbid.clone(),
             }),
         }
     }
@@ -147,13 +188,9 @@ pub fn plan(needs: &Needs, cache: &Cache, now: SystemTime) -> ResolvePlan {
 }
 
 /// Turn raw query outcomes into resolutions + staged cache writes. A
-/// `None` outcome books a negative entry; a provided-MBID album with
-/// no art gets one more chance via a name-search query.
-pub fn finalize(
-    plan: &ResolvePlan,
-    results: Vec<(Query, Option<Href>)>,
-    now: SystemTime,
-) -> Finalized {
+/// None output books a negative entry; a provided-MBID album with no
+/// art gets one more chance via a name-search query.
+pub fn finalize(results: Vec<(Query, Outcome)>, now: SystemTime) -> Finalized {
     let since = now
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
@@ -162,87 +199,103 @@ pub fn finalize(
     let mut writes = Vec::new();
     let mut pending = Vec::new();
 
-    for (query, result) in results {
-        match (query, result) {
-            (Query::AlbumCover { album, .. }, Some(url)) => {
-                resolutions.push(Resolution::AlbumCover {
-                    album: album.clone(),
-                    url: url.clone(),
-                });
-                writes.push((CacheKey::AlbumCover(album), CacheValue::Found(url)));
-            }
+    for (query, outcome) in results {
+        match (query, outcome) {
             (
-                Query::AlbumCover {
+                Query::Album {
                     album,
                     artist_display,
                     album_display,
-                    provided: true,
+                    provided,
                     ..
                 },
-                None,
+                Outcome::Album { cover, url, .. },
             ) => {
-                writes.push((
-                    CacheKey::AlbumCover(album.clone()),
-                    CacheValue::Missing { since },
-                ));
-                // Name-search fallback: usually lands on the canonical
-                // release that has art. Not `provided`, so this never
-                // cascades into another fallback round.
-                pending.push(Query::AlbumCover {
-                    album,
-                    artist_display,
-                    album_display,
-                    mbid: None,
-                    provided: false,
-                });
+                let needs_fallback = provided && cover.is_none();
+                match cover {
+                    Some(url) => {
+                        resolutions.push(Resolution::AlbumCover {
+                            album: album.clone(),
+                            url: url.clone(),
+                        });
+                        writes.push((CacheKey::AlbumCover(album.clone()), CacheValue::Found(url)));
+                    }
+                    None => writes.push((
+                        CacheKey::AlbumCover(album.clone()),
+                        CacheValue::Missing { since },
+                    )),
+                }
+                match url {
+                    Some(url) => {
+                        resolutions.push(Resolution::AlbumUrl {
+                            album: album.clone(),
+                            url: url.clone(),
+                        });
+                        writes.push((CacheKey::AlbumUrl(album.clone()), CacheValue::Found(url)));
+                    }
+                    None => writes.push((
+                        CacheKey::AlbumUrl(album.clone()),
+                        CacheValue::Missing { since },
+                    )),
+                }
+                if needs_fallback {
+                    // Name-search fallback: usually lands on the
+                    // canonical release that has art. Not provided, so
+                    // this never cascades into another fallback round.
+                    pending.push(Query::Album {
+                        album,
+                        artist_display,
+                        album_display,
+                        mbid: None,
+                        provided: false,
+                    });
+                }
             }
-            (Query::AlbumCover { album, .. }, None) => {
-                writes.push((CacheKey::AlbumCover(album), CacheValue::Missing { since }));
+            (Query::Artist { artist, .. }, Outcome::Artist { image, url, .. }) => {
+                match image {
+                    Some(url) => {
+                        resolutions.push(Resolution::ArtistImage {
+                            artist: artist.clone(),
+                            url: url.clone(),
+                        });
+                        writes.push((
+                            CacheKey::ArtistImage(artist.clone()),
+                            CacheValue::Found(url),
+                        ));
+                    }
+                    None => writes.push((
+                        CacheKey::ArtistImage(artist.clone()),
+                        CacheValue::Missing { since },
+                    )),
+                }
+                match url {
+                    Some(url) => {
+                        resolutions.push(Resolution::ArtistUrl {
+                            artist: artist.clone(),
+                            url: url.clone(),
+                        });
+                        writes.push((CacheKey::ArtistUrl(artist.clone()), CacheValue::Found(url)));
+                    }
+                    None => writes.push((
+                        CacheKey::ArtistUrl(artist.clone()),
+                        CacheValue::Missing { since },
+                    )),
+                }
             }
-            (Query::AlbumUrl { album, .. }, Some(url)) => {
-                resolutions.push(Resolution::AlbumUrl {
-                    album: album.clone(),
-                    url: url.clone(),
-                });
-                writes.push((CacheKey::AlbumUrl(album), CacheValue::Found(url)));
-            }
-            (Query::AlbumUrl { album, .. }, None) => {
-                writes.push((CacheKey::AlbumUrl(album), CacheValue::Missing { since }));
-            }
-            (Query::ArtistImage { artist, .. }, Some(url)) => {
-                resolutions.push(Resolution::ArtistImage {
-                    artist: artist.clone(),
-                    url: url.clone(),
-                });
-                writes.push((CacheKey::ArtistImage(artist), CacheValue::Found(url)));
-            }
-            (Query::ArtistImage { artist, .. }, None) => {
-                writes.push((CacheKey::ArtistImage(artist), CacheValue::Missing { since }));
-            }
-            (Query::ArtistUrl { artist, .. }, Some(url)) => {
-                resolutions.push(Resolution::ArtistUrl {
-                    artist: artist.clone(),
-                    url: url.clone(),
-                });
-                writes.push((CacheKey::ArtistUrl(artist), CacheValue::Found(url)));
-            }
-            (Query::ArtistUrl { artist, .. }, None) => {
-                writes.push((CacheKey::ArtistUrl(artist), CacheValue::Missing { since }));
-            }
-            (Query::TrackUrl { track, .. }, Some(url)) => {
-                resolutions.push(Resolution::TrackUrl {
-                    track: track.clone(),
-                    url: url.clone(),
-                });
-                writes.push((CacheKey::TrackUrl(track), CacheValue::Found(url)));
-            }
-            (Query::TrackUrl { track, .. }, None) => {
-                writes.push((CacheKey::TrackUrl(track), CacheValue::Missing { since }));
-            }
+            (Query::Track { track, .. }, Outcome::Track { url, .. }) => match url {
+                Some(url) => {
+                    resolutions.push(Resolution::TrackUrl {
+                        track: track.clone(),
+                        url: url.clone(),
+                    });
+                    writes.push((CacheKey::TrackUrl(track), CacheValue::Found(url)));
+                }
+                None => writes.push((CacheKey::TrackUrl(track), CacheValue::Missing { since })),
+            },
+            _ => {}
         }
     }
 
-    let _ = plan;
     Finalized {
         resolutions,
         writes,
@@ -250,7 +303,7 @@ pub fn finalize(
     }
 }
 
-/// Fold cache hits and query results into the maps `build_ranges`
+/// Fold cache hits and query results into the maps build_document
 /// looks up.
 pub fn collect(plan: &ResolvePlan, fin: &Finalized) -> ResolvedStats {
     let mut stats = ResolvedStats::default();
@@ -299,22 +352,35 @@ mod tests {
         Href::from_str(s).unwrap()
     }
 
+    fn mbid(s: &str) -> MusicBrainzId {
+        MusicBrainzId::from_str(s).unwrap()
+    }
+
     #[test]
     fn plan_serves_hits_skips_fresh_misses_and_requeues() {
         let mut cache = Cache::default();
-        // Album 1: cached URL → resolution.
-        cache.merge(vec![(
-            CacheKey::AlbumCover(album_ref("A", "Hit")),
-            CacheValue::Found(href("https://example.com/hit.jpg")),
-        )]);
-        // Album 2: fresh miss → skipped entirely.
+        cache.merge(vec![
+            (
+                CacheKey::AlbumCover(album_ref("A", "Hit")),
+                CacheValue::Found(href("https://example.com/hit.jpg")),
+            ),
+            (
+                CacheKey::AlbumUrl(album_ref("A", "Hit")),
+                CacheValue::Found(href("https://musicbrainz.org/release/hit")),
+            ),
+        ]);
         let now = now();
         let since = now.duration_since(UNIX_EPOCH).unwrap().as_secs();
-        cache.merge(vec![(
-            CacheKey::AlbumCover(album_ref("A", "Fresh Miss")),
-            CacheValue::Missing { since },
-        )]);
-        // Album 3: stale miss → requeued.
+        cache.merge(vec![
+            (
+                CacheKey::AlbumCover(album_ref("A", "Fresh Miss")),
+                CacheValue::Missing { since },
+            ),
+            (
+                CacheKey::AlbumUrl(album_ref("A", "Fresh Miss")),
+                CacheValue::Missing { since },
+            ),
+        ]);
         cache.merge(vec![(
             CacheKey::AlbumCover(album_ref("A", "Stale Miss")),
             CacheValue::Missing { since: 0 },
@@ -351,32 +417,27 @@ mod tests {
         };
 
         let plan = plan(&needs, &cache, now);
-        assert_eq!(plan.resolved.len(), 1);
-        assert!(matches!(
-            &plan.resolved[0],
-            Resolution::AlbumCover { album, .. } if *album == album_ref("A", "Hit")
-        ));
-        // Each album needs a cover query AND an album-url query; the
-        // fresh miss is skipped entirely.
-        assert_eq!(plan.queries.len(), 6);
-        let covers: Vec<_> = plan
+        assert_eq!(plan.resolved.len(), 2);
+        // One album query per entity that still needs something.
+        assert_eq!(plan.queries.len(), 2);
+        let albums: Vec<_> = plan
             .queries
             .iter()
             .filter_map(|q| match q {
-                Query::AlbumCover { album, .. } => Some(album.clone()),
+                Query::Album { album, .. } => Some(album.clone()),
                 _ => None,
             })
             .collect();
-        assert_eq!(covers.len(), 2);
-        assert!(covers.contains(&album_ref("A", "Stale Miss")));
-        assert!(covers.contains(&album_ref("A", "Absent")));
-        assert!(!covers.contains(&album_ref("A", "Fresh Miss")));
-        assert!(!covers.contains(&album_ref("A", "Hit")));
+        assert_eq!(albums.len(), 2);
+        assert!(albums.contains(&album_ref("A", "Stale Miss")));
+        assert!(albums.contains(&album_ref("A", "Absent")));
+        assert!(!albums.contains(&album_ref("A", "Fresh Miss")));
+        assert!(!albums.contains(&album_ref("A", "Hit")));
     }
 
     #[test]
     fn plan_preserves_provided_mbid() {
-        let mbid = MusicBrainzId::from_str("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee").unwrap();
+        let mbid = mbid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
         let needs = Needs {
             albums: vec![AlbumNeed {
                 album: album_ref("A", "B"),
@@ -387,9 +448,9 @@ mod tests {
             ..Needs::default()
         };
         let plan = plan(&needs, &Cache::default(), now());
-        assert_eq!(plan.queries.len(), 2); // cover + album url
+        assert_eq!(plan.queries.len(), 1);
         match &plan.queries[0] {
-            Query::AlbumCover {
+            Query::Album {
                 mbid: Some(m),
                 provided: true,
                 ..
@@ -399,52 +460,65 @@ mod tests {
     }
 
     #[test]
-    fn finalize_emits_resolution_and_found_write() {
-        let query = Query::ArtistImage {
+    fn finalize_emits_resolutions_and_found_writes() {
+        let query = Query::Artist {
             artist: ArtistKey::from("A"),
             artist_display: "A".into(),
+            mbid: None,
         };
-        let url = href("https://example.com/a.jpg");
+        let image = href("https://example.com/a.jpg");
+        let url = href("https://musicbrainz.org/artist/a");
         let fin = finalize(
-            &ResolvePlan {
-                resolved: vec![],
-                queries: vec![query.clone()],
-            },
-            vec![(query.clone(), Some(url.clone()))],
+            vec![(
+                query,
+                Outcome::Artist {
+                    mbid: None,
+                    image: Some(image.clone()),
+                    url: Some(url.clone()),
+                },
+            )],
             now(),
         );
         assert_eq!(fin.pending.len(), 0);
-        assert_eq!(fin.resolutions.len(), 1);
-        assert_eq!(
-            fin.resolutions[0],
-            Resolution::ArtistImage {
-                artist: ArtistKey::from("A"),
-                url: url.clone()
-            }
-        );
+        assert_eq!(fin.resolutions.len(), 2);
+        assert!(fin.resolutions.contains(&Resolution::ArtistImage {
+            artist: ArtistKey::from("A"),
+            url: image.clone()
+        }));
+        assert!(fin.resolutions.contains(&Resolution::ArtistUrl {
+            artist: ArtistKey::from("A"),
+            url: url.clone()
+        }));
         assert!(fin.writes.contains(&(
             CacheKey::ArtistImage(ArtistKey::from("A")),
+            CacheValue::Found(image)
+        )));
+        assert!(fin.writes.contains(&(
+            CacheKey::ArtistUrl(ArtistKey::from("A")),
             CacheValue::Found(url)
         )));
     }
 
     #[test]
     fn finalize_records_miss_with_now_timestamp() {
-        let query = Query::TrackUrl {
+        let query = Query::Track {
             track: TrackRef {
                 artist: ArtistKey::from("A"),
                 track: TrackKey::from("T"),
             },
             artist_display: "A".into(),
             track_display: "T".into(),
+            mbid: None,
         };
         let now = now();
         let fin = finalize(
-            &ResolvePlan {
-                resolved: vec![],
-                queries: vec![query.clone()],
-            },
-            vec![(query, None)],
+            vec![(
+                query,
+                Outcome::Track {
+                    mbid: None,
+                    url: None,
+                },
+            )],
             now,
         );
         assert!(fin.resolutions.is_empty());
@@ -462,25 +536,27 @@ mod tests {
     #[test]
     fn finalize_fallback_only_for_provided_mbids() {
         let now = now();
-        // Provided MBID with no art → pending name-search query.
-        let provided = Query::AlbumCover {
+        let provided = Query::Album {
             album: album_ref("A", "B"),
             artist_display: "A".into(),
             album_display: "B".into(),
-            mbid: Some(MusicBrainzId::from_str("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee").unwrap()),
+            mbid: Some(mbid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")),
             provided: true,
         };
         let fin = finalize(
-            &ResolvePlan {
-                resolved: vec![],
-                queries: vec![provided.clone()],
-            },
-            vec![(provided, None)],
+            vec![(
+                provided,
+                Outcome::Album {
+                    mbid: None,
+                    cover: None,
+                    url: Some(href("https://musicbrainz.org/release/x")),
+                },
+            )],
             now,
         );
         assert_eq!(fin.pending.len(), 1);
         match &fin.pending[0] {
-            Query::AlbumCover {
+            Query::Album {
                 mbid: None,
                 provided: false,
                 album,
@@ -491,8 +567,7 @@ mod tests {
             other => panic!("unexpected pending query: {other:?}"),
         }
 
-        // Not provided → no pending (no infinite fallback loop).
-        let searched = Query::AlbumCover {
+        let searched = Query::Album {
             album: album_ref("A", "B"),
             artist_display: "A".into(),
             album_display: "B".into(),
@@ -500,26 +575,32 @@ mod tests {
             provided: false,
         };
         let fin = finalize(
-            &ResolvePlan {
-                resolved: vec![],
-                queries: vec![searched.clone()],
-            },
-            vec![(searched, None)],
+            vec![(
+                searched,
+                Outcome::Album {
+                    mbid: None,
+                    cover: None,
+                    url: None,
+                },
+            )],
             now,
         );
         assert!(fin.pending.is_empty());
 
-        // Other query kinds never pend either.
-        let artist = Query::ArtistImage {
+        let artist = Query::Artist {
             artist: ArtistKey::from("A"),
             artist_display: "A".into(),
+            mbid: None,
         };
         let fin = finalize(
-            &ResolvePlan {
-                resolved: vec![],
-                queries: vec![artist.clone()],
-            },
-            vec![(artist, None)],
+            vec![(
+                artist,
+                Outcome::Artist {
+                    mbid: None,
+                    image: None,
+                    url: None,
+                },
+            )],
             now,
         );
         assert!(fin.pending.is_empty());

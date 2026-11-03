@@ -173,35 +173,35 @@ fn stats_view(data: StatsData) -> Element(msg) {
   case stats.is_empty(data) {
     True -> none()
     False ->
-      fragment(list.append(
-        range_tabs(data.ranges),
-        list.map(data.ranges, range_panel),
-      ))
+      fragment([range_tabs(data.ranges), ..list.map(data.ranges, range_panel)])
   }
 }
 
-/// `input + label` pairs, one per range. The first range is checked by
-/// default; `input:checked ~ .stats-panel[data-range=...]` in the CSS
-/// picks the matching panel.
-fn range_tabs(ranges: List(#(Range, RangeStats))) -> List(Element(msg)) {
-  ranges
-  |> list.index_map(fn(pair, i) {
-    let #(range, _) = pair
-    let range_id = "stats-" <> stats.range_key(range)
-    [
-      input([
-        class("stats-radio"),
-        type_("radio"),
-        name("stats-range"),
-        id(range_id),
-        checked(i == 0),
-      ]),
-      label([class("stats-tab"), for(range_id)], [
-        text(stats.range_label(range)),
-      ]),
-    ]
-  })
-  |> list.flatten
+/// `input + label` pairs in one segmented control. The first range is
+/// checked by default; `input:checked ~ .stats-panel[data-range=...]`
+/// in the CSS picks the matching panel.
+fn range_tabs(ranges: List(#(Range, RangeStats))) -> Element(msg) {
+  div(
+    [class("stats-tabs")],
+    ranges
+      |> list.index_map(fn(pair, i) {
+        let #(range, _) = pair
+        let range_id = "stats-" <> stats.range_key(range)
+        [
+          input([
+            class("stats-radio"),
+            type_("radio"),
+            name("stats-range"),
+            id(range_id),
+            checked(i == 0),
+          ]),
+          label([class("stats-tab"), for(range_id)], [
+            text(stats.range_label(range)),
+          ]),
+        ]
+      })
+      |> list.flatten,
+  )
 }
 
 fn range_panel(pair: #(Range, RangeStats)) -> Element(msg) {
@@ -225,16 +225,20 @@ fn grid(title: String, items: List(StatsItem)) -> Element(msg) {
     False ->
       div([class("stats-grid")], [
         h3([], [text(title)]),
-        ol([class("tiles")], list.map(items, fn(item) { tile(item, title) })),
+        ol(
+          [class("tiles")],
+          list.index_map(items, fn(item, i) { tile(item, title, i + 1) }),
+        ),
       ])
   }
 }
 
-/// A pure-image tile: the cover (or a flat placeholder with the item's
-/// initial when there is none), with the name/artist/plays in a hover
-/// popup. Links to the entity's MusicBrainz page when one resolved;
-/// otherwise it's a plain tile. No rank badge — a proper 3x3 mosaic.
-fn tile(item: StatsItem, category: String) -> Element(msg) {
+/// A chart tile: cover (or a monogram placeholder), then rank, name,
+/// artist, and plays/listened time below it. The metadata is visible
+/// at rest rather than hidden in a hover popup, so touch devices and
+/// keyboard users get the same labels. Links to the entity's
+/// MusicBrainz page when one resolved; otherwise it's a plain tile.
+fn tile(item: StatsItem, category: String, rank: Int) -> Element(msg) {
   let cover = case item.image {
     option.None ->
       div(
@@ -255,18 +259,21 @@ fn tile(item: StatsItem, category: String) -> Element(msg) {
         loading("lazy"),
       ])
   }
-  let popup =
-    div([class("tile-tooltip")], [
-      span([class("tile-name")], [text(item.name)]),
-      case item.artist {
-        option.None -> none()
-        option.Some(artist) -> span([class("tile-artist")], [text(artist)])
-      },
-      span([class("tile-plays")], [text(plays_label(item.plays))]),
+  let meta =
+    div([class("tile-meta")], [
+      span([class("tile-rank")], [text(date.pad2(rank))]),
+      div([class("tile-text")], [
+        span([class("tile-name")], [text(item.name)]),
+        case item.artist {
+          option.None -> none()
+          option.Some(artist) -> span([class("tile-artist")], [text(artist)])
+        },
+        span([class("tile-plays")], [text(plays_label(item))]),
+      ]),
     ])
-  let tile_body = [div([class("tile-cover-wrap")], [cover]), popup]
+  let tile_body = [div([class("tile-cover-wrap")], [cover]), meta]
   case item.url {
-    option.None -> li([class("tile")], tile_body)
+    option.None -> li([class("tile")], [div([class("tile-body")], tile_body)])
     option.Some(url) ->
       li([class("tile")], [
         a(
@@ -296,9 +303,35 @@ fn tile_label(item: StatsItem) -> String {
     option.None -> ""
     option.Some(artist) -> " — " <> artist
   }
-  item.name <> artist_part <> ", " <> plays_label(item.plays)
+  item.name <> artist_part <> ", " <> plays_label(item)
 }
 
-fn plays_label(plays: Int) -> String {
-  int.to_string(plays) <> " plays"
+/// "27 plays" or "27 plays · 1h 21m" when the play records carry a
+/// duration. Alpha used milliseconds; current records use seconds, but
+/// the Rust boundary normalizes both to milliseconds before this view.
+fn plays_label(item: StatsItem) -> String {
+  case item.listened_ms {
+    option.Some(ms) if ms > 0 ->
+      int.to_string(item.plays) <> " plays · " <> listened_label(ms)
+    _ -> int.to_string(item.plays) <> " plays"
+  }
+}
+
+fn listened_label(ms: Int) -> String {
+  let minutes = ms / 60_000
+  case minutes {
+    0 -> "<1m"
+    _ -> {
+      let hours = minutes / 60
+      let rest = minutes % 60
+      case hours {
+        0 -> int.to_string(minutes) <> "m"
+        _ ->
+          case rest {
+            0 -> int.to_string(hours) <> "h"
+            _ -> int.to_string(hours) <> "h " <> int.to_string(rest) <> "m"
+          }
+      }
+    }
+  }
 }

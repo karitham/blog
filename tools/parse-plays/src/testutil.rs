@@ -39,11 +39,6 @@ impl StubClient {
         self
     }
 
-    /// Requests made so far, in order.
-    pub fn requests(&self) -> Vec<String> {
-        self.requests.lock().unwrap().clone()
-    }
-
     /// A handle on the request log, for tests that hand the client to
     /// `MusicSources::for_tests` and inspect it afterwards.
     pub fn request_log(&self) -> Arc<Mutex<Vec<String>>> {

@@ -513,6 +513,14 @@ footer {
   color: var(--accent);
 }
 
+/* The global link hover inverts; a play row is a dense list, so keep
+   the row readable and use an underline instead. */
+.play-track a:hover {
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .play-artist {
   flex: 1.2;
   min-width: 0;
@@ -544,33 +552,54 @@ footer {
   pointer-events: none;
 }
 
+:is(.music-tabs, .stats-tabs) {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
 :is(.music-tab, .stats-tab) {
   display: inline-block;
-  padding: 0.4rem 0.7rem;
-  margin: 0.5rem 0.25rem 0 0;
-  font-size: 0.8rem;
+  padding: 0.35rem 0.7rem;
+  margin: 0;
+  font-size: 0.78rem;
   color: var(--text-dim);
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  border: 0;
+  border-right: 1px solid var(--border);
   cursor: pointer;
   user-select: none;
 
   &:hover {
-    border-color: var(--text-dimmer);
+    background: var(--bg-alt);
     color: var(--text);
   }
 }
 
+:is(.music-tabs, .stats-tabs) label:last-of-type {
+  border-right: 0;
+}
+
 :is(.music-radio, .stats-radio):checked + :is(.music-tab, .stats-tab) {
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--bg-alt);
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+:is(.music-radio, .stats-radio):focus-visible + :is(.music-tab, .stats-tab) {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.stats-tabs {
+  margin-top: 0.75rem;
 }
 
 /* Only the panel matching the checked radio is visible. Selectors are
    id-specific: a general `:checked ~ .panel` matches every panel
-   (they're all siblings of every radio), showing all at once. The
-   view tabs live in the header row, so they're matched via `:has()`
-   rather than sibling combinators. */
+   (they're all siblings of every radio), showing all at once. Both
+   tab groups use `:has()` so the radios can live inside a wrapper. */
 :is(.music-panel, .stats-panel) {
   display: none;
   padding-top: 0.25rem;
@@ -583,21 +612,16 @@ footer {
   display: block;
 }
 
-/* Pills in the header row sit on the title's baseline, no top margin. */
-#plays .music-tab {
-  margin-top: 0;
-}
-
-#stats-1m:checked ~ .stats-panel[data-range="1m"] {
+#plays:has(#stats-1m:checked) .stats-panel[data-range="1m"] {
   display: block;
 }
-#stats-6m:checked ~ .stats-panel[data-range="6m"] {
+#plays:has(#stats-6m:checked) .stats-panel[data-range="6m"] {
   display: block;
 }
-#stats-1y:checked ~ .stats-panel[data-range="1y"] {
+#plays:has(#stats-1y:checked) .stats-panel[data-range="1y"] {
   display: block;
 }
-#stats-all:checked ~ .stats-panel[data-range="all"] {
+#plays:has(#stats-all:checked) .stats-panel[data-range="all"] {
   display: block;
 }
 
@@ -620,38 +644,37 @@ footer {
   }
 }
 
-/* 3x3 grid of cover tiles. Pure images — the name/plays live in a
-   hover popup so the grid reads as a proper mosaic. */
+/* 3x3 chart tiles: cover, then rank, name, artist, and plays/listened
+   time. Metadata is visible at rest, not hidden in a hover popup. */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 0.9rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .tile {
-  position: relative;
   min-width: 0;
 }
 
+.tile-body,
 .tile-link {
   display: block;
-  transition-property: transform;
-  transition-duration: 100ms;
-  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  min-width: 0;
+  color: inherit;
+}
 
-  &:active {
-    transform: scale(0.96);
-  }
+.tile-link:hover {
+  background: none;
+  color: inherit;
 }
 
 .tile-cover-wrap {
   aspect-ratio: 1;
-  /* Ring instead of border: with zero gap, adjacent rings overlap
-     1:1, so interior lines stay 1px (a real border would double to
-     2px between tiles) and partial rows get no stray frame. */
+  background: var(--bg-alt);
+  border-radius: 3px;
   box-shadow: 0 0 0 1px var(--border);
   overflow: hidden;
   /* Sizes the placeholder monogram relative to the tile. */
@@ -663,6 +686,14 @@ footer {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition:
+    transform 150ms cubic-bezier(0.2, 0, 0, 1),
+    filter 150ms ease-out;
+}
+
+.tile-link:hover .tile-cover {
+  transform: scale(1.02);
+  filter: brightness(1.06);
 }
 
 /* No art — a flat gradient surface with the item's monogram; the
@@ -726,87 +757,51 @@ footer {
   );
 }
 
-/* Hover popup: name, artist, plays. Anchored above the tile and
-   edge-aligned on the first/last columns so it never clips off the
-   container. */
-.tile-tooltip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 0.6rem);
-  z-index: 3;
-  width: max-content;
-  max-width: 14rem;
-  padding: 0.4rem 0.6rem;
-  background: var(--bg-nav);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--shadow-depth), var(--shadow-ring);
-  font-size: 0.78rem;
-  line-height: 1.4;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(var(--tt-x, -50%), 2px) scale(0.98);
-  transform-origin: bottom center;
-  transition-property: opacity, transform;
-  transition-duration: 120ms;
-  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+.tile-meta {
+  display: flex;
+  gap: 0.45rem;
+  min-width: 0;
+  padding-top: 0.45rem;
 }
 
-.tiles li:first-child .tile-tooltip {
-  left: 0;
-  --tt-x: 0%;
-  transform-origin: bottom left;
+.tile-rank {
+  color: var(--text-dimmer);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
 }
 
-.tiles li:last-child .tile-tooltip {
-  left: auto;
-  right: 0;
-  --tt-x: 0%;
-  transform-origin: bottom right;
-}
-
-.tile:hover .tile-tooltip,
-.tile:focus-within .tile-tooltip {
-  opacity: 1;
-  transform: translate(var(--tt-x, -50%), 0) scale(1);
-}
-
-/* Caret: outer triangle in the border color, inner in the surface. */
-.tile-tooltip::before,
-.tile-tooltip::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-}
-
-.tile-tooltip::before {
-  border-top-color: var(--border);
-}
-
-.tile-tooltip::after {
-  top: calc(100% - 1px);
-  border-width: 5px;
-  border-top-color: var(--bg-nav);
+.tile-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.35;
 }
 
 .tile-name {
-  display: block;
-  font-weight: 600;
   color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tile-artist {
-  display: block;
-  color: var(--text-dimmer);
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tile-plays {
-  display: block;
   color: var(--text-dimmer);
+  font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ============================================================
@@ -1027,34 +1022,6 @@ footer {
 }
 
 /* ============================================================
-   Touch devices — tile names are hover-only on desktop
-   ============================================================ */
-
-/* On touch there's no hover, so the tooltip (which carries the tile's
-   name) would never appear. Turn it into a static caption under the
-   cover instead of floating it. */
-@media (hover: none) {
-  .tile-tooltip {
-    position: static;
-    opacity: 1;
-    transform: none;
-    width: auto;
-    max-width: none;
-    padding: 0.35rem 0.2rem 0;
-    background: none;
-    border: none;
-    box-shadow: none;
-    pointer-events: auto;
-    text-align: center;
-  }
-
-  .tile-tooltip::before,
-  .tile-tooltip::after {
-    display: none;
-  }
-}
-
-/* ============================================================
    Small screens
    ============================================================ */
 
@@ -1097,6 +1064,11 @@ footer {
 
   .play-release {
     display: none;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem 0.75rem;
   }
 
   .play-track {

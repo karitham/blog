@@ -13,7 +13,7 @@
 ////
 //// Each grid item:
 ////   { "name": "...", "artist": "...", "plays": 123,
-////     "ms_played": 456, "image": "https://...", "url": "https://..." }
+////     "listened_ms": 456, "image": "https://...", "url": "https://..." }
 //// `artist`, `image` and `url` are omitted when empty.
 
 import gleam/dynamic/decode
@@ -74,7 +74,7 @@ pub type StatsItem {
     name: String,
     artist: Option(String),
     plays: Int,
-    ms_played: Int,
+    listened_ms: Option(Int),
     image: Option(String),
     url: Option(String),
   )
@@ -141,7 +141,11 @@ fn stats_item_decoder() -> decode.Decoder(StatsItem) {
   )
   let artist = empty_to_none(artist_opt)
   use plays <- decode.field("plays", decode.int)
-  use ms_played <- decode.field("ms_played", decode.int)
+  use listened_ms <- decode.optional_field(
+    "listened_ms",
+    option.None,
+    decode.optional(decode.int),
+  )
   use image_opt <- decode.optional_field(
     "image",
     option.None,
@@ -154,7 +158,7 @@ fn stats_item_decoder() -> decode.Decoder(StatsItem) {
     decode.optional(decode.string),
   )
   let url = empty_to_none(url_opt)
-  decode.success(StatsItem(name:, artist:, plays:, ms_played:, image:, url:))
+  decode.success(StatsItem(name:, artist:, plays:, listened_ms:, image:, url:))
 }
 
 fn empty_to_none(opt: Option(String)) -> Option(String) {
@@ -206,7 +210,6 @@ fn encode_item(item: StatsItem) -> json.Json {
     [
       #("name", json.string(item.name)),
       #("plays", json.int(item.plays)),
-      #("ms_played", json.int(item.ms_played)),
     ]
     |> list.append(encode_optional(item)),
   )
@@ -214,6 +217,10 @@ fn encode_item(item: StatsItem) -> json.Json {
 
 fn encode_optional(item: StatsItem) -> List(#(String, json.Json)) {
   [
+    case item.listened_ms {
+      option.Some(ms) if ms > 0 -> [#("listened_ms", json.int(ms))]
+      _ -> []
+    },
     case item.artist {
       option.None -> []
       option.Some("") -> []

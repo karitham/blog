@@ -46,7 +46,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: |
-            priv/cache/cover-cache.json
+            priv/cache/*.json
             priv/cache/img
           key: cover-cache-${{ github.run_id }}
           restore-keys: cover-cache-

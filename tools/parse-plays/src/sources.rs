@@ -7,7 +7,7 @@
 
 use crate::model::{CommonsFilename, Href, MusicBrainzId, WikidataId};
 use crate::net::{HttpClient, HttpFetch, Limiter};
-use crate::resolve::{Query, ResolvePlan};
+use crate::resolve::{Outcome, Query, ResolvePlan};
 use rayon::prelude::*;
 use serde_json::Value;
 use std::str::FromStr;
@@ -52,6 +52,7 @@ pub struct RateLimits {
     pub wikidata: Limiter,
     pub commons: Limiter,
     pub coverart_img: Limiter,
+    pub bluesky: Limiter,
 }
 
 impl RateLimits {
@@ -62,6 +63,7 @@ impl RateLimits {
             wikidata: Limiter::new(1.0),
             commons: Limiter::new(4.0),
             coverart_img: Limiter::new(1.0),
+            bluesky: Limiter::new(4.0),
         }
     }
 
@@ -74,6 +76,7 @@ impl RateLimits {
             wikidata: Limiter::new(1_000_000.0),
             commons: Limiter::new(1_000_000.0),
             coverart_img: Limiter::new(1_000_000.0),
+            bluesky: Limiter::new(1_000_000.0),
         }
     }
 }
@@ -110,67 +113,77 @@ impl MusicSources {
 
     /// Run every query in the plan (parallel, per-endpoint limiters),
     /// returning per-query outcomes.
-    pub fn run_queries(&self, plan: &ResolvePlan) -> Vec<(Query, Option<Href>)> {
+    pub fn run_queries(&self, plan: &ResolvePlan) -> Vec<(Query, Outcome)> {
         plan.queries
             .par_iter()
             .map(|query| {
                 let outcome = match query {
-                    Query::AlbumCover {
+                    Query::Album {
                         artist_display,
                         album_display,
                         mbid,
                         ..
                     } => {
-                        let mbid = match mbid {
+                        let release = match mbid {
                             Some(mbid) => Some(mbid.clone()),
                             None => self.release_id(artist_display, album_display),
                         };
-                        mbid.and_then(|mbid| self.cover_art_url(&mbid))
+                        match release {
+                            Some(mbid) => Outcome::Album {
+                                cover: self.cover_art_url(&mbid),
+                                url: self.release_url(&mbid),
+                                mbid: Some(mbid),
+                            },
+                            None => Outcome::Album {
+                                mbid: None,
+                                cover: None,
+                                url: None,
+                            },
+                        }
                     }
-                    Query::AlbumUrl {
+                    Query::Artist {
                         artist_display,
-                        album_display,
                         mbid,
                         ..
                     } => {
-                        let mbid = match mbid {
+                        let artist = match mbid {
                             Some(mbid) => Some(mbid.clone()),
-                            None => self.release_id(artist_display, album_display),
+                            None => self.artist_id(artist_display),
                         };
-                        mbid.and_then(|mbid| {
-                            Href::from_str(&format!(
-                                "{}/release/{}",
-                                self.bases.musicbrainz,
-                                mbid.as_ref()
-                            ))
-                            .ok()
-                        })
+                        match artist {
+                            Some(mbid) => Outcome::Artist {
+                                image: self.artist_image_for_id(&mbid),
+                                url: self.artist_url(&mbid),
+                                mbid: Some(mbid),
+                            },
+                            None => Outcome::Artist {
+                                mbid: None,
+                                image: None,
+                                url: None,
+                            },
+                        }
                     }
-                    Query::ArtistImage { artist_display, .. } => self.artist_image(artist_display),
-                    Query::ArtistUrl { artist_display, .. } => {
-                        self.artist_id(artist_display).and_then(|mbid| {
-                            Href::from_str(&format!(
-                                "{}/artist/{}",
-                                self.bases.musicbrainz,
-                                mbid.as_ref()
-                            ))
-                            .ok()
-                        })
-                    }
-                    Query::TrackUrl {
+                    Query::Track {
                         artist_display,
                         track_display,
+                        mbid,
                         ..
-                    } => self
-                        .recording_id(artist_display, track_display)
-                        .and_then(|mbid| {
-                            Href::from_str(&format!(
-                                "{}/recording/{}",
-                                self.bases.musicbrainz,
-                                mbid.as_ref()
-                            ))
-                            .ok()
-                        }),
+                    } => {
+                        let recording = match mbid {
+                            Some(mbid) => Some(mbid.clone()),
+                            None => self.recording_id(artist_display, track_display),
+                        };
+                        match recording {
+                            Some(mbid) => Outcome::Track {
+                                url: self.recording_url(&mbid),
+                                mbid: Some(mbid),
+                            },
+                            None => Outcome::Track {
+                                mbid: None,
+                                url: None,
+                            },
+                        }
+                    }
                 };
                 (query.clone(), outcome)
             })
@@ -208,6 +221,15 @@ impl MusicSources {
             .flatten()
     }
 
+    fn release_url(&self, mbid: &MusicBrainzId) -> Option<Href> {
+        Href::from_str(&format!(
+            "{}/release/{}",
+            self.bases.musicbrainz,
+            mbid.as_ref()
+        ))
+        .ok()
+    }
+
     fn artist_id(&self, name: &str) -> Option<MusicBrainzId> {
         self.limits.musicbrainz.acquire();
         let query = format!("artist:\"{}\"", clean_query(name));
@@ -216,6 +238,15 @@ impl MusicSources {
             &[("query", &query), ("fmt", "json"), ("limit", "1")],
         )?;
         artist_id_from_json(&body)
+    }
+
+    fn artist_url(&self, mbid: &MusicBrainzId) -> Option<Href> {
+        Href::from_str(&format!(
+            "{}/artist/{}",
+            self.bases.musicbrainz,
+            mbid.as_ref()
+        ))
+        .ok()
     }
 
     /// MB artist lookup with URL relations → the artist's Wikidata QID.
@@ -243,9 +274,9 @@ impl MusicSources {
         p18_filename_from_json(&body)
     }
 
-    /// Commons image URL for a filename, resized to 600px.
+    /// Commons image URL for a filename, resized to 600px. Building
+    /// the URL is local; the downloader owns the Commons limiter.
     fn commons_url(&self, filename: &CommonsFilename) -> Option<Href> {
-        self.limits.commons.acquire();
         Href::from_str(&format!(
             "{}/wiki/Special:FilePath/{}?width=600",
             self.bases.commons,
@@ -254,11 +285,11 @@ impl MusicSources {
         .ok()
     }
 
-    /// Artist photo via the Wikidata chain: MB artist search →
-    /// url-rels → P18 → Commons URL.
-    fn artist_image(&self, artist_display: &str) -> Option<Href> {
-        let mbid = self.artist_id(artist_display)?;
-        let qid = self.wikidata_qid(&mbid)?;
+    /// Artist photo via the Wikidata chain: url-rels → P18 → Commons
+    /// URL. The caller supplies the artist MBID, either from the play
+    /// record or from one name search.
+    fn artist_image_for_id(&self, mbid: &MusicBrainzId) -> Option<Href> {
+        let qid = self.wikidata_qid(mbid)?;
         let filename = self.wikidata_p18(&qid)?;
         self.commons_url(&filename)
     }
@@ -275,6 +306,15 @@ impl MusicSources {
             &[("query", &query), ("fmt", "json"), ("limit", "1")],
         )?;
         recording_id_from_json(&body)
+    }
+
+    fn recording_url(&self, mbid: &MusicBrainzId) -> Option<Href> {
+        Href::from_str(&format!(
+            "{}/recording/{}",
+            self.bases.musicbrainz,
+            mbid.as_ref()
+        ))
+        .ok()
     }
 }
 
@@ -366,10 +406,8 @@ mod tests {
             release_id_from_json(&release).unwrap().as_ref(),
             "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         );
-        // Empty result → None, not a panic.
         assert!(release_id_from_json(&json!({ "releases": [] })).is_none());
         assert!(release_id_from_json(&json!({})).is_none());
-        // Invalid ID shape → None.
         assert!(release_id_from_json(&json!({ "releases": [{ "id": "bogus" }] })).is_none());
 
         let artist = json!({ "artists": [{ "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" }] });
@@ -413,8 +451,21 @@ mod tests {
 
     // -------------------------------------------- endpoint round-trips
 
+    fn album_query(mbid: Option<MusicBrainzId>) -> Query {
+        Query::Album {
+            album: AlbumRef {
+                artist: ArtistKey::from("a"),
+                album: AlbumKey::from("b"),
+            },
+            artist_display: "New World Sound".into(),
+            album_display: "Flute".into(),
+            mbid,
+            provided: false,
+        }
+    }
+
     #[test]
-    fn roundtrip_release_search_and_cover_art() {
+    fn roundtrip_album_entity_fills_cover_and_url() {
         let stub = StubClient::new()
             .route(
                 "ws/2/release",
@@ -428,24 +479,27 @@ mod tests {
         let sources = MusicSources::for_tests(Box::new(stub));
         let plan = ResolvePlan {
             resolved: vec![],
-            queries: vec![Query::AlbumCover {
-                album: AlbumRef {
-                    artist: ArtistKey::from("a"),
-                    album: AlbumKey::from("b"),
-                },
-                artist_display: "New World Sound".into(),
-                album_display: "Flute".into(),
-                mbid: None,
-                provided: false,
-            }],
+            queries: vec![album_query(None)],
         };
         let results = sources.run_queries(&plan);
-        let url = results[0].1.as_ref().unwrap().as_ref();
+        let Outcome::Album { cover, url, mbid } = &results[0].1 else {
+            panic!("unexpected outcome: {:?}", results[0].1)
+        };
+        assert!(mbid.is_some());
         assert!(
-            url.contains("/release/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/front-500"),
-            "{url}"
+            cover
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .contains("/release/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/front-500")
         );
-        // release search, then cover-art probe
+        assert!(
+            url.as_ref()
+                .unwrap()
+                .as_ref()
+                .contains("/release/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+        );
+        // release search, then cover-art probe; the link is built locally.
         let urls = req_log.lock().unwrap();
         assert_eq!(urls.len(), 2);
         assert!(urls[0].contains("ws/2/release"), "{}", urls[0]);
@@ -453,28 +507,23 @@ mod tests {
     }
 
     #[test]
-    fn roundtrip_cover_art_404_is_permanent_miss() {
+    fn roundtrip_cover_art_404_keeps_the_link() {
         let stub = StubClient::new().route("front-500", Response::Status(404));
         let req_log = stub.request_log();
         let sources = MusicSources::for_tests(Box::new(stub));
         let plan = ResolvePlan {
             resolved: vec![],
-            queries: vec![Query::AlbumCover {
-                album: AlbumRef {
-                    artist: ArtistKey::from("a"),
-                    album: AlbumKey::from("b"),
-                },
-                artist_display: "New World Sound".into(),
-                album_display: "Flute".into(),
-                mbid: Some(
-                    MusicBrainzId::from_str("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee").unwrap(),
-                ),
-                provided: true,
-            }],
+            queries: vec![album_query(Some(
+                MusicBrainzId::from_str("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee").unwrap(),
+            ))],
         };
         let results = sources.run_queries(&plan);
-        // Provided MBID → single cover-art probe, no search, no retries.
-        assert!(results[0].1.is_none());
+        let Outcome::Album { cover, url, .. } = &results[0].1 else {
+            panic!("unexpected outcome: {:?}", results[0].1)
+        };
+        assert!(cover.is_none());
+        assert!(url.is_some());
+        // Provided MBID -> single cover-art probe, no search, no retries.
         assert_eq!(req_log.lock().unwrap().len(), 1);
     }
 
@@ -504,74 +553,84 @@ mod tests {
         let sources = MusicSources::for_tests(Box::new(stub));
         let plan = ResolvePlan {
             resolved: vec![],
-            queries: vec![Query::ArtistImage {
+            queries: vec![Query::Artist {
                 artist: ArtistKey::from("a"),
                 artist_display: "Mac Miller".into(),
+                mbid: None,
             }],
         };
         let results = sources.run_queries(&plan);
-        let url = results[0].1.as_ref().unwrap().as_ref();
+        let Outcome::Artist { image, url, .. } = &results[0].1 else {
+            panic!("unexpected outcome: {:?}", results[0].1)
+        };
         assert!(
-            url.contains("Special:FilePath/Mac%20Miller%202017.jpg?width=600"),
-            "{url}"
+            image
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .contains("Special:FilePath/Mac%20Miller%202017.jpg?width=600")
+        );
+        assert!(
+            url.as_ref()
+                .unwrap()
+                .as_ref()
+                .contains("/artist/bbbbbbbb-cccc-dddd-eeee-ffffffffffff")
         );
         // artist search, url-rels lookup, wikidata claims
         assert_eq!(req_log.lock().unwrap().len(), 3);
     }
 
     #[test]
-    fn roundtrip_recording_and_artist_urls() {
-        let stub = StubClient::new()
-            .route(
-                "ws/2/recording",
-                Response::Json(json!({"recordings": [{
-                    "id": "cccccccc-dddd-eeee-ffff-000000000000"
-                }]})),
-            )
-            .route(
-                "ws/2/artist",
-                Response::Json(json!({"artists": [{
-                    "id": "dddddddd-eeee-ffff-0000-111111111111"
-                }]})),
-            );
+    fn roundtrip_provided_mbids_skip_searches() {
+        let stub = StubClient::new();
         let req_log = stub.request_log();
         let sources = MusicSources::for_tests(Box::new(stub));
+        let track_mbid = MusicBrainzId::from_str("cccccccc-dddd-eeee-ffff-000000000000").unwrap();
+        let artist_mbid = MusicBrainzId::from_str("dddddddd-eeee-ffff-0000-111111111111").unwrap();
         let plan = ResolvePlan {
             resolved: vec![],
             queries: vec![
-                Query::TrackUrl {
+                Query::Track {
                     track: TrackRef {
                         artist: ArtistKey::from("a"),
                         track: TrackKey::from("t"),
                     },
                     artist_display: "New World Sound".into(),
                     track_display: "Flute".into(),
+                    mbid: Some(track_mbid),
                 },
-                Query::ArtistUrl {
+                Query::Artist {
                     artist: ArtistKey::from("a"),
                     artist_display: "New World Sound".into(),
+                    mbid: Some(artist_mbid),
                 },
             ],
         };
         let results = sources.run_queries(&plan);
+        let Outcome::Track { url, .. } = &results[0].1 else {
+            panic!("unexpected outcome: {:?}", results[0].1)
+        };
         assert!(
-            results[0]
-                .1
-                .as_ref()
+            url.as_ref()
                 .unwrap()
                 .as_ref()
                 .contains("/recording/cccccccc-dddd-eeee-ffff-000000000000")
         );
+        let Outcome::Artist { url, .. } = &results[1].1 else {
+            panic!("unexpected outcome: {:?}", results[1].1)
+        };
         assert!(
-            results[1]
-                .1
-                .as_ref()
+            url.as_ref()
                 .unwrap()
                 .as_ref()
                 .contains("/artist/dddddddd-eeee-ffff-0000-111111111111")
         );
-        // Two parallel queries; the fake routes by URL, so accept order
-        // can't cross-wire the responses.
-        assert_eq!(req_log.lock().unwrap().len(), 2);
+        // An artist image lookup still runs (url-rels + wikidata), but
+        // the stub 404s both; no name search is issued.
+        let urls = req_log.lock().unwrap();
+        assert!(
+            urls.iter().all(|url| !url.contains("ws/2/artist?")),
+            "{urls:?}"
+        );
     }
 }

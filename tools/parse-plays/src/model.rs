@@ -15,47 +15,26 @@ use std::str::FromStr;
 
 // ---------------------------------------------------------------- keys
 
-/// Sanitized grouping key for artist names: lowercase, punctuation
-/// dropped, collaboration credit cut to the first artist, junction
-/// words (feat/with/&/vs...) removed. Two spellings of the same
-/// artist ("JAY-Z" vs "Jay Z", "A$AP" vs "ASAP") land in the same
-/// bucket; display names keep their original spelling.
+/// Normalized grouping key for artist names: lowercase, punctuation
+/// treated as a word boundary, whitespace collapsed. The whole credit
+/// is kept: a comma or ampersand inside a real name ("Tyler, The
+/// Creator", "Earth, Wind & Fire") must not merge it with a different
+/// artist. MBIDs, when present, are used for resolution, not identity.
 pub fn normalize(s: &str) -> String {
-    const JUNCTION_WORDS: [&str; 12] = [
-        "and",
-        "with",
-        "feat",
-        "featuring",
-        "ft",
-        "vs",
-        "versus",
-        "present",
-        "presents",
-        "pres",
-        "b2b",
-        "x",
-    ];
-
-    let lower = s.to_lowercase();
-    // Collab credit strings: keep only the part before the first
-    // comma/ampersand/plus — "tofubeats, HITOMITOI" groups as tofubeats.
-    let head = lower
-        .split(['&', '+', ','])
-        .next()
-        .unwrap_or(lower.as_str());
-    head
-        // Any run of non-alphanumerics is a word boundary ("JAY-Z",
-        // "A$AP", "Café" -> "caf", accents are dropped with them).
+    s.to_lowercase()
         .split(|c: char| !c.is_alphanumeric())
-        .take_while(|word| !JUNCTION_WORDS.contains(word))
         .filter(|word| !word.is_empty())
         .collect::<Vec<_>>()
         .join(" ")
 }
 
-/// Plain key for album/track name components: trim + lowercase only.
+/// Plain key for album/track name components: collapse whitespace and
+/// lowercase. Punctuation is significant here ("Fantastic, Vol. 2").
 pub fn normalize_name(s: &str) -> String {
-    s.trim().to_lowercase()
+    s.split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
 }
 
 macro_rules! key_type {
@@ -233,6 +212,120 @@ impl AsRef<str> for Href {
     }
 }
 
+// ---------------------------------------------------------------- image
+
+/// An image reference in the stats document. Resolution starts with a
+/// remote URL; the mirror step swaps it for a local path. Keeping the
+/// two states in one type means the serializer never has to guess
+/// whether a string is a URL or a /img/... path.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+#[serde(untagged)]
+pub enum Image {
+    Remote(Href),
+    Local(String),
+}
+
+// ---------------------------------------------------------------- play
+
+/// One normalized listening event. Built once at the raw-record
+/// boundary so aggregation never reads transport field names.
+///
+/// The two Teal eras differ:
+/// - alpha records have msPlayed (milliseconds) and no MBIDs;
+/// - current records have duration (seconds) and often carry
+///   artist/release/recording MBIDs.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Play {
+    pub artist: ArtistKey,
+    pub artist_display: String,
+    pub artist_mbid: Option<MusicBrainzId>,
+    pub album: Option<AlbumRef>,
+    pub album_display: String,
+    pub release_mbid: Option<MusicBrainzId>,
+    pub track: TrackRef,
+    pub track_display: String,
+    pub recording_mbid: Option<MusicBrainzId>,
+    pub listened_ms: u64,
+    pub played_on: Option<chrono::NaiveDate>,
+}
+
+impl Play {
+    /// Parse one Teal record. Returns None for records that cannot
+    /// contribute to a stats bucket (no first artist, no track name).
+    pub fn from_record(record: &serde_json::Value) -> Option<Play> {
+        let artist = record.get("artists")?.as_array()?.first()?;
+        let artist_display = artist.get("artistName")?.as_str()?.trim();
+        if artist_display.is_empty() {
+            return None;
+        }
+        let artist_key = ArtistKey::from(artist_display);
+
+        let track_display = record.get("trackName")?.as_str()?.trim();
+        if track_display.is_empty() {
+            return None;
+        }
+        let track_key = TrackKey::from(track_display);
+
+        let (album, album_display) = match record
+            .get("releaseName")
+            .and_then(serde_json::Value::as_str)
+            .map(str::trim)
+        {
+            Some(name) if !name.is_empty() => (
+                Some(AlbumRef {
+                    artist: artist_key.clone(),
+                    album: AlbumKey::from(name),
+                }),
+                name.to_string(),
+            ),
+            _ => (None, String::new()),
+        };
+
+        // Alpha records carry milliseconds; current records carry
+        // seconds. Normalize both to milliseconds.
+        let listened_ms = record
+            .get("msPlayed")
+            .and_then(serde_json::Value::as_u64)
+            .or_else(|| {
+                record
+                    .get("duration")
+                    .and_then(serde_json::Value::as_u64)
+                    .map(|seconds| seconds.saturating_mul(1000))
+            })
+            .unwrap_or(0);
+
+        let played_on = record
+            .get("playedTime")
+            .and_then(serde_json::Value::as_str)
+            .and_then(|s| s.get(..10))
+            .and_then(|day| chrono::NaiveDate::parse_from_str(day, "%Y-%m-%d").ok());
+
+        Some(Play {
+            artist: artist_key.clone(),
+            artist_display: artist_display.to_string(),
+            artist_mbid: parse_mbid(artist, "artistMbId"),
+            album,
+            album_display,
+            release_mbid: parse_mbid(record, "releaseMbId"),
+            track: TrackRef {
+                artist: artist_key,
+                track: track_key,
+            },
+            track_display: track_display.to_string(),
+            recording_mbid: parse_mbid(record, "recordingMbId"),
+            listened_ms,
+            played_on,
+        })
+    }
+}
+
+fn parse_mbid(value: &serde_json::Value, field: &str) -> Option<MusicBrainzId> {
+    value
+        .get(field)
+        .and_then(serde_json::Value::as_str)
+        .and_then(|s| MusicBrainzId::from_str(s).ok())
+}
+
 // ---------------------------------------------------------------- resolved
 
 /// What resolution must produce before serialization: cover art,
@@ -254,19 +347,26 @@ mod tests {
 
     #[test]
     fn key_constructors_normalize() {
-        // Display-name variants collapse to one key.
-        assert_eq!(
-            ArtistKey::from("JAY-Z feat. Beyoncé"),
-            ArtistKey::from("Jay Z")
-        );
-        assert_eq!(
-            ArtistKey::from("tofubeats, HITOMITOI"),
-            ArtistKey::from("Tofubeats")
-        );
+        // Spelling variants collapse to one key.
+        assert_eq!(ArtistKey::from("JAY-Z"), ArtistKey::from("Jay Z"));
         assert_eq!(ArtistKey::from("A$AP Rocky"), ArtistKey::from("a$ap-rocky"));
-        // Album/track keys are trim+lowercase only — junction words stay.
+        // Embedded commas/ampersands are part of the name, not a collab
+        // separator: these must not merge with a different artist.
+        assert_ne!(
+            ArtistKey::from("Tyler, The Creator"),
+            ArtistKey::from("Tyler")
+        );
+        assert_ne!(
+            ArtistKey::from("Earth, Wind & Fire"),
+            ArtistKey::from("Earth")
+        );
+        // Album/track keys normalize whitespace and case only.
         assert_eq!(AlbumKey::from("  Animals "), AlbumKey::from("animals"));
         assert_eq!(AlbumKey::from("Red & Blue"), AlbumKey::from("red & blue"));
+        assert_eq!(
+            AlbumKey::from("Fantastic, Vol. 2"),
+            AlbumKey::from("fantastic,  vol. 2")
+        );
         // Key kinds are distinct types: this is a compile-time property,
         // asserted here so it can't silently regress to one string type.
         let _: AlbumRef = AlbumRef {
@@ -330,6 +430,83 @@ mod tests {
         ] {
             assert!(Href::from_str(bad).is_err(), "{bad:?} should fail");
         }
+    }
+
+    fn raw(play: serde_json::Value) -> Play {
+        Play::from_record(&play).expect("valid play")
+    }
+
+    #[test]
+    fn play_parses_alpha_and_current_shapes() {
+        let alpha = raw(serde_json::json!({
+            "$type": "fm.teal.alpha.feed.play",
+            "artists": [{ "artistName": "New World Sound" }],
+            "trackName": "Flute",
+            "releaseName": "Flute",
+            "msPlayed": 287_503,
+            "playedTime": "2014-12-11T04:17:04Z"
+        }));
+        assert_eq!(alpha.listened_ms, 287_503);
+        assert_eq!(
+            alpha.played_on,
+            Some(chrono::NaiveDate::from_ymd_opt(2014, 12, 11).unwrap())
+        );
+        assert!(alpha.artist_mbid.is_none());
+
+        let current = raw(serde_json::json!({
+            "$type": "fm.teal.feed.play",
+            "artists": [{
+                "artistName": "Ol’ Dirty Bastard",
+                "artistMbId": "mbid:d50548a0-3cfd-4d7a-964b-0aef6545d819"
+            }],
+            "trackName": "Cuttin' Headz",
+            "releaseName": "Return to the 36 Chambers",
+            "duration": 148,
+            "playedTime": "2026-08-13T14:29:26Z",
+            "releaseMbId": "mbid:212ea289-d12d-4820-aff6-fbc5bd60d829",
+            "recordingMbId": "mbid:478c78d0-585a-46f1-a245-abfad69265e1"
+        }));
+        // duration is seconds, normalized to milliseconds.
+        assert_eq!(current.listened_ms, 148_000);
+        assert_eq!(
+            current.artist_mbid.as_ref().unwrap().as_ref(),
+            "d50548a0-3cfd-4d7a-964b-0aef6545d819"
+        );
+        assert_eq!(
+            current.release_mbid.as_ref().unwrap().as_ref(),
+            "212ea289-d12d-4820-aff6-fbc5bd60d829"
+        );
+        assert_eq!(
+            current.recording_mbid.as_ref().unwrap().as_ref(),
+            "478c78d0-585a-46f1-a245-abfad69265e1"
+        );
+    }
+
+    #[test]
+    fn play_rejects_incomplete_records_and_handles_missing_album() {
+        assert!(Play::from_record(&serde_json::json!({})).is_none());
+        assert!(
+            Play::from_record(&serde_json::json!({
+                "artists": [],
+                "trackName": "x"
+            }))
+            .is_none()
+        );
+        assert!(
+            Play::from_record(&serde_json::json!({
+                "artists": [{ "artistName": "  " }],
+                "trackName": "x"
+            }))
+            .is_none()
+        );
+        let no_album = raw(serde_json::json!({
+            "artists": [{ "artistName": "A" }],
+            "trackName": "T",
+            "playedTime": "2026-01-01T00:00:00Z"
+        }));
+        assert!(no_album.album.is_none());
+        assert_eq!(no_album.album_display, "");
+        assert_eq!(no_album.listened_ms, 0);
     }
 
     #[test]

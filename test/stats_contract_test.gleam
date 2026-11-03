@@ -30,7 +30,7 @@ pub fn fixture_decodes_to_expected_stats_test() {
   album_a.artist |> should.equal(option.Some("Artist A"))
   album_a.name |> should.equal("Album A")
 
-  // All-time has both, Artist B first (more ms_played).
+  // All-time has both, Artist B first (more listened_ms).
   let assert #(stats.AllTime, all_time) = range_for(data, stats.AllTime)
   let assert [artist_b, _artist_a] = all_time.artists
   artist_b.name |> should.equal("Artist B")

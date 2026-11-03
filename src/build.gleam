@@ -11,10 +11,12 @@ import data/model.{type Post, type SiteData, SiteData}
 import data/sources
 import data/transport
 import gen/actor/defs.{type ProfileViewDetailed}
+import gleam/dict
 import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
+import hydration
 import lustre/element.{type Element}
 import render/page
 import simplifile
@@ -68,16 +70,12 @@ fn do_build(
   site_data: SiteData,
   cfg: config.SiteConfig,
 ) -> Result(Nil, String) {
-  // Mirror the profile's avatar/banner blobs into the site so the
-  // browser never hits the PDS for them; the returned profile points
-  // at the local copies and `rewrites` lets the client do the same.
-  let profile_images =
-    images.mirror_profile_images(
-      site_data.profile,
-      transport.fetch_image,
-      write_bits,
-    )
-  let site_data = SiteData(..site_data, profile: profile_images.profile)
+  // The profile avatar/banner are mirrored by `just refresh`. Apply
+  // the resulting remote->local map to the build-time profile; the
+  // same map goes into the hydration payload for the client island.
+  let rewrites = images.load_rewrites()
+  let profile = hydration.localize_profile(site_data.profile, rewrites)
+  let site_data = SiteData(..site_data, profile:)
 
   // Drafts ARE built into dist/ so a half-written post is reachable
   // by URL for preview. They're deliberately excluded from the index
@@ -98,7 +96,7 @@ fn do_build(
   let published_data = SiteData(..site_data, posts: published)
 
   let index_html =
-    page.index_page(published_data, cfg.site_url, profile_images.rewrites)
+    page.index_page(published_data, cfg.site_url, dict.to_list(rewrites))
     |> render_document
   write_text(path: cfg.dist_dir <> "/index.html", contents: index_html)
 
@@ -125,15 +123,6 @@ fn log_draft(post: Post) -> Nil {
   io.println(
     "  [draft] " <> model.slug_to_string(post.slug) <> " — " <> post.title,
   )
-}
-
-/// simplifile's write_bits has labeled arguments; this unlabeled
-/// wrapper matches `images.WriteBits` for injection.
-fn write_bits(
-  path: String,
-  bits: BitArray,
-) -> Result(Nil, simplifile.FileError) {
-  simplifile.write_bits(to: path, bits: bits)
 }
 
 fn write_posts(

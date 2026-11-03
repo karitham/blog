@@ -73,7 +73,7 @@ pub fn plays_section_tile_without_image_uses_placeholder_test() {
       name: "Alpha",
       artist: option.None,
       plays: 5,
-      ms_played: 0,
+      listened_ms: option.None,
       image: option.None,
       url: option.None,
     ))
@@ -89,7 +89,7 @@ pub fn plays_section_tile_with_image_and_url_links_test() {
       name: "Alpha",
       artist: option.Some("Artist A"),
       plays: 5,
-      ms_played: 0,
+      listened_ms: option.None,
       image: option.Some("/img/alpha.jpg"),
       url: option.Some("https://musicbrainz.org/artist/a"),
     ))
@@ -97,6 +97,23 @@ pub fn plays_section_tile_with_image_and_url_links_test() {
   string.contains(html, "/img/alpha.jpg") |> should.be_true()
   string.contains(html, "tile-link") |> should.be_true()
   string.contains(html, "https://musicbrainz.org/artist/a") |> should.be_true()
+}
+
+pub fn plays_section_tile_shows_rank_and_listened_time_test() {
+  let assert Ok(#(decoded, _drops)) = atproto.decode_plays(sample_play_body())
+  let data =
+    stats_with_tile(StatsItem(
+      name: "Alpha",
+      artist: option.None,
+      plays: 27,
+      listened_ms: option.Some(3_600_000 + 21 * 60_000),
+      image: option.None,
+      url: option.None,
+    ))
+  let html = plays.plays_section(decoded, data) |> to_string
+  string.contains(html, "01") |> should.be_true()
+  string.contains(html, "27 plays") |> should.be_true()
+  string.contains(html, "1h 21m") |> should.be_true()
 }
 
 pub fn plays_section_hidden_when_no_plays_test() {

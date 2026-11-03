@@ -9,11 +9,11 @@ fn full_stats_body() -> String {
     \"ranges\": {
       \"1m\": {
         \"artists\": [
-          {\"name\": \"Alpha\", \"plays\": 5, \"ms_played\": 1000,
+          {\"name\": \"Alpha\", \"plays\": 5, \"listened_ms\": 1000,
            \"image\": \"/img/alpha.jpg\", \"url\": \"https://musicbrainz.org/artist/a\"}
         ],
         \"albums\": [
-          {\"name\": \"Album A\", \"artist\": \"Alpha\", \"plays\": 3, \"ms_played\": 500}
+          {\"name\": \"Album A\", \"artist\": \"Alpha\", \"plays\": 3, \"listened_ms\": 500}
         ],
         \"tracks\": []
       },
@@ -42,9 +42,11 @@ pub fn decoder_omits_optional_fields_test() {
   let assert [artist] = range_stats.artists
   artist.artist |> should.equal(option.None)
   artist.url |> should.equal(option.Some("https://musicbrainz.org/artist/a"))
+  artist.listened_ms |> should.equal(option.Some(1000))
   let assert [album] = range_stats.albums
   album.artist |> should.equal(option.Some("Alpha"))
   album.image |> should.equal(option.None)
+  album.listened_ms |> should.equal(option.Some(500))
 }
 
 pub fn decoder_defaults_missing_ranges_to_empty_test() {
@@ -90,6 +92,6 @@ pub fn decoder_rejects_malformed_range_test() {
 pub fn decoder_rejects_invalid_stats_item_test() {
   // Missing required field `name` inside an artist should fail the whole file.
   let body =
-    "{\"ranges\": {\"1m\": {\"artists\": [{\"plays\": 1, \"ms_played\": 2}], \"albums\": [], \"tracks\": []}}}"
+    "{\"ranges\": {\"1m\": {\"artists\": [{\"plays\": 1, \"listened_ms\": 2}], \"albums\": [], \"tracks\": []}}}"
   json.parse(body, stats.stats_data_decoder()) |> should.be_error()
 }

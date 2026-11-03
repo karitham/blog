@@ -24,15 +24,25 @@ pub(crate) fn is_play_record(record: &Value) -> bool {
 }
 
 /// Read every play record from a repository CAR file, decoded as
-/// JSON values. Records that fail to decode are dropped.
+/// JSON values. Pass - to read the CAR from stdin. Records that fail
+/// to decode are dropped.
 pub async fn read_plays(car_path: &str) -> Result<Vec<serde_json::Value>, String> {
-    let reader = tokio::io::BufReader::with_capacity(
-        1 << 20,
-        tokio::fs::File::open(car_path)
-            .await
-            .map_err(|e| format!("failed to open {car_path}: {e}"))?,
-    );
+    if car_path == "-" {
+        read_from(tokio::io::BufReader::new(tokio::io::stdin())).await
+    } else {
+        let reader = tokio::io::BufReader::with_capacity(
+            1 << 20,
+            tokio::fs::File::open(car_path)
+                .await
+                .map_err(|e| format!("failed to open {car_path}: {e}"))?,
+        );
+        read_from(reader).await
+    }
+}
 
+async fn read_from<R: tokio::io::AsyncRead + Unpin>(
+    reader: R,
+) -> Result<Vec<serde_json::Value>, String> {
     // Stream the CAR through repo-stream. The block processor runs on
     // every block as it is read; keeping only play records means the
     // driver buffers a fraction of the raw CAR and the MST walk emits

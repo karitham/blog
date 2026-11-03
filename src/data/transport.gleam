@@ -1,10 +1,8 @@
 //// HTTP body fetcher for the SSG (Erlang target).
 ////
-//// `fetch_body` does a GET and returns the response body as a string;
-//// `fetch_image` does a GET and returns raw bytes plus the response's
-//// Content-Type (for picking a file extension). Status and error
-//// handling stay here so the shared decoders in `shared/src/atproto.gleam`
-//// can stay pure.
+//// `fetch_body` does a GET and returns the response body as a string.
+//// Status and error handling stay here so the shared decoders in
+//// `shared/src/atproto.gleam` can stay pure.
 ////
 //// Both retry transient failures (network errors, 429/5xx) a few times
 //// with a short fixed delay, so a blip from the PDS or a CDN doesn't
@@ -14,7 +12,6 @@
 
 import data/transport/core.{type HttpError}
 import gleam/http/request
-import gleam/http/response
 import gleam/httpc
 import gleam/int
 import gleam/result
@@ -32,13 +29,6 @@ const retry_delay_ms = 500
 /// these and continues with an empty value where appropriate.
 pub fn fetch_body(url: String) -> Result(String, String) {
   retry(fn() { fetch_body_once(url) })
-}
-
-/// GET `url` and return the raw bytes and Content-Type header. Used to
-/// mirror remote images (avatar/banner blobs) into the built site so
-/// the visitor's browser never hits the PDS for them.
-pub fn fetch_image(url: String) -> Result(#(BitArray, String), String) {
-  retry(fn() { fetch_image_once(url) })
 }
 
 fn retry(f: fn() -> Result(a, HttpError)) -> Result(a, String) {
@@ -74,30 +64,6 @@ fn fetch_body_once(url: String) -> Result(String, HttpError) {
     False -> {
       let reason = "HTTP " <> int.to_string(resp.status) <> ": " <> resp.body
       core.classify_status(resp.status, reason)
-    }
-  }
-}
-
-fn fetch_image_once(url: String) -> Result(#(BitArray, String), HttpError) {
-  let req_result =
-    request.to(url)
-    |> result.map(fn(req) { request.set_body(req, <<>>) })
-    |> result.replace_error("invalid url: " <> url)
-    |> result.map_error(fn(e) { core.Permanent(e) })
-  use req <- result.try(req_result)
-  let resp_result =
-    httpc.send_bits(req)
-    |> result.map_error(fn(e) { core.Transient(string.inspect(e)) })
-  use resp <- result.try(resp_result)
-  case resp.status >= 200 && resp.status < 300 {
-    False ->
-      core.classify_status(resp.status, "HTTP " <> int.to_string(resp.status))
-    True -> {
-      let content_type = case response.get_header(resp, "content-type") {
-        Ok(ct) -> ct
-        Error(_) -> ""
-      }
-      Ok(#(resp.body, content_type))
     }
   }
 }

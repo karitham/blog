@@ -39,21 +39,24 @@ test:
 new *ARGS:
 	gleam run new {{ARGS}}
 
-# Fetch fresh listening data from PDS, then derive the stats the site embeds.
-# One pass: CAR in, stats out — the ~100MB raw dump is never materialized.
-# `--covers` enables MusicBrainz/Cover Art Archive lookups for pairs not yet
-# cached; with a warm cache the stats step is offline. `--images` mirrors the
-# resolved cover/artist images into priv/cache/img so the browser never hits
-# Cover Art Archive / Wikimedia at page load; a warm image cache is also offline.
+# Fetch fresh listening data from the PDS, then derive the stats the
+# site embeds. The CAR streams from curl into the process, so the ~100MB
+# dump is never written to disk. `--covers` enables MusicBrainz/Cover Art
+# Archive lookups for pairs not yet cached; with a warm cache the resolve
+# step is offline. `--images` mirrors cover/artist images into
+# priv/cache/img with a manifest and GC; `--profile` mirrors the
+# avatar/banner through the same store.
 refresh:
 	#!/usr/bin/env bash
 	set -euo pipefail
 	mkdir -p priv/cache priv/cache/img
-	curl -sL "https://eurosky.social/xrpc/com.atproto.sync.getRepo?did=did:plc:kcgwlowulc3rac43lregdawo" \
-		-o priv/cache/repo.car
-	cd tools/parse-plays && cargo run --release -- refresh ../../priv/cache/repo.car \
-		../../priv/cache/plays-stats.json --covers ../../priv/cache/cover-cache.json \
-		--images ../../priv/cache/img
+	curl --fail --retry 3 --retry-delay 1 -sSL \
+		"https://eurosky.social/xrpc/com.atproto.sync.getRepo?did=did:plc:kcgwlowulc3rac43lregdawo" \
+		| (cd tools/parse-plays && cargo run --quiet --release -- refresh - \
+			../../priv/cache/plays-stats.json \
+			--covers ../../priv/cache/cover-cache.json \
+			--images ../../priv/cache/img \
+			--profile karitham.dev)
 
 # Wipe build artifacts.
 clean:
