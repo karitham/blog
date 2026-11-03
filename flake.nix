@@ -58,6 +58,7 @@
                 just
                 nodejs
                 bun
+                curl
 
                 rustc
                 cargo

@@ -1,0 +1,69 @@
+# Build and publish karitham.dev from Tangled's hosted Spindle.
+#
+# The site lives on Wisp as place.wisp.* records on the PDS. The deploy
+# step needs WISPCTL_APP_PASSWORD in Settings -> Pipelines -> Secrets.
+when:
+  - event: [push, manual]
+    branch: [main]
+  # Weekly refresh: fetch new plays from the PDS, rebuild the stats, and
+  # redeploy so the Music section stays current between pushes.
+  - event: schedule
+    schedule:
+      - cron: "H 6 * * 1"
+
+engine: microvm
+image: nixos
+
+dependencies:
+  - nodejs
+  - zstd
+  - curl
+
+environment:
+  WISP_HANDLE: karitham.dev
+  WISP_SITE: site
+
+cache:
+  - key: gleam-build
+    hash:
+      - manifest.toml
+      - shared/manifest.toml
+      - client/manifest.toml
+    fallback: true
+    paths:
+      - build
+      - shared/build
+      - client/build
+  - key: cargo-target
+    hash:
+      - tools/parse-plays/Cargo.lock
+    fallback: true
+    paths:
+      - tools/parse-plays/target
+  - key: cargo-registry
+    paths:
+      - /home/spindle-workflow/.cargo/registry
+  # Append-only: keep the mirrored covers and profile images between runs.
+  - key: cover-cache
+    paths:
+      - priv/cache
+    when: always
+
+steps:
+  - name: test
+    command: |
+      nix develop -c just test
+      nix develop -c cargo test --release --manifest-path tools/parse-plays/Cargo.toml
+
+  - name: refresh
+    command: nix develop -c just refresh
+
+  - name: build
+    command: nix develop -c just build
+
+  - name: deploy
+    command: |
+      : "${WISPCTL_APP_PASSWORD:?set WISPCTL_APP_PASSWORD in Settings -> Pipelines -> Secrets}"
+      npm install --global --prefix "$HOME/.local" wispctl@2.1.2
+      export PATH="$HOME/.local/bin:$PATH"
+      wispctl deploy "$WISP_HANDLE" --path ./dist --site "$WISP_SITE" --spa --yes

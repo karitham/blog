@@ -25,6 +25,17 @@ Needs Gleam 1.17+ and Erlang/OTP 28+ - `nix develop` provides everything.
 BLOG_URL="http://localhost:8000" just build
 ```
 
+## Deploy
+
+`.tangled/workflows/deploy.yml` runs on Tangled's hosted Spindle and publishes `dist/` to [Wisp](https://wisp.place) as the `site` site.
+
+- The custom domain `karitham.dev` points at Wisp; Cloudflare serves only DNS for it.
+- `WISPCTL_APP_PASSWORD` is an app password for `karitham.dev`, stored in the repository's Tangled pipeline settings (Settings, Pipelines, Secrets).
+- The workflow runs weekly as well as on every push to `main`.
+- GitHub is a push mirror. It does not build or deploy.
+
+The deploy uses Wisp's SPA fallback (`index.html`), matching the previous Cloudflare Pages behavior. Wisp serves the site from `https://sites.wisp.place/karitham.dev/site` until the custom domain is verified.
+
 ## Refreshing listening data
 
 The Music section's stats, covers, and page links come from a data pipeline that runs before `just build`:
@@ -37,7 +48,7 @@ just refresh
 
 Every lookup is cache-first with per-endpoint rate limiting, jittered retries, and `Retry-After` handling. With a warm cache the resolution and image steps are offline; the CAR and profile fetches still touch the network, and only new images are downloaded. A failed or interrupted run never corrupts the caches (atomic writes), and the next run re-does what did not finish.
 
-CI runs `just refresh && just build` on every push and caches `priv/cache/*.json` + `priv/cache/img` between runs, so deploys only resolve and download what's new. The whole `priv/cache` dir is gitignored and wiped by `just clean`.
+Tangled Spindle runs `just refresh && just build` on every push to `main` and on a weekly schedule (`.tangled/workflows/deploy.yml`), caching `priv/cache/*.json` + `priv/cache/img` between runs, so deploys only resolve and download what's new. The whole `priv/cache` dir is gitignored and wiped by `just clean`.
 
 ## Adding a post
 
