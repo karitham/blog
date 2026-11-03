@@ -1,12 +1,29 @@
 /* ============================================================
-   Catppuccin Macchiato - quiet terminal edition
-   One mono family. Lines, not cards. Color for state, not decoration.
+   Catppuccin Macchiato - zine terminal edition
+   MuseoModerno display, Recursive casual mono. Color by role:
+   mauve interacts, green marks, blue labels.
    ============================================================ */
+
+@font-face {
+  font-family: "MuseoModerno";
+  src: url("/fonts/museomoderno-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Recursive";
+  src: url("/fonts/recursive-latin.woff2") format("woff2");
+  font-weight: 300 1000;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   color-scheme: dark;
 
-  /* base */
+  /* base: Catppuccin Macchiato */
   --bg: #24273a;
   --bg-alt: #1e2030;
   --bg-nav: #181926;
@@ -16,14 +33,13 @@
   --text-dim: #b8c0e0;
   --text-dimmer: #939ab7;
 
-  /* accents */
+  /* accents: mauve interacts, green marks, blue labels */
   --accent: #c6a0f6;
-  --accent-hi: #d7bdf8;
   --green: #a6da95;
   --blue: #8aadf4;
   --peach: #f5a97f;
-  --red: #ed8796;
   --yellow: #eed49f;
+  --red: #ed8796;
   --teal: #8bd5ca;
   --lavender: #b7bdf8;
   --pink: #f5bde6;
@@ -37,9 +53,13 @@
   --radius: 4px;
   --content-width: 880px;
   --gutter: 1.5rem;
+  --font-display: "MuseoModerno", "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-body:
+    "Recursive", "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo,
+    Consolas, "Liberation Mono", monospace;
   --font-mono:
-    "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo, Consolas,
-    "Liberation Mono", monospace;
+    "Recursive", "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo,
+    Consolas, "Liberation Mono", monospace;
 
   --shadow-ring: 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent);
   --shadow-depth: 0 2px 4px 0 color-mix(in srgb, var(--bg-nav) 50%, transparent);
@@ -65,14 +85,17 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 15px;
+  font-family: var(--font-body);
+  font-size: 16px;
   line-height: 1.65;
+  font-variation-settings:
+    "MONO" 1,
+    "CASL" 0.45;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: var(--accent);
+  background: var(--green);
   color: var(--bg);
 }
 
@@ -105,25 +128,40 @@ body {
    ============================================================ */
 
 :is(h1, h2, h3, h4, h5, h6) {
-  font-family: inherit;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-variation-settings: normal;
+  letter-spacing: -0.02em;
   margin: 0 0 0.75rem;
   text-wrap: balance;
 }
 
 h1 {
-  font-size: 1.6rem;
-  line-height: 1.25;
+  font-size: 2rem;
+  line-height: 1.1;
 }
 
 h2 {
-  font-size: 1.22rem;
-  line-height: 1.3;
+  font-size: 1.5rem;
+  line-height: 1.2;
 }
 
 h3 {
-  font-size: 1.02rem;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+/* Terminal ornaments stay mono even when the heading is display type. */
+:is(
+  :is(#plays, #repos, .section-header) h2,
+  .post h1,
+  .post-content :is(h2, h3, h4),
+  .stats-grid h3
+)::before {
+  font-family: var(--font-mono);
+  font-variation-settings:
+    "MONO" 1,
+    "CASL" 0;
 }
 
 strong {
@@ -132,7 +170,10 @@ strong {
 }
 
 code {
-  font-family: inherit;
+  font-family: var(--font-mono);
+  font-variation-settings:
+    "MONO" 1,
+    "CASL" 0;
   background: var(--bg-alt);
   padding: 0.08em 0.35em;
   border-radius: 2px;
@@ -142,6 +183,10 @@ code {
 pre {
   background: var(--bg-alt);
   padding: 0.9rem 1rem;
+  font-family: var(--font-mono);
+  font-variation-settings:
+    "MONO" 1,
+    "CASL" 0;
   font-size: 0.875rem;
   line-height: 1.6;
   overflow-x: auto;
@@ -210,14 +255,15 @@ a {
 }
 
 a:hover {
-  color: var(--accent-hi);
+  color: var(--accent);
   text-decoration: underline;
+  text-decoration-color: var(--green);
+  text-decoration-thickness: 2px;
   text-underline-offset: 0.2em;
-  text-decoration-thickness: 1px;
 }
 
 a:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -266,7 +312,7 @@ a:hover code {
   z-index: 100;
   padding: 0.4rem 0.65rem;
   background: var(--bg-nav);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--green);
   border-radius: var(--radius);
   color: var(--text);
 }
@@ -312,8 +358,11 @@ a:hover code {
 
 .nav-brand {
   color: var(--text);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-variation-settings: normal;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
 
@@ -339,7 +388,10 @@ a:hover code {
 
 .nav-link:hover {
   color: var(--text);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: var(--green);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
 }
 
 /* Footer */
@@ -365,7 +417,7 @@ footer p a {
 
 footer p a:hover {
   color: var(--text);
-  text-decoration-color: currentColor;
+  text-decoration-color: var(--green);
 }
 
 /* ============================================================
@@ -415,9 +467,10 @@ footer p a:hover {
 
 .profile-name {
   margin: 0;
-  font-size: 1.45rem;
-  font-weight: 600;
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 650;
+  line-height: 1.1;
   letter-spacing: -0.02em;
   color: var(--text);
 }
@@ -433,6 +486,8 @@ footer p a:hover {
   &:hover {
     color: var(--blue);
     text-decoration: underline;
+    text-decoration-color: var(--green);
+    text-decoration-thickness: 2px;
   }
 }
 
@@ -482,7 +537,7 @@ footer p a:hover {
 
   & h2 {
     margin: 0;
-    font-size: 1.12rem;
+    font-size: 1.35rem;
   }
 }
 
@@ -535,11 +590,14 @@ footer p a:hover {
 
 .card-title {
   color: var(--accent);
-  font-size: 0.98rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-variation-settings: normal;
+  font-size: 1.12rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
 
   &:hover {
-    color: var(--accent-hi);
+    color: var(--accent);
   }
 }
 
@@ -604,7 +662,7 @@ footer p a:hover {
 }
 
 .play-track a:hover {
-  color: var(--accent-hi);
+  color: var(--accent);
 }
 
 .play-artist {
@@ -628,61 +686,75 @@ footer p a:hover {
 }
 
 /* ============================================================
-   Music: view tabs, range tabs, chart rows
+   Music: one tab row and the chart rows
    ============================================================ */
 
 /* Radios are the state holder; visually hidden but focusable. */
-:is(.music-radio, .stats-radio) {
+.music-radio {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
 
-:is(.music-tabs, .stats-tabs) {
-  display: inline-flex;
-  align-items: stretch;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
+.music-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.35rem;
 }
 
-:is(.music-tab, .stats-tab) {
+/* One tab row: recent, a slash, then the chart ranges. The active
+   tab's rule sits on the toolbar line. */
+.music-tabs {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+}
+
+.music-sep {
+  color: var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  user-select: none;
+}
+
+.music-tab {
   display: inline-block;
-  padding: 0.34rem 0.68rem;
-  margin: 0;
-  font-size: 0.76rem;
-  color: var(--text-dim);
-  border: 0;
-  border-right: 1px solid var(--border);
+  padding: 0.35rem 0 0.45rem;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dimmer);
+  font-family: var(--font-body);
+  font-variation-settings:
+    "MONO" 1,
+    "CASL" 0.2;
+  font-size: 0.86rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   cursor: pointer;
   user-select: none;
   transition:
-    background 120ms ease-out,
-    color 120ms ease-out;
+    color 120ms ease-out,
+    border-color 120ms ease-out;
 
   &:hover {
-    background: var(--bg-alt);
     color: var(--text);
+    border-bottom-color: color-mix(in srgb, var(--green) 40%, transparent);
   }
 }
 
-:is(.music-tabs, .stats-tabs) label:last-of-type {
-  border-right: 0;
-}
-
-:is(.music-radio, .stats-radio):checked + :is(.music-tab, .stats-tab) {
-  background: var(--bg-alt);
+.music-radio:checked + .music-tab {
   color: var(--text);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  border-bottom-color: var(--green);
 }
 
-:is(.music-radio, .stats-radio):focus-visible + :is(.music-tab, .stats-tab) {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.stats-tabs {
-  margin-top: 0.9rem;
+.music-radio:focus-visible + .music-tab {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 /* Only the panel matching the checked radio is visible. Selectors are
@@ -693,10 +765,13 @@ footer p a:hover {
   padding-top: 0.35rem;
 }
 
-#plays:has(#music-now:checked) .music-panel[data-view="now"] {
+#plays:has(#music-recent:checked) .music-panel[data-view="recent"] {
   display: block;
 }
-#plays:has(#music-stats:checked) .music-panel[data-view="stats"] {
+#plays:has(#stats-1m:checked) .music-panel[data-view="stats"],
+#plays:has(#stats-6m:checked) .music-panel[data-view="stats"],
+#plays:has(#stats-1y:checked) .music-panel[data-view="stats"],
+#plays:has(#stats-all:checked) .music-panel[data-view="stats"] {
   display: block;
 }
 #plays:has(#stats-1m:checked) .stats-panel[data-range="1m"] {
@@ -720,6 +795,10 @@ footer p a:hover {
     margin: 0 0 0.55rem;
     padding-bottom: 0.35rem;
     border-bottom: 1px solid var(--border-soft);
+    font-family: var(--font-body);
+    font-variation-settings:
+      "MONO" 1,
+      "CASL" 0.2;
     font-size: 0.82rem;
     font-weight: 500;
     letter-spacing: 0.04em;
@@ -727,7 +806,7 @@ footer p a:hover {
 
     &::before {
       content: "## ";
-      color: var(--teal);
+      color: var(--green);
     }
   }
 }
@@ -767,7 +846,11 @@ footer p a:hover {
   }
 
   &:hover .tile-name {
-    color: var(--accent-hi);
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--green);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
   }
 }
 
@@ -776,6 +859,10 @@ footer p a:hover {
   font-size: 0.68rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.tiles li:nth-child(-n + 3) .tile-rank {
+  color: var(--green);
 }
 
 .tile-cover-wrap {
@@ -797,60 +884,24 @@ footer p a:hover {
   outline: none;
 }
 
-/* No art: a category-tinted monogram. */
+/* No art: one tinted monogram treatment, not three category colors. */
 .tile-cover--none {
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--bg-alt) 70%, transparent),
+    color-mix(in srgb, var(--accent) 12%, var(--bg-alt)),
     var(--bg-alt)
   );
 }
 
 .tile-initial {
-  color: var(--text-dimmer);
+  color: var(--accent);
   font-size: 34cqw;
   font-weight: 600;
   line-height: 1;
   user-select: none;
-}
-
-.tile-cover--artists .tile-initial {
-  color: var(--lavender);
-}
-
-.tile-cover--albums .tile-initial {
-  color: var(--teal);
-}
-
-.tile-cover--tracks .tile-initial {
-  color: var(--peach);
-}
-
-.tile-cover--artists {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--lavender) 14%, var(--bg-alt)),
-    var(--bg-alt)
-  );
-}
-
-.tile-cover--albums {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--teal) 14%, var(--bg-alt)),
-    var(--bg-alt)
-  );
-}
-
-.tile-cover--tracks {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--peach) 14%, var(--bg-alt)),
-    var(--bg-alt)
-  );
 }
 
 .tile-text {
@@ -863,8 +914,13 @@ footer p a:hover {
 .tile-name {
   overflow: hidden;
   color: var(--text);
-  font-size: 0.84rem;
+  font-family: var(--font-body);
+  font-variation-settings:
+    "MONO" 1,
+    "CASL" 0.45;
+  font-size: 0.9rem;
   font-weight: 600;
+  letter-spacing: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -898,8 +954,9 @@ footer p a:hover {
 .post h1 {
   margin-bottom: 0.5rem;
   color: var(--text);
-  font-size: 1.7rem;
-  line-height: 1.25;
+  font-size: 2.3rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 
   &::before {
     content: "# ";
@@ -933,7 +990,7 @@ footer p a:hover {
 }
 
 .post-content {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: 1.78;
   text-wrap: pretty;
 
@@ -961,7 +1018,7 @@ footer p a:hover {
 
     &::before {
       content: "#### ";
-      color: var(--peach);
+      color: var(--text-dimmer);
     }
   }
 
@@ -985,8 +1042,9 @@ footer p a:hover {
 
   & :is(h2, h3, h4):hover .anchor {
     text-decoration: underline;
+    text-decoration-color: var(--green);
+    text-decoration-thickness: 2px;
     text-underline-offset: 4px;
-    text-decoration-color: var(--border);
   }
 
   & a {
@@ -995,7 +1053,7 @@ footer p a:hover {
     text-underline-offset: 0.2em;
 
     &:hover {
-      text-decoration-color: currentColor;
+      text-decoration-color: var(--green);
     }
   }
 
@@ -1046,8 +1104,8 @@ footer p a:hover {
     &:hover {
       position: relative;
       z-index: 1;
-      color: var(--accent-hi);
-      border-color: var(--accent);
+      color: var(--green);
+      border-color: var(--green);
       background: var(--bg-alt);
       text-decoration: none;
     }
@@ -1180,6 +1238,14 @@ footer p a:hover {
 
   .profile-name {
     font-size: 1.3rem;
+  }
+
+  .music-tabs {
+    gap: 0.3rem 0.8rem;
+  }
+
+  .music-tab {
+    font-size: 0.82rem;
   }
 
   .tiles {

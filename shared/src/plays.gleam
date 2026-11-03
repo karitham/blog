@@ -17,12 +17,10 @@ import lustre/element.{type Element, fragment, none, text}
 import lustre/element/html.{a, div, h2, h3, img, input, label, li, ol, span}
 import stats.{type Range, type RangeStats, type StatsData, type StatsItem}
 
-/// The full Music section: title and view tabs on one header line,
-/// with the live rows and the top-N grids beneath them. The live
-/// rows live in their own `#plays-rows` container so the client's
-/// 30s poll only replaces that subtree and the view tabs keep their
-/// state. Built manually (not via `section.section`) so the tabs can
-/// sit beside the h2 in a `.section-header` row.
+/// The full Music section: a quiet title, one tab row where "recent"
+/// sits beside the chart ranges, then the content. The live rows live
+/// in their own `#plays-rows` container so the client's 30s poll only
+/// replaces that subtree and the tabs keep their state.
 pub fn plays_section(plays: List(FeedPlay), data: StatsData) -> Element(msg) {
   case plays {
     [] -> none()
@@ -33,10 +31,8 @@ pub fn plays_section(plays: List(FeedPlay), data: StatsData) -> Element(msg) {
           class("section"),
         ],
         [
-          div([class("section-header")], [
-            h2([], [text("Music")]),
-            ..music_tabs(data)
-          ]),
+          div([class("section-header")], [h2([], [text("Music")])]),
+          music_toolbar(data),
           ..music_panels(plays, data)
         ],
       )
@@ -64,41 +60,38 @@ pub fn plays_rows(plays: List(FeedPlay), stale: Bool) -> Element(msg) {
   )
 }
 
-/// The `now playing` / `stats` pills for the header line. Hidden
-/// entirely when there are no stats to show.
-fn music_tabs(data: StatsData) -> List(Element(msg)) {
+/// One tab row: "recent" plus one tab per chart range. No nested
+/// view/filter controls — picking a range is picking its chart.
+fn music_toolbar(data: StatsData) -> Element(msg) {
   case stats.is_empty(data) {
-    True -> []
-    False -> [
-      div([class("music-tabs")], [
-        input([
-          class("music-radio"),
-          type_("radio"),
-          name("music-view"),
-          id("music-now"),
-          checked(True),
-        ]),
-        label([class("music-tab"), for("music-now")], [text("now playing")]),
-        input([
-          class("music-radio"),
-          type_("radio"),
-          name("music-view"),
-          id("music-stats"),
-        ]),
-        label([class("music-tab"), for("music-stats")], [text("stats")]),
-      ]),
-    ]
+    True -> none()
+    False -> div([class("music-toolbar")], [tabs(data)])
   }
 }
 
-/// The panels below the header. With stats, the `now playing` view is
-/// shown by default; `:has()` selectors in the CSS switch between the
-/// two based on the checked radio.
+fn tabs(data: StatsData) -> Element(msg) {
+  div([class("music-tabs")], [
+    input([
+      class("music-radio"),
+      type_("radio"),
+      name("music-view"),
+      id("music-recent"),
+      checked(True),
+    ]),
+    label([class("music-tab"), for("music-recent")], [text("recent")]),
+    span([class("music-sep"), attribute("aria-hidden", "true")], [text("/")]),
+    ..range_tabs(data.ranges)
+  ])
+}
+
+/// The panels below the controls. With stats, the recent view is shown
+/// by default; `:has()` selectors in the CSS switch between the two
+/// based on the checked radio.
 fn music_panels(plays: List(FeedPlay), data: StatsData) -> List(Element(msg)) {
   case stats.is_empty(data) {
     True -> [rows_container(plays)]
     False -> [
-      div([class("music-panel"), attribute("data-view", "now")], [
+      div([class("music-panel"), attribute("data-view", "recent")], [
         rows_container(plays),
       ]),
       div([class("music-panel"), attribute("data-view", "stats")], [
@@ -167,41 +160,36 @@ pub fn format_play_time(iso: String) -> #(String, String) {
 
 // ---------------------------------------------------------------- stats view
 
-/// The stats tab content: a radio-driven range switcher (CSS-only
-/// pills) and one stacked panel per range holding the three 3x3 grids.
+/// The charts content: one stacked panel per range, each holding the
+/// three top-N grids. The range switcher lives in the control bar.
 fn stats_view(data: StatsData) -> Element(msg) {
   case stats.is_empty(data) {
     True -> none()
-    False ->
-      fragment([range_tabs(data.ranges), ..list.map(data.ranges, range_panel)])
+    False -> fragment(list.map(data.ranges, range_panel))
   }
 }
 
-/// `input + label` pairs in one segmented control. The first range is
-/// checked by default; `input:checked ~ .stats-panel[data-range=...]`
-/// in the CSS picks the matching panel.
-fn range_tabs(ranges: List(#(Range, RangeStats))) -> Element(msg) {
-  div(
-    [class("stats-tabs")],
-    ranges
-      |> list.index_map(fn(pair, i) {
-        let #(range, _) = pair
-        let range_id = "stats-" <> stats.range_key(range)
-        [
-          input([
-            class("stats-radio"),
-            type_("radio"),
-            name("stats-range"),
-            id(range_id),
-            checked(i == 0),
-          ]),
-          label([class("stats-tab"), for(range_id)], [
-            text(stats.range_label(range)),
-          ]),
-        ]
-      })
-      |> list.flatten,
-  )
+/// One radio/label pair per range, appended to the primary tab row.
+/// All radios share the `music-view` name, so a range selection
+/// replaces the recent selection and `:has()` picks the panel.
+fn range_tabs(ranges: List(#(Range, RangeStats))) -> List(Element(msg)) {
+  ranges
+  |> list.map(fn(pair) {
+    let #(range, _) = pair
+    let range_id = "stats-" <> stats.range_key(range)
+    [
+      input([
+        class("music-radio"),
+        type_("radio"),
+        name("music-view"),
+        id(range_id),
+      ]),
+      label([class("music-tab"), for(range_id)], [
+        text(stats.range_label(range)),
+      ]),
+    ]
+  })
+  |> list.flatten
 }
 
 fn range_panel(pair: #(Range, RangeStats)) -> Element(msg) {

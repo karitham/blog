@@ -112,6 +112,7 @@ fn do_build(
   copy_post_assets(published, cfg)
   copy_post_assets(drafts, cfg)
   copy_favicons(cfg)
+  use _ <- result.try(copy_fonts(cfg))
   use _ <- result.try(copy_image_cache(cfg))
   use _ <- result.try(copy_client_bundle(cfg))
 
@@ -206,6 +207,14 @@ fn copy_post_files(src_dir src_dir: String, dst_dir dst_dir: String) -> Nil {
       })
     Error(e) -> log_io_error(op: "read", path: src_dir, error: e)
   }
+}
+
+fn copy_fonts(cfg: config.SiteConfig) -> Result(Nil, String) {
+  copy_dir(src: "priv/static/fonts", dst: cfg.dist_dir <> "/fonts")
+  |> result.map(fn(_) {
+    io.println("  copied fonts")
+    Nil
+  })
 }
 
 fn copy_favicons(cfg: config.SiteConfig) {

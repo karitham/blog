@@ -143,6 +143,21 @@ fn head_children(
         ])
       option.None -> none()
     },
+    // Self-hosted fonts: preload the two files the first screen uses.
+    html.link([
+      attribute.rel("preload"),
+      attribute.href("/fonts/recursive-latin.woff2"),
+      attribute.attribute("as", "font"),
+      attribute.type_("font/woff2"),
+      attribute.attribute("crossorigin", ""),
+    ]),
+    html.link([
+      attribute.rel("preload"),
+      attribute.href("/fonts/museomoderno-latin.woff2"),
+      attribute.attribute("as", "font"),
+      attribute.type_("font/woff2"),
+      attribute.attribute("crossorigin", ""),
+    ]),
     // Styles, icons, scripts
     html.link([attribute.rel("stylesheet"), attribute.href("/style.css")]),
     html.link([
