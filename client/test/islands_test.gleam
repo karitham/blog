@@ -4,7 +4,7 @@
 
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
 import gen/feed/play.{type FeedPlay, ArtistView, FeedPlay}
-import gen/repo.{type Repo, Repo}
+import gen/repo/manifest.{type RepoManifest, Declaration, RepoManifest}
 import gleam/dict
 import gleam/dynamic/decode
 import gleam/json
@@ -42,12 +42,11 @@ fn sample_play() -> FeedPlay {
   )
 }
 
-fn sample_repo() -> Repo {
-  Repo(
-    name: Some("repo-one"),
-    description: Some("first"),
-    repo_did: "did:plc:one",
+fn sample_repo() -> RepoManifest {
+  RepoManifest(
     created_at: "2026-01-01T00:00:00Z",
+    declaration: Declaration(name: "repo-one", owner: "did:plc:owner"),
+    description: Some("first"),
     topics: Some(["gleam"]),
     website: None,
   )

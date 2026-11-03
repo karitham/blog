@@ -3,7 +3,7 @@ import decode
 import encode
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
 import gen/feed/play.{type FeedPlay, ArtistView, FeedPlay}
-import gen/repo.{type Repo, Repo}
+import gen/repo/manifest.{type RepoManifest, Declaration, RepoManifest}
 import gleam/dict
 import gleam/option.{None, Some}
 import gleam/string
@@ -51,28 +51,26 @@ fn sample_plays() -> List(FeedPlay) {
   ]
 }
 
-fn sample_repos() -> List(DecodedRecord(Repo)) {
+fn sample_repos() -> List(DecodedRecord(RepoManifest)) {
   [
     DecodedRecord(
-      uri: "at://did:plc:one/sh.tangled.repo/repo-one",
+      uri: "at://did:plc:one/org.tangled.repo.manifest/self",
       cid: "bafy1",
-      value: Repo(
-        name: Some("repo-one"),
-        description: Some("first"),
-        repo_did: "did:plc:one",
+      value: RepoManifest(
         created_at: "2026-01-01T00:00:00Z",
+        declaration: Declaration(name: "repo-one", owner: "did:plc:owner"),
+        description: Some("first"),
         topics: Some(["gleam", "atproto"]),
         website: None,
       ),
     ),
     DecodedRecord(
-      uri: "at://did:plc:two/sh.tangled.repo/repo-two",
+      uri: "at://did:plc:two/org.tangled.repo.manifest/self",
       cid: "bafy2",
-      value: Repo(
-        name: Some("repo-two"),
-        description: Some(""),
-        repo_did: "did:plc:two",
+      value: RepoManifest(
         created_at: "2026-02-01T00:00:00Z",
+        declaration: Declaration(name: "repo-two", owner: "did:plc:owner"),
+        description: Some(""),
         topics: Some([]),
         website: None,
       ),

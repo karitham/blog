@@ -8,9 +8,17 @@ build: codegen client ssg
 
 # Regenerate types/decoders from vendored Lexicon schemas. We don't
 # ask for the typed XRPC client — both SSG and browser go through
-# `shared/src/fetch.gleam`'s raw HTTP + decoders instead.
+# `shared/src/atproto.gleam`'s raw HTTP + decoders instead. Generate
+# into a temp dir and swap it in so a removed or renamed lexicon can't
+# leave a stale module behind.
 codegen:
-	gleam run -m atproto_codegen -- ./lexicons ./shared/src/gen gen app.bsky.,com.atproto.,sh.tangled.,fm.teal.
+	#!/usr/bin/env bash
+	set -euo pipefail
+	out="$(mktemp -d)"
+	trap 'rm -rf "$out"' EXIT
+	gleam run -m atproto_codegen -- ./lexicons "$out" gen app.bsky.,com.atproto.,org.tangled.,fm.teal.
+	rm -rf shared/src/gen
+	mv "$out" shared/src/gen
 
 # Build the JS bundle: one minified, self-executing ES module in
 # client/dist/, copied into dist/client/ by the SSG step.

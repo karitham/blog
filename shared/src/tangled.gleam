@@ -2,54 +2,48 @@
 //// generic AT Protocol layer (`atproto.gleam`) shouldn't know.
 ////
 //// atproto knows how to fetch and decode records; this module knows
-//// what Tangled *means* by them — repo names come from the URI rkey
-//// when missing, pinned DIDs are padded with empty placeholders, and
-//// only pinned repos are shown on the site.
+//// what Tangled *means* by them — a repo's DID is its record URI
+//// authority, only pinned repos are shown, and legacy AT-URI pins are
+//// ignored.
 
-import atproto.{type DecodedRecord, DecodedRecord}
+import atproto.{type DecodedRecord}
 import gen/actor/profile.{type ActorProfile}
-import gen/repo.{type Repo, Repo}
+import gen/repo/manifest.{type RepoManifest}
 import gleam/list
 import gleam/option
+import gleam/string
 
-/// Fill in a Tangled repo's `name` from the URI rkey when the
-/// original is missing or empty. Records without a real name usually
-/// hold an auto-generated hash; the rkey is the slug Tangled uses
-/// for the URL. Returns the wrapper unchanged if the URI can't be
-/// parsed, so the caller can still pass it to the view.
-pub fn resolve_repo_name(record: DecodedRecord(Repo)) -> DecodedRecord(Repo) {
-  let repo = record.value
-  case repo.name {
-    option.Some(name) if name != "" -> record
-    _ ->
-      case atproto.rkey_from_uri(record.uri) {
-        Ok(rkey) ->
-          DecodedRecord(..record, value: Repo(..repo, name: option.Some(rkey)))
-        Error(_) -> record
-      }
+/// The repo DID carried by a manifest record URI:
+/// `at://did:plc:abc/org.tangled.repo.manifest/self` -> `did:plc:abc`.
+pub fn repo_did_from_uri(uri: String) -> Result(String, Nil) {
+  case string.split(uri, on: "/") {
+    ["at:", "", did, ..] -> Ok(did)
+    _ -> Error(Nil)
   }
 }
 
-/// Drop repo records whose `repo_did` isn't in the pinned list.
+/// Drop repo records whose URI authority isn't in the pinned list.
+/// The appview is asked for exactly the pinned DIDs; this keeps the
+/// pinned-only invariant if it returns anything else.
 pub fn filter_repos_by_did(
-  records: List(DecodedRecord(Repo)),
+  records: List(DecodedRecord(RepoManifest)),
   pinned_dids: List(String),
-) -> List(DecodedRecord(Repo)) {
+) -> List(DecodedRecord(RepoManifest)) {
   list.filter(records, fn(record) {
-    list.contains(pinned_dids, record.value.repo_did)
+    case repo_did_from_uri(record.uri) {
+      Ok(did) -> list.contains(pinned_dids, did)
+      Error(_) -> False
+    }
   })
 }
 
-/// Extract non-empty pinned DIDs from one or more actor profile
-/// records. Tangled pads the list with empty rkeys as placeholders;
-/// those are dropped.
-pub fn pinned_dids_from_profiles(
-  records: List(DecodedRecord(ActorProfile)),
-) -> List(String) {
-  records
-  |> list.flat_map(fn(record) {
-    record.value.pinned_repositories
-    |> option.unwrap(or: [])
-    |> list.filter(fn(did) { did != "" })
-  })
+/// Extract the pinned repo DIDs from the owner's profile record.
+/// Values are repo DIDs in v1; legacy AT-URI pins and empty
+/// placeholders are dropped, and duplicates collapse before the
+/// appview URL is built.
+pub fn pinned_dids_from_profile(profile: ActorProfile) -> List(String) {
+  profile.pinned_repositories
+  |> option.unwrap(or: [])
+  |> list.filter(fn(value) { string.starts_with(value, "did:") })
+  |> list.unique
 }

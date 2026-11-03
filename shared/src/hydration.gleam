@@ -9,7 +9,7 @@
 import atproto.{type DecodedRecord}
 import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
 import gen/feed/play.{type FeedPlay}
-import gen/repo.{type Repo}
+import gen/repo/manifest.{type RepoManifest}
 import gleam/dict.{type Dict}
 import gleam/option
 
@@ -20,7 +20,7 @@ pub type HydrationModel {
   HydrationModel(
     profile: ProfileViewDetailed,
     plays: List(FeedPlay),
-    repos: List(DecodedRecord(Repo)),
+    repos: List(DecodedRecord(RepoManifest)),
     rewrites: Dict(String, String),
   )
 }

@@ -4,7 +4,7 @@
 import atproto.{type DecodedRecord}
 import gen/actor/defs.{profile_view_detailed_fields}
 import gen/feed/play.{feed_play_fields}
-import gen/repo.{type Repo, repo_fields}
+import gen/repo/manifest.{type RepoManifest, repo_manifest_fields}
 import gleam/dict.{type Dict}
 import gleam/json
 import gleam/list
@@ -48,10 +48,10 @@ fn encode_rewrites(rewrites: Dict(String, String)) -> json.Json {
   |> json.object
 }
 
-fn encode_decoded_repo(record: DecodedRecord(Repo)) -> json.Json {
+fn encode_decoded_repo(record: DecodedRecord(RepoManifest)) -> json.Json {
   json.object([
     #("uri", json.string(record.uri)),
     #("cid", json.string(record.cid)),
-    #("value", json.object(repo_fields(record.value))),
+    #("value", json.object(repo_manifest_fields(record.value))),
   ])
 }

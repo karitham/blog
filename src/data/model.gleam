@@ -8,7 +8,7 @@
 import atproto.{type DecodedRecord}
 import gen/actor/defs.{type ProfileViewDetailed}
 import gen/feed/play.{type FeedPlay}
-import gen/repo.{type Repo}
+import gen/repo/manifest.{type RepoManifest}
 import gleam/list
 import gleam/option.{type Option}
 import gleam/string
@@ -74,7 +74,7 @@ pub type SiteData {
     profile: ProfileViewDetailed,
     recent_plays: List(FeedPlay),
     plays_stats: StatsData,
-    repos: List(DecodedRecord(Repo)),
+    repos: List(DecodedRecord(RepoManifest)),
     posts: List(Post),
   )
 }

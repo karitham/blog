@@ -4,7 +4,7 @@
 import atproto.{type DecodedRecord, DecodedRecord}
 import gen/actor/defs.{profile_view_detailed_decoder}
 import gen/feed/play.{feed_play_decoder}
-import gen/repo.{type Repo, repo_decoder}
+import gen/repo/manifest.{type RepoManifest, repo_manifest_decoder}
 import gleam/dynamic/decode
 import gleam/json
 import hydration.{type HydrationModel, HydrationModel}
@@ -26,9 +26,9 @@ fn hydration_model_decoder() -> decode.Decoder(HydrationModel) {
   decode.success(HydrationModel(profile:, plays:, repos:, rewrites:))
 }
 
-fn decoded_repo_decoder() -> decode.Decoder(DecodedRecord(Repo)) {
+fn decoded_repo_decoder() -> decode.Decoder(DecodedRecord(RepoManifest)) {
   use uri <- decode.field("uri", decode.string)
   use cid <- decode.field("cid", decode.string)
-  use value <- decode.field("value", repo_decoder())
+  use value <- decode.field("value", repo_manifest_decoder())
   decode.success(DecodedRecord(uri:, cid:, value:))
 }

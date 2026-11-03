@@ -12,7 +12,7 @@ import data/frontmatter
 import data/model.{type Post, type SiteData, SiteData}
 import gen/actor/defs.{type ProfileViewDetailed}
 import gen/feed/play.{type FeedPlay}
-import gen/repo.{type Repo}
+import gen/repo/manifest.{type RepoManifest}
 import gleam/int
 import gleam/io
 import gleam/json
@@ -106,15 +106,7 @@ fn fetch_plays(http_get: HttpGet) -> List(FeedPlay) {
 pub fn plays_from_body(body: String) -> List(FeedPlay) {
   case atproto.decode_plays(body) {
     Ok(#(plays, drops)) -> {
-      case drops > 0 {
-        True ->
-          io.println(
-            "Warning: dropped "
-            <> int.to_string(drops)
-            <> " play record(s) that failed to decode",
-          )
-        False -> Nil
-      }
+      log_drops(what: "play", drops: drops)
       plays
     }
     Error(e) -> log_fail(what: "plays", reason: string.inspect(e), fallback: [])
@@ -126,18 +118,22 @@ pub fn plays_from_body(body: String) -> List(FeedPlay) {
 fn fetch_repos(
   http_get: HttpGet,
   pinned_dids: List(String),
-) -> List(DecodedRecord(Repo)) {
-  case http_get(atproto.repos_url()) {
-    Ok(body) ->
-      case atproto.decode_repos(body) {
-        Ok(records) ->
-          records
-          |> tangled.filter_repos_by_did(pinned_dids)
-          |> list.map(tangled.resolve_repo_name)
-        Error(e) ->
-          log_fail(what: "repos", reason: string.inspect(e), fallback: [])
+) -> List(DecodedRecord(RepoManifest)) {
+  case pinned_dids {
+    [] -> []
+    _ ->
+      case http_get(atproto.repos_url(pinned_dids)) {
+        Ok(body) ->
+          case atproto.decode_repos(body) {
+            Ok(#(records, drops)) -> {
+              log_drops(what: "repo", drops: drops)
+              tangled.filter_repos_by_did(records, pinned_dids)
+            }
+            Error(e) ->
+              log_fail(what: "repos", reason: string.inspect(e), fallback: [])
+          }
+        Error(e) -> log_fail(what: "repos", reason: e, fallback: [])
       }
-    Error(e) -> log_fail(what: "repos", reason: e, fallback: [])
   }
 }
 
@@ -146,8 +142,8 @@ fn fetch_repos(
 fn fetch_pinned_dids(http_get: HttpGet) -> List(String) {
   case http_get(atproto.pinned_dids_url()) {
     Ok(body) ->
-      case atproto.decode_actor_profiles(body) {
-        Ok(profiles) -> tangled.pinned_dids_from_profiles(profiles)
+      case atproto.decode_actor_profile(body) {
+        Ok(profile) -> tangled.pinned_dids_from_profile(profile)
         Error(e) ->
           log_fail(what: "pinned_dids", reason: string.inspect(e), fallback: [])
       }
@@ -277,4 +273,18 @@ fn log_fail(
 ) -> a {
   io.println("Failed to fetch " <> what <> ": " <> reason)
   fallback
+}
+
+fn log_drops(what what: String, drops drops: Int) -> Nil {
+  case drops > 0 {
+    True ->
+      io.println(
+        "Warning: dropped "
+        <> int.to_string(drops)
+        <> " "
+        <> what
+        <> " record(s) that failed to decode",
+      )
+    False -> Nil
+  }
 }

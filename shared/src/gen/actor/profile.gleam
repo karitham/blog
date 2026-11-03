@@ -5,7 +5,7 @@ import gleam/json
 import gleam/option.{type Option}
 import gen/internal
 
-pub const collection = "sh.tangled.actor.profile"
+pub const collection = "org.tangled.actor.profile"
 
 pub type ActorProfile {
   ActorProfile(
@@ -19,7 +19,7 @@ pub fn actor_profile_fields(value: ActorProfile) -> List(#(String, json.Json)) {
 
 pub fn encode_actor_profile(value: ActorProfile) -> json.Json {
   json.object([
-    #("$type", json.string("sh.tangled.actor.profile")),
+    #("$type", json.string("org.tangled.actor.profile")),
     ..actor_profile_fields(value)
   ])
 }

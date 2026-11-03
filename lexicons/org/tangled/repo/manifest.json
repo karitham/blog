@@ -1,0 +1,42 @@
+{
+  "lexicon": 1,
+  "id": "org.tangled.repo.manifest",
+  "description": "Tangled repository manifest, owned by the repository DID",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["declaration", "createdAt"],
+        "properties": {
+          "declaration": { "type": "ref", "ref": "#declaration" },
+          "description": {
+            "type": "string",
+            "minGraphemes": 1,
+            "maxGraphemes": 140
+          },
+          "website": { "type": "string", "format": "uri" },
+          "topics": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 50 },
+            "maxLength": 50
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    },
+    "declaration": {
+      "type": "object",
+      "required": ["owner", "name"],
+      "properties": {
+        "owner": { "type": "string", "format": "did" },
+        "name": {
+          "type": "string",
+          "format": "record-key",
+          "description": "repository name; its URL slug is lowercase(name)"
+        }
+      }
+    }
+  }
+}

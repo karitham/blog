@@ -9,6 +9,11 @@ pub const pds_endpoint = "https://eurosky.social"
 
 pub const public_api = "https://public.api.bsky.app"
 
+/// Tangled's appview (Bobbin). Serves the org.tangled.* queries that
+/// read data the owner's PDS cannot: repo manifests live in each repo
+/// DID's account, not the owner's.
+pub const tangled_api = "https://api.tangled.org"
+
 pub const did = "did:plc:kcgwlowulc3rac43lregdawo"
 
 /// Shared by SSG and client so both render the same list length.

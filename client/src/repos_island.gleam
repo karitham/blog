@@ -1,14 +1,14 @@
 //// Repos island: owns the `#repos` mount point.
 ////
-//// Starts from the build-time repos list, then re-fetches pinned
-//// actor profiles + repo records from the Tangled repo on load and
-//// on tab visibility. The two-step fetch (pinned DIDs gate the repo
-//// filter) stays inside one effect; the section only re-renders on a
-//// successful decode.
+//// Starts from the build-time repos list, then re-fetches the Tangled
+//// profile and repo manifests on load and on tab visibility. Pinned
+//// DIDs gate the appview query, so the two-step fetch stays inside one
+//// effect; the section only re-renders on a successful decode.
 
 import atproto
 import browser
-import gen/repo.{type Repo}
+import gen/repo/manifest.{type RepoManifest}
+import gleam/int
 import gleam/list
 import gleam/string
 import lustre
@@ -18,15 +18,15 @@ import repos as repos_view
 import tangled
 
 pub type Flags {
-  Flags(repos: List(Repo))
+  Flags(repos: List(RepoManifest))
 }
 
 pub type Model {
-  Model(repos: List(Repo))
+  Model(repos: List(RepoManifest))
 }
 
 pub type Msg {
-  ReposFetched(List(Repo))
+  ReposFetched(List(RepoManifest))
   VisibilityChanged(Bool)
 }
 
@@ -60,40 +60,57 @@ pub fn view(model: Model) -> Element(Msg) {
   repos_view.repos_inner(model.repos)
 }
 
-/// Fetch pinned repo DIDs, then the repo records they select. Both
-/// decoders log failures and leave the current render untouched —
-/// same fallback as the SSG build keeping a section it couldn't
-/// fetch.
+/// Fetch the owner's pinned DIDs, then the manifest records they
+/// select. Failures log and leave the current render untouched — same
+/// fallback as the SSG keeping a section it couldn't fetch.
 fn fetch_effect() -> Effect(Msg) {
   effect.from(fn(dispatch) {
     browser.fetch_text(atproto.pinned_dids_url(), fn(pinned_text) {
-      case atproto.decode_actor_profiles(pinned_text) {
+      case atproto.decode_actor_profile(pinned_text) {
         Error(reason) ->
           browser.log_error(
-            "decode_actor_profiles failed: " <> string.inspect(reason),
+            "decode_actor_profile failed: " <> string.inspect(reason),
           )
-        Ok(profiles) -> {
-          let pinned_dids = tangled.pinned_dids_from_profiles(profiles)
-          browser.fetch_text(atproto.repos_url(), fn(repos_text) {
-            case atproto.decode_repos(repos_text) {
-              Error(reason) ->
-                browser.log_error(
-                  "decode_repos failed: " <> string.inspect(reason),
-                )
-              Ok(records) -> {
-                let repos =
-                  records
-                  |> tangled.filter_repos_by_did(pinned_dids)
-                  |> list.map(tangled.resolve_repo_name)
-                  |> list.map(fn(record) { record.value })
-                dispatch(ReposFetched(repos))
-              }
-            }
-          })
-        }
+        Ok(profile) ->
+          fetch_repos(dispatch, tangled.pinned_dids_from_profile(profile))
       }
     })
   })
+}
+
+fn fetch_repos(dispatch: fn(Msg) -> Nil, pinned_dids: List(String)) -> Nil {
+  case pinned_dids {
+    // No pins means no appview call and an intentionally empty list;
+    // a stale build-time render would otherwise show unpinned repos.
+    [] -> dispatch(ReposFetched([]))
+    _ ->
+      browser.fetch_text(atproto.repos_url(pinned_dids), fn(repos_text) {
+        case atproto.decode_repos(repos_text) {
+          Error(reason) ->
+            browser.log_error("decode_repos failed: " <> string.inspect(reason))
+          Ok(#(records, drops)) -> {
+            log_drops(drops)
+            let repos =
+              records
+              |> tangled.filter_repos_by_did(pinned_dids)
+              |> list.map(fn(record) { record.value })
+            dispatch(ReposFetched(repos))
+          }
+        }
+      })
+  }
+}
+
+fn log_drops(drops: Int) -> Nil {
+  case drops > 0 {
+    True ->
+      browser.log_error(
+        "dropped "
+        <> int.to_string(drops)
+        <> " repo record(s) that failed to decode",
+      )
+    False -> Nil
+  }
 }
 
 fn visibility_effect() -> Effect(Msg) {
