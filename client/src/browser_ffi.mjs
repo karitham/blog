@@ -26,6 +26,18 @@ export function has_element(id) {
   return document.getElementById(id) !== null;
 }
 
+// The site root path. Wisp rewrites the stylesheet href to the subpath
+// it serves the site from, so deriving the root from it keeps
+// client-rendered images working at "/" and "/did:.../site/".
+export function site_root() {
+  if (typeof document === "undefined") return "/";
+  var link = document.querySelector('link[rel="stylesheet"]');
+  var href = link && link.getAttribute("href");
+  if (!href) return "/";
+  var i = href.lastIndexOf("/");
+  return i >= 0 ? href.slice(0, i + 1) : "/";
+}
+
 export function log_error(message) {
   console.error(message);
 }

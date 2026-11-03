@@ -19,6 +19,11 @@ pub fn script_text(id: String) -> Option(String)
 @external(javascript, "./browser_ffi.mjs", "has_element")
 pub fn has_element(id: String) -> Bool
 
+/// The site root path: "/" on a custom domain, or the subpath Wisp
+/// rewrote the assets to on its default address.
+@external(javascript, "./browser_ffi.mjs", "site_root")
+pub fn site_root() -> String
+
 @external(javascript, "./browser_ffi.mjs", "log_error")
 pub fn log_error(message: String) -> Nil
 

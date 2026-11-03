@@ -23,7 +23,11 @@ pub type Flags {
 }
 
 pub type Model {
-  Model(rewrites: Dict(String, String), profile: ProfileViewDetailed)
+  Model(
+    rewrites: Dict(String, String),
+    profile: ProfileViewDetailed,
+    base: String,
+  )
 }
 
 pub type Msg {
@@ -43,8 +47,17 @@ pub fn start(flags: Flags) -> Nil {
 }
 
 pub fn init(flags: Flags) -> #(Model, Effect(Msg)) {
+  let base = browser.site_root()
   #(
-    Model(rewrites: flags.rewrites, profile: flags.profile),
+    Model(
+      rewrites: flags.rewrites,
+      profile: hydration.localize_profile_with_base(
+        flags.profile,
+        flags.rewrites,
+        base,
+      ),
+      base: base,
+    ),
     effect.batch([fetch_effect(), visibility_effect()]),
   )
 }
@@ -54,7 +67,11 @@ pub fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     ProfileFetched(Ok(profile)) -> #(
       Model(
         ..model,
-        profile: hydration.localize_profile(profile, model.rewrites),
+        profile: hydration.localize_profile_with_base(
+          profile,
+          model.rewrites,
+          model.base,
+        ),
       ),
       effect.none(),
     )

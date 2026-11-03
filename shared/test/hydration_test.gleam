@@ -6,7 +6,7 @@ import gen/actor/defs.{type ProfileViewDetailed, ProfileViewDetailed}
 import gleam/dict
 import gleam/option.{None, Some}
 import gleeunit/should
-import hydration.{localize_profile}
+import hydration.{localize_profile, localize_profile_with_base}
 
 fn sample_profile() -> ProfileViewDetailed {
   ProfileViewDetailed(
@@ -50,4 +50,35 @@ pub fn localize_profile_leaves_other_fields_untouched_test() {
   let localized = localize_profile(sample_profile(), mirror_map())
   localized.handle |> should.equal("test.bsky.social")
   localized.did |> should.equal("did:plc:test")
+}
+
+pub fn localize_profile_prefixes_mirrors_for_subpath_test() {
+  let localized =
+    localize_profile_with_base(
+      sample_profile(),
+      mirror_map(),
+      "/did:plc:test/site/",
+    )
+  localized.avatar
+  |> should.equal(Some("/did:plc:test/site/img/profile/avatar.jpeg"))
+  localized.banner
+  |> should.equal(Some("/did:plc:test/site/img/profile/banner.jpeg"))
+}
+
+pub fn localize_profile_prefixes_existing_local_paths_test() {
+  let profile =
+    ProfileViewDetailed(
+      ..sample_profile(),
+      avatar: Some("/img/profile/avatar.jpeg"),
+    )
+  let localized =
+    localize_profile_with_base(profile, dict.new(), "/did:plc:test/site")
+  localized.avatar
+  |> should.equal(Some("/did:plc:test/site/img/profile/avatar.jpeg"))
+}
+
+pub fn localize_profile_keeps_root_paths_at_root_test() {
+  let localized =
+    localize_profile_with_base(sample_profile(), mirror_map(), "/")
+  localized.avatar |> should.equal(Some("/img/profile/avatar.jpeg"))
 }

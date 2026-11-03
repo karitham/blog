@@ -6,7 +6,7 @@
 
 @font-face {
   font-family: "MuseoModerno";
-  src: url("/fonts/museomoderno-latin.woff2") format("woff2");
+  src: url("fonts/museomoderno-latin.woff2") format("woff2");
   font-weight: 400 700;
   font-style: normal;
   font-display: swap;
@@ -14,7 +14,7 @@
 
 @font-face {
   font-family: "Recursive";
-  src: url("/fonts/recursive-latin.woff2") format("woff2");
+  src: url("fonts/recursive-latin.woff2") format("woff2");
   font-weight: 300 1000;
   font-style: normal;
   font-display: swap;

@@ -67,7 +67,11 @@ pub fn profile_fetch_localizes_images_test() {
       #("https://cdn.bsky.app/avatar.jpeg", "/img/profile/avatar.jpeg"),
     ])
   let model =
-    profile_island.Model(rewrites: rewrites, profile: sample_profile())
+    profile_island.Model(
+      rewrites: rewrites,
+      profile: sample_profile(),
+      base: "/",
+    )
   let fresh =
     ProfileViewDetailed(
       ..sample_profile(),
@@ -79,9 +83,33 @@ pub fn profile_fetch_localizes_images_test() {
   |> should.equal(Some("/img/profile/avatar.jpeg"))
 }
 
+pub fn profile_fetch_prefixes_site_root_test() {
+  let rewrites =
+    dict.from_list([
+      #("https://cdn.bsky.app/avatar.jpeg", "/img/profile/avatar.jpeg"),
+    ])
+  let model =
+    profile_island.Model(
+      rewrites: rewrites,
+      profile: sample_profile(),
+      base: "/did:plc:test/site/",
+    )
+  let #(model, _) =
+    profile_island.update(
+      model,
+      profile_island.ProfileFetched(Ok(sample_profile())),
+    )
+  model.profile.avatar
+  |> should.equal(Some("/did:plc:test/site/img/profile/avatar.jpeg"))
+}
+
 pub fn profile_fetch_error_keeps_model_test() {
   let model =
-    profile_island.Model(rewrites: dict.new(), profile: sample_profile())
+    profile_island.Model(
+      rewrites: dict.new(),
+      profile: sample_profile(),
+      base: "/",
+    )
   let #(model, _) =
     profile_island.update(
       model,
