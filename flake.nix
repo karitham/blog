@@ -57,6 +57,7 @@
                 treefmt
                 just
                 nodejs
+                bun
 
                 rustc
                 cargo
